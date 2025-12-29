@@ -86,36 +86,30 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-10 w-full max-w-lg sm:max-w-none border-y border-midnight-600 py-6"
+            className="mt-10 w-full border-y border-midnight-600 py-6"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
-              <div className="flex items-center gap-3">
-                <Target className="h-5 w-5 text-tactical-red" />
-                <div className="text-left">
-                  <div className="font-heading text-xl sm:text-2xl font-bold text-slate-light">500+</div>
-                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                    Intel Reports
-                  </div>
+            <div className="flex flex-row items-center justify-center gap-4 sm:gap-8">
+              <div className="flex flex-col items-center text-center">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-red mb-1" />
+                <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">500+</div>
+                <div className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-dark">
+                  Intel Reports
                 </div>
               </div>
-              <div className="hidden sm:block h-10 w-px bg-midnight-600" />
-              <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-tactical-amber" />
-                <div className="text-left">
-                  <div className="font-heading text-xl sm:text-2xl font-bold text-slate-light">50K+</div>
-                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                    Intelligence Network
-                  </div>
+              <div className="h-12 w-px bg-midnight-600" />
+              <div className="flex flex-col items-center text-center">
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-amber mb-1" />
+                <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">50K+</div>
+                <div className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-dark">
+                  Network
                 </div>
               </div>
-              <div className="hidden sm:block h-10 w-px bg-midnight-600" />
-              <div className="flex items-center gap-3">
-                <Radio className="h-5 w-5 text-earth-olive" />
-                <div className="text-left">
-                  <div className="font-heading text-xl sm:text-2xl font-bold text-slate-light">24/7</div>
-                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                    Live Monitoring
-                  </div>
+              <div className="h-12 w-px bg-midnight-600" />
+              <div className="flex flex-col items-center text-center">
+                <Radio className="h-4 w-4 sm:h-5 sm:w-5 text-earth-olive mb-1" />
+                <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">24/7</div>
+                <div className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-dark">
+                  Monitoring
                 </div>
               </div>
             </div>

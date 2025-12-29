@@ -44,8 +44,8 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-midnight-900 text-slate-light antialiased">
-        <div className="flex min-h-screen flex-col">
+      <body className="min-h-screen bg-midnight-900 text-slate-light antialiased overflow-x-hidden">
+        <div className="flex min-h-screen flex-col overflow-x-hidden">
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
