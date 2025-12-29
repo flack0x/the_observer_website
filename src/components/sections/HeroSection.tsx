@@ -14,8 +14,8 @@ export default function HeroSection() {
           className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(30, 64, 175, 0.03) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(30, 64, 175, 0.03) 1px, transparent 1px)
+              linear-gradient(rgba(27, 58, 87, 0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(27, 58, 87, 0.05) 1px, transparent 1px)
             `,
             backgroundSize: "80px 80px",
           }}

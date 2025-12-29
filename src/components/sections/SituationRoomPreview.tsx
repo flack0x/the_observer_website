@@ -92,8 +92,8 @@ export default function SituationRoomPreview() {
                 className="absolute inset-0 opacity-20"
                 style={{
                   backgroundImage: `
-                    linear-gradient(rgba(30, 64, 175, 0.3) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(30, 64, 175, 0.3) 1px, transparent 1px)
+                    linear-gradient(rgba(27, 58, 87, 0.3) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(27, 58, 87, 0.3) 1px, transparent 1px)
                   `,
                   backgroundSize: "40px 40px",
                 }}
@@ -105,7 +105,7 @@ export default function SituationRoomPreview() {
                   className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2"
                   style={{
                     background:
-                      "conic-gradient(from 0deg, transparent 0deg, rgba(30, 64, 175, 0.2) 30deg, transparent 60deg)",
+                      "conic-gradient(from 0deg, transparent 0deg, rgba(27, 58, 87, 0.25) 30deg, transparent 60deg)",
                   }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
@@ -155,7 +155,7 @@ export default function SituationRoomPreview() {
                     y1="30%"
                     x2="75%"
                     y2="40%"
-                    stroke="rgba(178, 34, 34, 0.3)"
+                    stroke="rgba(27, 58, 87, 0.4)"
                     strokeWidth="1"
                     strokeDasharray="4 4"
                   />

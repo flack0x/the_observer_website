@@ -2,30 +2,34 @@
 
 /* Custom Theme Configuration for The Observer */
 @theme {
-  /* Primary - Deep Charcoal/Midnight Blue */
-  --color-midnight-900: #0D0D0F;
-  --color-midnight-800: #121216;
-  --color-midnight-700: #1A1A1D;
-  --color-midnight-600: #232328;
-  --color-midnight-500: #2D2D33;
-  --color-midnight-400: #3D3D45;
+  /* Primary - Warmer Dark Backgrounds */
+  --color-midnight-900: #141618;
+  --color-midnight-800: #1A1D20;
+  --color-midnight-700: #232729;
+  --color-midnight-600: #2E3235;
+  --color-midnight-500: #3A3F42;
+  --color-midnight-400: #4A5054;
 
-  /* Secondary - Tactical Blue & Gold */
-  --color-tactical-red: #1E40AF;
-  --color-tactical-red-hover: #1E3A8A;
-  --color-tactical-red-glow: rgba(30, 64, 175, 0.4);
+  /* Secondary - Navy Blue & Gold */
+  --color-tactical-red: #1B3A57;
+  --color-tactical-red-hover: #153047;
+  --color-tactical-red-glow: rgba(27, 58, 87, 0.5);
   --color-tactical-amber: #D4AF37;
   --color-tactical-amber-dark: #B8960C;
 
-  /* Neutral - Light Slate Grey */
-  --color-slate-light: #E1E1E1;
-  --color-slate-medium: #A8A8A8;
-  --color-slate-dark: #6B6B6B;
+  /* Neutral - Ivory Cream Tones */
+  --color-slate-light: #FAF8F3;
+  --color-slate-medium: #C9C5BA;
+  --color-slate-dark: #8A867D;
 
   /* Earth Tones - Accent Colors */
   --color-earth-olive: #6B7B4C;
   --color-earth-sand: #C2B280;
   --color-earth-desert: #967B5D;
+
+  /* Ivory Cream - New accent */
+  --color-ivory: #FAF8F3;
+  --color-ivory-dark: #EDE9DF;
 
   /* Fonts */
   --font-heading: "Montserrat", system-ui, sans-serif;
