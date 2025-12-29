@@ -1,6 +1,14 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="180" height="180" rx="40" fill="#0D0D0F"/>
-  <path d="M90 45C56 45 31 67 22 90C31 113 56 135 90 135C124 135 149 113 158 90C149 67 124 45 90 45Z" stroke="#1E40AF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <circle cx="90" cy="90" r="22" fill="#D4AF37"/>
-  <circle cx="90" cy="90" r="8" fill="#0D0D0F"/>
+  <!-- Left lens -->
+  <circle cx="60" cy="95" r="28" stroke="#1E40AF" stroke-width="8" fill="none"/>
+  <circle cx="60" cy="95" r="12" fill="#D4AF37"/>
+  <!-- Right lens -->
+  <circle cx="120" cy="95" r="28" stroke="#1E40AF" stroke-width="8" fill="none"/>
+  <circle cx="120" cy="95" r="12" fill="#D4AF37"/>
+  <!-- Bridge -->
+  <path d="M88 95H92" stroke="#1E40AF" stroke-width="8" stroke-linecap="round"/>
+  <!-- Top handles -->
+  <path d="M60 67V50" stroke="#1E40AF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M120 67V50" stroke="#1E40AF" stroke-width="8" stroke-linecap="round"/>
 </svg>

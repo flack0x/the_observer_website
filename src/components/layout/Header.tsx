@@ -9,7 +9,7 @@ import {
   Globe,
   Radio,
   ChevronDown,
-  Eye,
+  Binoculars,
   Send,
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
@@ -49,7 +49,7 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group shrink-0">
               <div className="relative">
-                <Eye className="h-6 w-6 text-tactical-red transition-all group-hover:text-tactical-amber" />
+                <Binoculars className="h-6 w-6 text-tactical-red transition-all group-hover:text-tactical-amber" />
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-heading text-base font-bold tracking-wider text-slate-light">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Eye, Send, Mail, Shield, FileText, BookOpen } from "lucide-react";
+import { Binoculars, Send, Mail, Shield, FileText, BookOpen } from "lucide-react";
 
 const footerLinks = {
   intelligence: [
@@ -63,7 +63,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 sm:gap-3">
-              <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-tactical-red" />
+              <Binoculars className="h-6 w-6 sm:h-8 sm:w-8 text-tactical-red" />
               <div>
                 <span className="font-heading text-lg sm:text-xl font-bold tracking-wider text-slate-light">
                   THE OBSERVER
