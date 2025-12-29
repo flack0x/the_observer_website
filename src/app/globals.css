@@ -10,12 +10,12 @@
   --color-midnight-500: #2D2D33;
   --color-midnight-400: #3D3D45;
 
-  /* Secondary - Tactical Red & Amber */
-  --color-tactical-red: #B22222;
-  --color-tactical-red-hover: #8B1A1A;
-  --color-tactical-red-glow: rgba(178, 34, 34, 0.4);
-  --color-tactical-amber: #FFBF00;
-  --color-tactical-amber-dark: #CC9900;
+  /* Secondary - Tactical Blue & Gold */
+  --color-tactical-red: #1E40AF;
+  --color-tactical-red-hover: #1E3A8A;
+  --color-tactical-red-glow: rgba(30, 64, 175, 0.4);
+  --color-tactical-amber: #D4AF37;
+  --color-tactical-amber-dark: #B8960C;
 
   /* Neutral - Light Slate Grey */
   --color-slate-light: #E1E1E1;

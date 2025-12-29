@@ -160,8 +160,8 @@ export default function SituationRoomPage() {
                 className="absolute inset-0 opacity-20"
                 style={{
                   backgroundImage: `
-                    linear-gradient(rgba(178, 34, 34, 0.3) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(178, 34, 34, 0.3) 1px, transparent 1px)
+                    linear-gradient(rgba(30, 64, 175, 0.3) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(30, 64, 175, 0.3) 1px, transparent 1px)
                   `,
                   backgroundSize: "50px 50px",
                 }}
@@ -173,7 +173,7 @@ export default function SituationRoomPage() {
                   className="absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2"
                   style={{
                     background:
-                      "conic-gradient(from 0deg, transparent 0deg, rgba(178, 34, 34, 0.15) 30deg, transparent 60deg)",
+                      "conic-gradient(from 0deg, transparent 0deg, rgba(30, 64, 175, 0.15) 30deg, transparent 60deg)",
                   }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
@@ -208,7 +208,7 @@ export default function SituationRoomPage() {
                   y1="30%"
                   x2="65%"
                   y2="45%"
-                  stroke="rgba(178, 34, 34, 0.3)"
+                  stroke="rgba(30, 64, 175, 0.3)"
                   strokeWidth="1"
                   strokeDasharray="4 4"
                 />
@@ -217,7 +217,7 @@ export default function SituationRoomPage() {
                   y1="45%"
                   x2="45%"
                   y2="60%"
-                  stroke="rgba(255, 191, 0, 0.3)"
+                  stroke="rgba(212, 175, 55, 0.3)"
                   strokeWidth="1"
                   strokeDasharray="4 4"
                 />
