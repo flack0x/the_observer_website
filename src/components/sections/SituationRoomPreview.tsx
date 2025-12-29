@@ -13,18 +13,18 @@ const mapLayers = [
 
 export default function SituationRoomPreview() {
   return (
-    <section className="border-t border-midnight-700 bg-midnight-800 py-20">
+    <section className="border-t border-midnight-700 bg-midnight-800 py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+        <div className="grid gap-8 sm:gap-12 lg:grid-cols-2 lg:items-center">
           {/* Content */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <div className="mb-6 flex items-center gap-4">
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-lg bg-tactical-red/10">
-                <Map className="h-6 w-6 text-tactical-red" />
+            <div className="mb-5 sm:mb-6 flex items-center gap-3 sm:gap-4">
+              <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-tactical-red/10">
+                <Map className="h-5 w-5 sm:h-6 sm:w-6 text-tactical-red" />
                 <motion.div
                   className="absolute inset-0 rounded-lg border border-tactical-red/30"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
@@ -32,21 +32,21 @@ export default function SituationRoomPreview() {
                 />
               </div>
               <div>
-                <h2 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
+                <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-light">
                   The Situation Room
                 </h2>
-                <p className="text-sm text-slate-dark">Interactive intelligence mapping</p>
+                <p className="text-xs sm:text-sm text-slate-dark">Interactive intelligence mapping</p>
               </div>
             </div>
 
-            <p className="mb-8 font-body text-lg leading-relaxed text-slate-medium">
+            <p className="mb-6 sm:mb-8 font-body text-base sm:text-lg leading-relaxed text-slate-medium">
               Access real-time annotated maps showing troop movements, territorial
               control, resource pipelines, and strategic installations. Visualize
               the &quot;where&quot; to understand the &quot;why.&quot;
             </p>
 
             {/* Map Layers */}
-            <div className="mb-8 space-y-3">
+            <div className="mb-6 sm:mb-8 space-y-2 sm:space-y-3">
               {mapLayers.map((layer, index) => (
                 <motion.div
                   key={layer.name}
@@ -54,15 +54,15 @@ export default function SituationRoomPreview() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between rounded-lg border border-midnight-600 bg-midnight-700 px-4 py-3"
+                  className="flex items-center justify-between rounded-lg border border-midnight-600 bg-midnight-700 px-3 py-2.5 sm:px-4 sm:py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-3 w-3 rounded-full ${layer.color}`} />
-                    <span className="font-heading text-sm uppercase tracking-wider text-slate-light">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className={`h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full ${layer.color}`} />
+                    <span className="font-heading text-xs sm:text-sm uppercase tracking-wider text-slate-light">
                       {layer.name}
                     </span>
                   </div>
-                  <span className="rounded bg-midnight-600 px-2 py-0.5 font-mono text-xs text-slate-medium">
+                  <span className="rounded bg-midnight-600 px-2 py-0.5 font-mono text-[10px] sm:text-xs text-slate-medium">
                     {layer.count} active
                   </span>
                 </motion.div>
@@ -71,9 +71,9 @@ export default function SituationRoomPreview() {
 
             <Link
               href="/situation-room"
-              className="group inline-flex items-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover"
+              className="group inline-flex items-center gap-2 rounded-lg bg-tactical-red px-4 py-2.5 sm:px-6 sm:py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover"
             >
-              <Crosshair className="h-5 w-5" />
+              <Crosshair className="h-4 w-4 sm:h-5 sm:w-5" />
               Enter Situation Room
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>

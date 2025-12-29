@@ -45,24 +45,24 @@ const weaponSystems = [
 
 export default function ArsenalPreview() {
   return (
-    <section className="border-t border-midnight-700 bg-midnight-800 py-20">
+    <section className="border-t border-midnight-700 bg-midnight-800 py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mb-12 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-tactical-red/10">
-              <Crosshair className="h-5 w-5 text-tactical-red" />
+        <div className="mb-8 sm:mb-12 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-tactical-red/10">
+              <Crosshair className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-red" />
             </div>
             <div>
-              <h2 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
+              <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-light">
                 The Arsenal
               </h2>
-              <p className="text-sm text-slate-dark">Military systems analysis</p>
+              <p className="text-xs sm:text-sm text-slate-dark">Military systems analysis</p>
             </div>
           </div>
           <Link
             href="/arsenal"
-            className="group flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
+            className="group flex items-center gap-2 font-heading text-xs sm:text-sm font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
           >
             Full Arsenal
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -149,24 +149,24 @@ export default function ArsenalPreview() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 flex flex-col items-center justify-between gap-6 rounded-xl border border-midnight-600 bg-midnight-900 p-8 sm:flex-row"
+          className="mt-8 sm:mt-12 flex flex-col items-center justify-between gap-4 sm:gap-6 rounded-xl border border-midnight-600 bg-midnight-900 p-5 sm:p-8 sm:flex-row"
         >
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tactical-red/10">
-              <Target className="h-6 w-6 text-tactical-red" />
+          <div className="flex items-center gap-3 sm:gap-4 text-center sm:text-left">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-tactical-red/10 shrink-0">
+              <Target className="h-5 w-5 sm:h-6 sm:w-6 text-tactical-red" />
             </div>
             <div>
-              <h4 className="font-heading text-lg font-bold uppercase tracking-wider text-slate-light">
+              <h4 className="font-heading text-base sm:text-lg font-bold uppercase tracking-wider text-slate-light">
                 Defense Technology Database
               </h4>
-              <p className="text-sm text-slate-dark">
+              <p className="text-xs sm:text-sm text-slate-dark">
                 Access detailed specifications and strategic assessments
               </p>
             </div>
           </div>
           <Link
             href="/arsenal"
-            className="flex items-center gap-2 rounded-lg border border-tactical-red bg-tactical-red/10 px-6 py-3 font-heading text-sm font-bold uppercase tracking-wider text-tactical-red transition-all hover:bg-tactical-red hover:text-white"
+            className="flex items-center gap-2 rounded-lg border border-tactical-red bg-tactical-red/10 px-4 py-2.5 sm:px-6 sm:py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-tactical-red transition-all hover:bg-tactical-red hover:text-white w-full sm:w-auto justify-center"
           >
             <Shield className="h-4 w-4" />
             Access Arsenal

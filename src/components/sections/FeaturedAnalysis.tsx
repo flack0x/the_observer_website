@@ -55,24 +55,24 @@ export default function FeaturedAnalysis() {
         featured: false,
       }));
   return (
-    <section className="border-t border-midnight-700 bg-midnight-900 py-20">
+    <section className="border-t border-midnight-700 bg-midnight-900 py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mb-12 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-tactical-amber/10">
-              <BookOpen className="h-5 w-5 text-tactical-amber" />
+        <div className="mb-8 sm:mb-12 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-tactical-amber/10">
+              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-amber" />
             </div>
             <div>
-              <h2 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
+              <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-light">
                 Deep Dives
               </h2>
-              <p className="text-sm text-slate-dark">Long-form geopolitical analysis</p>
+              <p className="text-xs sm:text-sm text-slate-dark">Long-form geopolitical analysis</p>
             </div>
           </div>
           <Link
             href="/analysis"
-            className="group flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-wider text-tactical-amber transition-colors hover:text-tactical-red"
+            className="group flex items-center gap-2 font-heading text-xs sm:text-sm font-medium uppercase tracking-wider text-tactical-amber transition-colors hover:text-tactical-red"
           >
             All Analysis
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -108,35 +108,35 @@ export default function FeaturedAnalysis() {
             </div>
 
             {/* Content */}
-            <div className="p-8 lg:p-10">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="rounded bg-tactical-amber/20 px-2 py-1 font-heading text-xs font-medium uppercase text-tactical-amber">
+            <div className="p-5 sm:p-8 lg:p-10">
+              <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="rounded bg-tactical-amber/20 px-2 py-1 font-heading text-[10px] sm:text-xs font-medium uppercase text-tactical-amber">
                   {featuredArticles[0].category}
                 </span>
-                <span className="flex items-center gap-1 text-xs text-slate-dark">
+                <span className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-dark">
                   <Clock className="h-3 w-3" />
                   {featuredArticles[0].readTime}
                 </span>
               </div>
 
-              <h3 className="mb-4 font-heading text-2xl font-bold uppercase leading-tight text-slate-light transition-colors group-hover:text-tactical-amber lg:text-3xl">
+              <h3 className="mb-4 font-heading text-lg sm:text-2xl font-bold uppercase leading-tight text-slate-light transition-colors group-hover:text-tactical-amber lg:text-3xl">
                 {featuredArticles[0].title}
               </h3>
 
-              <p className="mb-6 font-body text-base leading-relaxed text-slate-medium">
+              <p className="mb-6 font-body text-sm sm:text-base leading-relaxed text-slate-medium">
                 {featuredArticles[0].excerpt}
               </p>
 
-              <div className="flex items-center justify-between border-t border-midnight-600 pt-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-midnight-600 pt-4 sm:pt-6">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-midnight-600">
-                    <User className="h-4 w-4 text-slate-medium" />
+                  <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-midnight-600">
+                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-slate-medium" />
                   </div>
-                  <span className="text-sm text-slate-dark">{featuredArticles[0].author}</span>
+                  <span className="text-xs sm:text-sm text-slate-dark">{featuredArticles[0].author}</span>
                 </div>
                 <Link
                   href={`/analysis/${featuredArticles[0].id}`}
-                  className="group/btn flex items-center gap-2 rounded-lg bg-tactical-amber px-6 py-3 font-heading text-sm font-bold uppercase tracking-wider text-midnight-900 transition-all hover:bg-tactical-amber-dark"
+                  className="group/btn flex items-center justify-center gap-2 rounded-lg bg-tactical-amber px-4 py-2.5 sm:px-6 sm:py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-midnight-900 transition-all hover:bg-tactical-amber-dark"
                 >
                   Read Analysis
                   <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />

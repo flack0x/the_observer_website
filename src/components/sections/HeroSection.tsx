@@ -62,7 +62,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-heading text-5xl font-black uppercase tracking-tight text-slate-light sm:text-6xl lg:text-7xl"
+            className="font-heading text-[2.5rem] font-black uppercase tracking-tight text-slate-light sm:text-6xl lg:text-7xl"
           >
             <span className="block">Observe.</span>
             <span className="block text-gradient">Analyze.</span>
@@ -74,7 +74,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-8 max-w-2xl font-body text-lg leading-relaxed text-slate-medium sm:text-xl"
+            className="mt-6 sm:mt-8 max-w-2xl px-2 font-body text-base leading-relaxed text-slate-medium sm:text-xl"
           >
             Independent geopolitical intelligence and strategic analysis.
             Cutting through the noise to reveal the truth behind global
@@ -86,34 +86,36 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-8 border-y border-midnight-600 py-6"
+            className="mt-10 w-full max-w-lg sm:max-w-none border-y border-midnight-600 py-6"
           >
-            <div className="flex items-center gap-3">
-              <Target className="h-5 w-5 text-tactical-red" />
-              <div className="text-left">
-                <div className="font-heading text-2xl font-bold text-slate-light">500+</div>
-                <div className="text-xs uppercase tracking-wider text-slate-dark">
-                  Intel Reports
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
+              <div className="flex items-center gap-3">
+                <Target className="h-5 w-5 text-tactical-red" />
+                <div className="text-left">
+                  <div className="font-heading text-xl sm:text-2xl font-bold text-slate-light">500+</div>
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
+                    Intel Reports
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="h-10 w-px bg-midnight-600" />
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-tactical-amber" />
-              <div className="text-left">
-                <div className="font-heading text-2xl font-bold text-slate-light">50K+</div>
-                <div className="text-xs uppercase tracking-wider text-slate-dark">
-                  Intelligence Network
+              <div className="hidden sm:block h-10 w-px bg-midnight-600" />
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-tactical-amber" />
+                <div className="text-left">
+                  <div className="font-heading text-xl sm:text-2xl font-bold text-slate-light">50K+</div>
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
+                    Intelligence Network
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="h-10 w-px bg-midnight-600" />
-            <div className="flex items-center gap-3">
-              <Radio className="h-5 w-5 text-earth-olive" />
-              <div className="text-left">
-                <div className="font-heading text-2xl font-bold text-slate-light">24/7</div>
-                <div className="text-xs uppercase tracking-wider text-slate-dark">
-                  Live Monitoring
+              <div className="hidden sm:block h-10 w-px bg-midnight-600" />
+              <div className="flex items-center gap-3">
+                <Radio className="h-5 w-5 text-earth-olive" />
+                <div className="text-left">
+                  <div className="font-heading text-xl sm:text-2xl font-bold text-slate-light">24/7</div>
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
+                    Live Monitoring
+                  </div>
                 </div>
               </div>
             </div>
@@ -124,18 +126,18 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="mt-12 flex flex-col gap-4 sm:flex-row"
+            className="mt-8 sm:mt-12 flex flex-col gap-3 sm:gap-4 sm:flex-row w-full px-4 sm:px-0 sm:w-auto"
           >
             <Link
               href="/frontline"
-              className="group flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-8 py-4 font-heading text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover hover:shadow-lg hover:shadow-tactical-red/20"
+              className="group flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 sm:px-8 sm:py-4 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover hover:shadow-lg hover:shadow-tactical-red/20"
             >
-              <Eye className="h-5 w-5 transition-transform group-hover:scale-110" />
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110" />
               Access The Frontline
             </Link>
             <Link
               href="/situation-room"
-              className="flex items-center justify-center gap-2 rounded-lg border border-midnight-500 bg-midnight-800/50 px-8 py-4 font-heading text-sm font-bold uppercase tracking-wider text-slate-light backdrop-blur-sm transition-all hover:border-tactical-amber hover:text-tactical-amber"
+              className="flex items-center justify-center gap-2 rounded-lg border border-midnight-500 bg-midnight-800/50 px-6 py-3 sm:px-8 sm:py-4 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light backdrop-blur-sm transition-all hover:border-tactical-amber hover:text-tactical-amber"
             >
               Enter Situation Room
             </Link>

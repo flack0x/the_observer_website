@@ -36,24 +36,24 @@ const getSignificanceColor = (significance: string) => {
 
 export default function ChroniclesPreview() {
   return (
-    <section className="border-t border-midnight-700 bg-midnight-800 py-20">
+    <section className="border-t border-midnight-700 bg-midnight-800 py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mb-12 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-earth-sand/10">
-              <Clock className="h-5 w-5 text-earth-sand" />
+        <div className="mb-8 sm:mb-12 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-earth-sand/10">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-earth-sand" />
             </div>
             <div>
-              <h2 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
+              <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-light">
                 Chronicles of the Axis
               </h2>
-              <p className="text-sm text-slate-dark">Historical context & timeline</p>
+              <p className="text-xs sm:text-sm text-slate-dark">Historical context & timeline</p>
             </div>
           </div>
           <Link
             href="/chronicles"
-            className="group flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-wider text-earth-sand transition-colors hover:text-tactical-amber"
+            className="group flex items-center gap-2 font-heading text-xs sm:text-sm font-medium uppercase tracking-wider text-earth-sand transition-colors hover:text-tactical-amber"
           >
             Full Timeline
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -65,7 +65,7 @@ export default function ChroniclesPreview() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-10 max-w-3xl font-body text-lg leading-relaxed text-slate-medium"
+          className="mb-8 sm:mb-10 max-w-3xl font-body text-base sm:text-lg leading-relaxed text-slate-medium"
         >
           Understanding today&apos;s conflicts requires understanding their roots. Our
           chronicles link current events to historical milestones, providing the
@@ -145,11 +145,11 @@ export default function ChroniclesPreview() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 flex justify-center"
+          className="mt-8 sm:mt-12 flex justify-center"
         >
           <Link
             href="/chronicles"
-            className="group flex items-center gap-2 rounded-lg border border-earth-sand bg-earth-sand/10 px-6 py-3 font-heading text-sm font-bold uppercase tracking-wider text-earth-sand transition-all hover:bg-earth-sand hover:text-midnight-900"
+            className="group flex items-center gap-2 rounded-lg border border-earth-sand bg-earth-sand/10 px-4 py-2.5 sm:px-6 sm:py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-earth-sand transition-all hover:bg-earth-sand hover:text-midnight-900"
           >
             Explore Full Historical Timeline
             <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

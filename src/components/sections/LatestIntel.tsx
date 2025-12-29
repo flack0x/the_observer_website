@@ -65,24 +65,24 @@ export default function LatestIntel() {
         isBreaking: index === 0,
       }));
   return (
-    <section className="border-t border-midnight-700 bg-midnight-800 py-16">
+    <section className="border-t border-midnight-700 bg-midnight-800 py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mb-10 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-tactical-red/10">
-              <AlertTriangle className="h-5 w-5 text-tactical-red" />
+        <div className="mb-8 sm:mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-tactical-red/10">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-red" />
             </div>
             <div>
-              <h2 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
+              <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-light">
                 The Frontline
               </h2>
-              <p className="text-sm text-slate-dark">Latest intelligence reports</p>
+              <p className="text-xs sm:text-sm text-slate-dark">Latest intelligence reports</p>
             </div>
           </div>
           <Link
             href="/frontline"
-            className="group flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
+            className="group flex items-center gap-2 font-heading text-xs sm:text-sm font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
           >
             View All Reports
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
