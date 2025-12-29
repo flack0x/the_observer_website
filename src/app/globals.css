@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+/* Custom Theme Configuration for The Observer */
+@theme {
+  /* Primary - Deep Charcoal/Midnight Blue */
+  --color-midnight-900: #0D0D0F;
+  --color-midnight-800: #121216;
+  --color-midnight-700: #1A1A1D;
+  --color-midnight-600: #232328;
+  --color-midnight-500: #2D2D33;
+  --color-midnight-400: #3D3D45;
+
+  /* Secondary - Tactical Red & Amber */
+  --color-tactical-red: #B22222;
+  --color-tactical-red-hover: #8B1A1A;
+  --color-tactical-red-glow: rgba(178, 34, 34, 0.4);
+  --color-tactical-amber: #FFBF00;
+  --color-tactical-amber-dark: #CC9900;
+
+  /* Neutral - Light Slate Grey */
+  --color-slate-light: #E1E1E1;
+  --color-slate-medium: #A8A8A8;
+  --color-slate-dark: #6B6B6B;
+
+  /* Earth Tones - Accent Colors */
+  --color-earth-olive: #6B7B4C;
+  --color-earth-sand: #C2B280;
+  --color-earth-desert: #967B5D;
+
+  /* Fonts */
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --font-body: "Lora", Georgia, serif;
+  --font-mono: "Geist Mono", monospace;
+
+  /* Custom animations */
+  --animate-ticker: ticker 40s linear infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-in: fadeIn 0.5s ease-out forwards;
+  --animate-slide-up: slideUp 0.5s ease-out forwards;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-radar: radar 4s linear infinite;
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes glow {
+    0% { box-shadow: 0 0 5px var(--color-tactical-red-glow); }
+    100% { box-shadow: 0 0 20px var(--color-tactical-red-glow), 0 0 40px var(--color-tactical-red-glow); }
+  }
+
+  @keyframes radar {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-midnight-900);
+  color: var(--color-slate-light);
+  font-family: var(--font-body);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-slate-light);
+}
+
+/* Grid Pattern Background */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Tactical Glow Effect */
+.tactical-glow {
+  box-shadow: 0 0 20px var(--color-tactical-red-glow);
+}
+
+/* Breaking News Pulse */
+.breaking-pulse {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-midnight-800);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-midnight-500);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-tactical-red);
+}
+
+/* Selection Color */
+::selection {
+  background-color: var(--color-tactical-red);
+  color: white;
+}
+
+/* Link Styles */
+a {
+  transition: color 0.2s ease;
+}
+
+/* Card Hover Effect */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Classified Stamp Effect */
+.classified-stamp {
+  position: relative;
+}
+
+.classified-stamp::after {
+  content: "CLASSIFIED";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--color-tactical-red);
+  opacity: 0.1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Radar Animation */
+.radar-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.radar-sweep::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: conic-gradient(from 0deg, transparent 0deg, var(--color-tactical-red-glow) 30deg, transparent 60deg);
+  animation: radar 4s linear infinite;
+  opacity: 0.3;
+}
+
+/* Text Gradient */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-tactical-red) 0%, var(--color-tactical-amber) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
