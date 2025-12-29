@@ -62,7 +62,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex lg:items-center lg:gap-0.5">
+            <div className="hidden lg:flex lg:items-center lg:gap-1">
               {navigation.map((item) => (
                 <div
                   key={item.name}
@@ -71,14 +71,14 @@ export default function Header() {
                   onMouseLeave={() => setActiveDropdown(null)}
                 >
                   {item.children ? (
-                    <button className="flex items-center gap-1 px-3 py-2 font-heading text-[11px] font-semibold uppercase tracking-wider text-slate-medium transition-colors hover:text-tactical-red">
+                    <button className="inline-flex items-center gap-1 h-9 px-3 font-heading text-[11px] font-semibold uppercase tracking-wider text-slate-medium transition-colors hover:text-tactical-red">
                       {item.name}
                       <ChevronDown className="h-3 w-3" />
                     </button>
                   ) : (
                     <Link
                       href={item.href}
-                      className="px-3 py-2 font-heading text-[11px] font-semibold uppercase tracking-wider text-slate-medium transition-colors hover:text-tactical-red"
+                      className="inline-flex items-center h-9 px-3 font-heading text-[11px] font-semibold uppercase tracking-wider text-slate-medium transition-colors hover:text-tactical-red"
                     >
                       {item.name}
                     </Link>
@@ -156,47 +156,60 @@ export default function Header() {
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden border-b border-midnight-600 bg-midnight-800"
           >
-            <div className="space-y-1 px-4 py-4">
-              {navigation.map((item) => (
-                <div key={item.name}>
-                  {item.children ? (
-                    <>
-                      <div className="px-3 py-2 font-heading text-sm font-medium uppercase tracking-wider text-slate-dark">
+            <div className="px-4 py-4">
+              <div className="space-y-1">
+                {navigation.map((item) => (
+                  <div key={item.name}>
+                    {item.children ? (
+                      <div className="py-2">
+                        <div className="flex items-center gap-2 px-3 py-2 font-heading text-xs font-semibold uppercase tracking-wider text-slate-dark border-b border-midnight-700 mb-2">
+                          {item.name}
+                        </div>
+                        <div className="grid grid-cols-2 gap-1">
+                          {item.children.map((child) => (
+                            <Link
+                              key={child.name}
+                              href={child.href}
+                              className="flex flex-col rounded-md px-3 py-2.5 bg-midnight-700/50 hover:bg-midnight-700 transition-colors"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <span className="font-heading text-xs font-medium uppercase tracking-wider text-slate-light">
+                                {child.name}
+                              </span>
+                              <span className="text-[10px] text-slate-dark mt-0.5">
+                                {child.description}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="flex items-center justify-between rounded-md px-3 py-3 font-heading text-sm font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
                         {item.name}
-                      </div>
-                      <div className="ml-4 space-y-1">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.name}
-                            href={child.href}
-                            className="block rounded-md px-3 py-2 font-heading text-sm uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            {child.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className="block rounded-md px-3 py-2 font-heading text-sm font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  )}
-                </div>
-              ))}
-              <a
-                href="https://t.me/observer_5"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 flex items-center justify-center gap-2 rounded-full bg-tactical-red px-4 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white"
-              >
-                <Send className="h-4 w-4" />
-                Join Intelligence Network
-              </a>
+                        <span className="text-[10px] text-slate-dark font-normal normal-case tracking-normal">
+                          {item.description}
+                        </span>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-midnight-700">
+                <a
+                  href="https://t.me/observer_5"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-full bg-tactical-red px-4 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white hover:bg-tactical-red-hover transition-colors"
+                >
+                  <Send className="h-4 w-4" />
+                  Join Intelligence Network
+                </a>
+              </div>
             </div>
           </motion.div>
         )}
