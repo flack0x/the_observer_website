@@ -3,10 +3,37 @@
 import { motion } from "framer-motion";
 import { Eye, ChevronDown, Target, Shield, Radio } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HeroSection() {
   return (
     <section className="relative min-h-[85vh] overflow-hidden bg-midnight-900">
+      {/* Observer Silhouette Background */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Desktop: Right-aligned silhouette */}
+        <div className="hidden lg:block absolute right-0 bottom-0 w-[45%] h-full">
+          <Image
+            src="/images/observer-silhouette.png"
+            alt=""
+            fill
+            className="object-contain object-right-bottom opacity-[0.08]"
+            priority
+          />
+        </div>
+        {/* Mobile/Tablet: Centered silhouette */}
+        <div className="lg:hidden absolute inset-0 flex items-end justify-center">
+          <div className="relative w-[80%] h-[50%]">
+            <Image
+              src="/images/observer-silhouette.png"
+              alt=""
+              fill
+              className="object-contain object-bottom opacity-[0.05]"
+              priority
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Grid Pattern */}
@@ -23,18 +50,6 @@ export default function HeroSection() {
 
         {/* Radial Gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-tactical-red/5 via-transparent to-midnight-900" />
-
-        {/* Animated Circles - positioned to not overlap with content */}
-        <motion.div
-          className="absolute -left-20 top-1/4 h-72 w-72 rounded-full border border-tactical-red/10"
-          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.1, 0.2] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute -right-20 bottom-1/4 h-56 w-56 rounded-full border border-tactical-amber/10"
-          animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.2, 0.1] }}
-          transition={{ duration: 6, repeat: Infinity }}
-        />
       </div>
 
       {/* Main Content */}
