@@ -2,11 +2,54 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, FileText, Globe, Activity } from "lucide-react";
-import { useArticles } from "@/lib/hooks";
+import {
+  Activity,
+  Globe,
+  TrendingUp,
+  Users,
+  BarChart3,
+  Zap,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
+import Link from "next/link";
 
-// Animated counter hook
-function useCounter(end: number, duration: number = 2000) {
+interface Metrics {
+  computed_at: string;
+  total_articles: number;
+  countries: Record<string, number>;
+  organizations: Record<string, number>;
+  categories: Record<string, number>;
+  temporal: {
+    articles_today: number;
+    articles_this_week: number;
+    daily_trend: { date: string; count: number }[];
+  };
+  sentiment: {
+    percentages: Record<string, number>;
+  };
+  trending: { topic: string; mentions: number }[];
+}
+
+function formatLabel(key: string): string {
+  return key
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function AnimatedCounter({ value, duration = 1500 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -16,7 +59,7 @@ function useCounter(end: number, duration: number = 2000) {
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
-      setCount(Math.floor(progress * end));
+      setCount(Math.floor(progress * value));
 
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animate);
@@ -25,120 +68,95 @@ function useCounter(end: number, duration: number = 2000) {
 
     animationFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration]);
+  }, [value, duration]);
 
-  return count;
+  return <>{count.toLocaleString()}</>;
 }
 
-// Stat card component
 function StatCard({
   icon: Icon,
   label,
   value,
-  suffix = "",
-  color = "tactical-red",
+  subValue,
+  color,
   delay = 0,
 }: {
   icon: React.ElementType;
   label: string;
   value: number;
-  suffix?: string;
-  color?: string;
+  subValue?: string;
+  color: string;
   delay?: number;
 }) {
-  const count = useCounter(value, 1500);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay }}
-      className="bg-midnight-800 rounded-xl p-5 sm:p-6 border border-midnight-700"
+      className="bg-midnight-800 rounded-xl p-5 border border-midnight-700"
     >
-      <div className={`inline-flex p-2.5 rounded-lg bg-${color}/10 mb-4`}>
-        <Icon className={`h-5 w-5 text-${color}`} />
+      <div
+        className="inline-flex p-2.5 rounded-lg mb-3"
+        style={{ backgroundColor: `${color}15` }}
+      >
+        <Icon className="h-5 w-5" style={{ color }} />
       </div>
-      <div className="font-heading text-3xl sm:text-4xl font-bold text-slate-light mb-1">
-        {count}{suffix}
+      <div className="font-heading text-2xl sm:text-3xl font-bold text-slate-light">
+        <AnimatedCounter value={value} />
       </div>
       <div className="text-sm text-slate-dark">{label}</div>
-    </motion.div>
-  );
-}
-
-// Category bar component
-function CategoryBar({
-  category,
-  count,
-  total,
-  color,
-  delay = 0,
-}: {
-  category: string;
-  count: number;
-  total: number;
-  color: string;
-  delay?: number;
-}) {
-  const percentage = total > 0 ? (count / total) * 100 : 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay }}
-      className="space-y-2"
-    >
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-slate-light font-medium">{category}</span>
-        <span className="text-slate-dark">{count}</span>
-      </div>
-      <div className="h-2 bg-midnight-700 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          whileInView={{ width: `${percentage}%` }}
-          viewport={{ once: true }}
-          transition={{ delay: delay + 0.3, duration: 0.8 }}
-          className={`h-full rounded-full ${color}`}
-        />
-      </div>
+      {subValue && <div className="text-xs text-slate-dark mt-1">{subValue}</div>}
     </motion.div>
   );
 }
 
 export default function IntelDashboard() {
-  const { articles } = useArticles("en");
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Calculate stats from articles
-  const totalArticles = articles.length || 127; // Fallback for display
-  const categoryCounts = articles.reduce((acc, article) => {
-    const cat = article.category || "Other";
-    acc[cat] = (acc[cat] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const res = await fetch("/api/metrics");
+        if (res.ok) {
+          const data = await res.json();
+          setMetrics(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch metrics:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMetrics();
+  }, []);
 
-  // Default category data if no articles
-  const categoryData = Object.keys(categoryCounts).length > 0
-    ? Object.entries(categoryCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-    : [
-        ["Military", 45],
-        ["Political", 38],
-        ["Economic", 24],
-        ["Intelligence", 15],
-        ["Analysis", 5],
-      ];
+  if (loading) {
+    return (
+      <section className="py-12 sm:py-16 lg:py-20 bg-midnight-800 border-y border-midnight-700">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-tactical-red" />
+        </div>
+      </section>
+    );
+  }
 
-  const categoryColors = [
-    "bg-tactical-red",
-    "bg-tactical-amber",
-    "bg-earth-olive",
-    "bg-blue-500",
-    "bg-purple-500",
-  ];
+  if (!metrics) {
+    return null;
+  }
+
+  // Prepare chart data
+  const countryData = Object.entries(metrics.countries)
+    .slice(0, 6)
+    .map(([name, value]) => ({ name: formatLabel(name), value }));
+
+  const trendData = metrics.temporal.daily_trend.slice(-7).map((d) => ({
+    date: new Date(d.date).toLocaleDateString("en-US", { weekday: "short" }),
+    articles: d.count,
+  }));
+
+  const trendingTopics = metrics.trending.slice(0, 5);
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-midnight-800 border-y border-midnight-700">
@@ -148,73 +166,239 @@ export default function IntelDashboard() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-10 sm:mb-12"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-900 border border-midnight-600 mb-4">
-            <Activity className="h-4 w-4 text-tactical-red" />
-            <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-medium">
-              Intelligence Overview
-            </span>
+          <div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-900 border border-midnight-600 mb-4">
+              <Activity className="h-4 w-4 text-tactical-red" />
+              <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-medium">
+                Live Intelligence
+              </span>
+            </div>
+            <h2 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-slate-light">
+              Analytics Dashboard
+            </h2>
           </div>
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-slate-light">
-            Network Activity
-          </h2>
+          <Link
+            href="/situation-room"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-midnight-600 text-sm text-slate-medium hover:border-tactical-red hover:text-tactical-red transition-colors"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Full Dashboard
+          </Link>
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 sm:mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
-            icon={FileText}
-            label="Total Reports"
-            value={totalArticles}
-            suffix="+"
-            color="tactical-red"
+            icon={BarChart3}
+            label="Total Articles"
+            value={metrics.total_articles}
+            color="#B91C1C"
             delay={0}
           />
           <StatCard
-            icon={Globe}
-            label="Regions Covered"
-            value={12}
-            color="tactical-amber"
+            icon={Zap}
+            label="This Week"
+            value={metrics.temporal.articles_this_week}
+            subValue={`${metrics.temporal.articles_today} today`}
+            color="#D4AF37"
             delay={0.1}
           />
           <StatCard
-            icon={TrendingUp}
-            label="This Week"
-            value={34}
-            color="earth-olive"
+            icon={Globe}
+            label="Countries"
+            value={Object.keys(metrics.countries).length}
+            color="#1B3A57"
             delay={0.2}
           />
           <StatCard
-            icon={Activity}
-            label="Live Sources"
-            value={8}
-            color="blue-500"
+            icon={Users}
+            label="Organizations"
+            value={Object.keys(metrics.organizations).length}
+            color="#6B7B4C"
             delay={0.3}
           />
         </div>
 
-        {/* Category Breakdown */}
+        {/* Charts Row */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Activity Trend */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="bg-midnight-900 rounded-xl p-5 border border-midnight-700"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="h-4 w-4 text-tactical-amber" />
+              <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
+                7-Day Activity
+              </h3>
+            </div>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData}>
+                  <defs>
+                    <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#B91C1C" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#B91C1C" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="date" stroke="#5f6368" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#5f6368" fontSize={10} tickLine={false} axisLine={false} width={25} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="articles"
+                    stroke="#B91C1C"
+                    strokeWidth={2}
+                    fill="url(#colorActivity)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          {/* Top Countries */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="bg-midnight-900 rounded-xl p-5 border border-midnight-700"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Globe className="h-4 w-4 text-tactical-red" />
+              <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
+                Top Regions
+              </h3>
+            </div>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={countryData} layout="vertical">
+                  <XAxis type="number" stroke="#5f6368" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    stroke="#5f6368"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                    width={70}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Bar dataKey="value" fill="#B91C1C" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          {/* Trending */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="bg-midnight-900 rounded-xl p-5 border border-midnight-700"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="h-4 w-4 text-tactical-amber" />
+              <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
+                Trending Now
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {trendingTopics.map((topic, i) => {
+                const maxMentions = trendingTopics[0]?.mentions || 1;
+                const width = (topic.mentions / maxMentions) * 100;
+                return (
+                  <div key={topic.topic} className="relative">
+                    <div className="flex items-center justify-between relative z-10 py-1.5 px-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-slate-dark">#{i + 1}</span>
+                        <span className="text-sm text-slate-light">{formatLabel(topic.topic)}</span>
+                      </div>
+                      <span className="text-xs font-mono text-tactical-amber">{topic.mentions}</span>
+                    </div>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${width}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.8, delay: 0.1 * i }}
+                      className="absolute inset-y-0 left-0 rounded bg-tactical-red/10"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Sentiment Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-midnight-900 rounded-xl p-6 sm:p-8 border border-midnight-700"
+          transition={{ delay: 0.5 }}
+          className="mt-6 bg-midnight-900 rounded-xl p-5 border border-midnight-700"
         >
-          <h3 className="font-heading text-lg font-bold uppercase tracking-wider text-slate-light mb-6">
-            Coverage by Category
-          </h3>
-          <div className="space-y-4">
-            {categoryData.map(([category, count], index) => (
-              <CategoryBar
-                key={category}
-                category={String(category)}
-                count={Number(count)}
-                total={totalArticles}
-                color={categoryColors[index] || "bg-slate-500"}
-                delay={index * 0.1}
-              />
-            ))}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
+              Content Sentiment
+            </h3>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-red-600" />
+                Negative {metrics.sentiment.percentages.negative}%
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                Neutral {metrics.sentiment.percentages.neutral}%
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-green-600" />
+                Positive {metrics.sentiment.percentages.positive}%
+              </span>
+            </div>
+          </div>
+          <div className="h-3 rounded-full bg-midnight-700 overflow-hidden flex">
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: `${metrics.sentiment.percentages.negative}%` }}
+              viewport={{ once: true }}
+              transition={{ duration: 1 }}
+              className="h-full bg-red-600"
+            />
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: `${metrics.sentiment.percentages.neutral}%` }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="h-full bg-amber-500"
+            />
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: `${metrics.sentiment.percentages.positive}%` }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.4 }}
+              className="h-full bg-green-600"
+            />
           </div>
         </motion.div>
       </div>
