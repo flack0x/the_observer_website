@@ -1,14 +1,14 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="180" height="180" rx="40" fill="#141618"/>
+  <rect width="180" height="180" rx="40" fill="#1B3A57"/>
   <!-- Left lens -->
-  <circle cx="60" cy="95" r="28" stroke="#1B3A57" stroke-width="8" fill="none"/>
+  <circle cx="60" cy="95" r="28" stroke="#FFFFFF" stroke-width="8" fill="none"/>
   <circle cx="60" cy="95" r="12" fill="#D4AF37"/>
   <!-- Right lens -->
-  <circle cx="120" cy="95" r="28" stroke="#1B3A57" stroke-width="8" fill="none"/>
+  <circle cx="120" cy="95" r="28" stroke="#FFFFFF" stroke-width="8" fill="none"/>
   <circle cx="120" cy="95" r="12" fill="#D4AF37"/>
   <!-- Bridge -->
-  <path d="M88 95H92" stroke="#1B3A57" stroke-width="8" stroke-linecap="round"/>
+  <path d="M88 95H92" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
   <!-- Top handles -->
-  <path d="M60 67V50" stroke="#1B3A57" stroke-width="8" stroke-linecap="round"/>
-  <path d="M120 67V50" stroke="#1B3A57" stroke-width="8" stroke-linecap="round"/>
+  <path d="M60 67V50" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M120 67V50" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
 </svg>
