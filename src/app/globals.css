@@ -196,3 +196,61 @@ a {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Breaking News Ticker - GPU-accelerated CSS animation */
+.ticker-container {
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+  position: relative;
+}
+
+.ticker-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  white-space: nowrap;
+  animation: ticker-scroll 30s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ticker-pulse {
+  animation: ticker-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes ticker-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  .ticker-pulse {
+    animation: none;
+  }
+}
