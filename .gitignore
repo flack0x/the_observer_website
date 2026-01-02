@@ -44,3 +44,6 @@ scripts/*.session
 scripts/*.session-journal
 __pycache__/
 *.pyc
+
+.vercel
+.env*.local
