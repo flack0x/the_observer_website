@@ -2,6 +2,7 @@
 
 import { Radio } from "lucide-react";
 import { useBreakingNews } from "@/lib/hooks";
+import type { Locale } from "@/lib/i18n";
 
 // Category colors
 const categoryColors: Record<string, { bg: string; text: string }> = {
@@ -12,6 +13,14 @@ const categoryColors: Record<string, { bg: string; text: string }> = {
   INTELLIGENCE: { bg: "bg-blue-500", text: "text-white" },
   DIPLOMATIC: { bg: "bg-purple-500", text: "text-white" },
   ANALYSIS: { bg: "bg-amber-500", text: "text-black" },
+  // Arabic categories
+  'عسكري': { bg: "bg-red-600", text: "text-white" },
+  'عاجل': { bg: "bg-red-600", text: "text-white" },
+  'سياسي': { bg: "bg-amber-500", text: "text-black" },
+  'اقتصادي': { bg: "bg-green-600", text: "text-white" },
+  'استخباراتي': { bg: "bg-blue-500", text: "text-white" },
+  'دبلوماسي': { bg: "bg-purple-500", text: "text-white" },
+  'تحليل': { bg: "bg-amber-500", text: "text-black" },
 };
 
 const defaultColor = { bg: "bg-slate-600", text: "text-white" };
@@ -22,7 +31,7 @@ interface NewsItem {
 }
 
 // Fallback news while loading
-const fallbackNews: NewsItem[] = [
+const fallbackNewsEN: NewsItem[] = [
   { category: "BREAKING", title: "Egypt-Israel $35B gas deal signals new economic dependency dynamics" },
   { category: "POLITICAL", title: "Regional powers reassess strategic alignments amid shifting alliances" },
   { category: "MILITARY", title: "New defense systems deployed across contested maritime zones" },
@@ -30,8 +39,21 @@ const fallbackNews: NewsItem[] = [
   { category: "ECONOMIC", title: "Sanctions impact analysis reveals unexpected market adaptations" },
 ];
 
-export default function BreakingNewsTicker() {
-  const { breakingNews, loading } = useBreakingNews();
+const fallbackNewsAR: NewsItem[] = [
+  { category: "عاجل", title: "صفقة غاز مصرية-إسرائيلية بـ35 مليار دولار تشير إلى ديناميكيات تبعية اقتصادية جديدة" },
+  { category: "سياسي", title: "القوى الإقليمية تعيد تقييم توجهاتها الاستراتيجية وسط تحالفات متغيرة" },
+  { category: "عسكري", title: "نشر أنظمة دفاعية جديدة عبر المناطق البحرية المتنازع عليها" },
+  { category: "استخباراتي", title: "كشف عمليات سرية في وثائق رفعت عنها السرية" },
+  { category: "اقتصادي", title: "تحليل تأثير العقوبات يكشف عن تكيفات غير متوقعة في السوق" },
+];
+
+interface BreakingNewsTickerProps {
+  locale?: Locale;
+}
+
+export default function BreakingNewsTicker({ locale = 'en' }: BreakingNewsTickerProps) {
+  const { breakingNews, loading } = useBreakingNews(locale);
+  const fallbackNews = locale === 'ar' ? fallbackNewsAR : fallbackNewsEN;
 
   // Parse breaking news into structured format
   const newsItems: NewsItem[] = loading || breakingNews.length === 0

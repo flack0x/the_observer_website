@@ -5,15 +5,24 @@ import { motion } from "framer-motion";
 import { Clock, ArrowRight, Radio, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useArticles } from "@/lib/hooks";
+import type { Locale, Dictionary } from "@/lib/i18n";
 
-const categories = ["All", "Political", "Military", "Economic", "Intelligence", "Analysis"];
+interface LiveFeedProps {
+  locale: Locale;
+  dict: Dictionary;
+}
 
-export default function LiveFeed() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const { articles, loading } = useArticles("en");
+const categoriesEN = ["All", "Political", "Military", "Economic", "Intelligence", "Analysis"];
+const categoriesAR = ["الكل", "سياسي", "عسكري", "اقتصادي", "استخباراتي", "تحليل"];
+
+export default function LiveFeed({ locale, dict }: LiveFeedProps) {
+  const isArabic = locale === 'ar';
+  const categories = isArabic ? categoriesAR : categoriesEN;
+  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const { articles, loading } = useArticles(locale);
 
   // Filter articles by category
-  const filteredArticles = activeCategory === "All"
+  const filteredArticles = activeCategory === categories[0]
     ? articles
     : articles.filter(a =>
         a.category.toLowerCase().includes(activeCategory.toLowerCase())
@@ -35,21 +44,21 @@ export default function LiveFeed() {
               </div>
               <div>
                 <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-light">
-                  Live Feed
+                  {dict.home.liveFeed}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-dark flex items-center gap-2">
                   <Clock className="h-3 w-3" />
-                  Updated moments ago
+                  {isArabic ? 'تم التحديث منذ لحظات' : 'Updated moments ago'}
                 </p>
               </div>
             </div>
 
             {/* View all link */}
             <Link
-              href="/frontline"
+              href={`/${locale}/frontline`}
               className="hidden sm:flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
             >
-              View All
+              {dict.common.viewAll}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -115,13 +124,13 @@ export default function LiveFeed() {
                 {/* Read more */}
                 <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
                   <span className="text-xs text-slate-dark">
-                    3 min read
+                    {isArabic ? '٣ دقائق قراءة' : '3 min read'}
                   </span>
                   <Link
-                    href={`/frontline/${article.id}`}
+                    href={`/${locale}/frontline/${article.id}`}
                     className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
                   >
-                    Read
+                    {dict.common.readMore}
                     <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
@@ -131,7 +140,7 @@ export default function LiveFeed() {
                   <div className="absolute -top-2 -right-2">
                     <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-tactical-red text-white text-[10px] font-heading font-bold uppercase">
                       <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                      Latest
+                      {isArabic ? 'الأحدث' : 'Latest'}
                     </span>
                   </div>
                 )}
@@ -143,17 +152,17 @@ export default function LiveFeed() {
         {/* Empty State */}
         {!loading && displayArticles.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-slate-dark">No articles found in this category.</p>
+            <p className="text-slate-dark">{dict.common.noArticles}</p>
           </div>
         )}
 
         {/* Mobile View All */}
         <div className="mt-8 sm:hidden">
           <Link
-            href="/frontline"
+            href={`/${locale}/frontline`}
             className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-midnight-800 border border-midnight-700 font-heading text-sm font-medium uppercase tracking-wider text-slate-light hover:border-tactical-red hover:text-tactical-red transition-all"
           >
-            View All Articles
+            {dict.common.viewAll}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

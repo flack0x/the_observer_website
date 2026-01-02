@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Clock, ExternalLink, Share2 } from "lucide-react";
+import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface ArticleContentProps {
   article: {
@@ -13,31 +14,37 @@ interface ArticleContentProps {
     category: string;
     link: string;
   };
+  locale: Locale;
+  dict: Dictionary;
 }
 
-export default function ArticleContent({ article }: ArticleContentProps) {
+export default function ArticleContent({ article, locale, dict }: ArticleContentProps) {
+  const isArabic = locale === 'ar';
+
   // Format content into paragraphs
   const paragraphs = article.content
     .split("\n\n")
     .filter((p) => p.trim().length > 0)
     .map((p) => p.trim());
 
+  const telegramChannel = isArabic ? 'https://t.me/almuraqb' : 'https://t.me/observer_5';
+
   return (
     <article className="min-h-screen bg-midnight-900 py-8 sm:py-12 lg:py-16">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         {/* Back button */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: isArabic ? 20 : -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="mb-8"
         >
           <Link
-            href="/frontline"
+            href={`/${locale}/frontline`}
             className="inline-flex items-center gap-2 text-slate-medium hover:text-tactical-red transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} />
             <span className="text-sm font-heading uppercase tracking-wider">
-              Back to Frontline
+              {dict.frontline.backToFrontline}
             </span>
           </Link>
         </motion.div>
@@ -74,17 +81,17 @@ export default function ArticleContent({ article }: ArticleContentProps) {
               className="flex items-center gap-2 text-sm text-slate-medium hover:text-tactical-red transition-colors"
             >
               <ExternalLink className="h-4 w-4" />
-              View on Telegram
+              {dict.common.viewOnTelegram}
             </a>
             <button
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
-                alert("Link copied!");
+                alert(isArabic ? "تم نسخ الرابط!" : "Link copied!");
               }}
               className="flex items-center gap-2 text-sm text-slate-medium hover:text-tactical-red transition-colors"
             >
               <Share2 className="h-4 w-4" />
-              Share
+              {dict.common.share}
             </button>
           </div>
         </motion.header>
@@ -105,6 +112,7 @@ export default function ArticleContent({ article }: ArticleContentProps) {
             // Skip footer content
             if (
               paragraph.includes("@observer") ||
+              paragraph.includes("@almuraqb") ||
               paragraph.startsWith("Link to") ||
               paragraph.startsWith("🔵")
             ) {
@@ -142,18 +150,20 @@ export default function ArticleContent({ article }: ArticleContentProps) {
         >
           <div className="bg-midnight-800 rounded-xl p-6 sm:p-8 text-center">
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
-              Stay Informed
+              {isArabic ? 'ابق على اطلاع' : 'Stay Informed'}
             </h3>
             <p className="text-slate-medium text-sm mb-4">
-              Join our Telegram channel for real-time updates
+              {isArabic
+                ? 'انضم إلى قناتنا على تيليجرام للتحديثات الفورية'
+                : 'Join our Telegram channel for real-time updates'}
             </p>
             <a
-              href="https://t.me/observer_5"
+              href={telegramChannel}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-tactical-red text-white rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
             >
-              Join The Observer
+              {isArabic ? 'انضم إلى المُراقِب' : 'Join The Observer'}
             </a>
           </div>
         </motion.div>

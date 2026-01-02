@@ -3,55 +3,61 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Send, Mail, Shield } from "lucide-react";
+import type { Locale, Dictionary } from "@/lib/i18n";
 
-const footerLinks = {
-  intelligence: [
-    { name: "The Frontline", href: "/frontline" },
-    { name: "Situation Room", href: "/situation-room" },
-    { name: "The Dossier", href: "/dossier" },
-    { name: "The Arsenal", href: "/arsenal" },
-  ],
-  analysis: [
-    { name: "Deep Dives", href: "/analysis" },
-    { name: "Counter-Narrative", href: "/counter-narrative" },
-    { name: "Economic Warfare", href: "/economic-warfare" },
-    { name: "Chronicles", href: "/chronicles" },
-  ],
-  resources: [
-    { name: "The Library", href: "/library" },
-    { name: "Primary Sources", href: "/sources" },
-    { name: "Underground Voice", href: "/underground" },
-    { name: "Polls", href: "/polls" },
-  ],
-};
+interface FooterProps {
+  locale: Locale;
+  dict: Dictionary;
+}
 
-export default function Footer() {
+export default function Footer({ locale, dict }: FooterProps) {
+  const footerLinks = {
+    intelligence: [
+      { name: dict.nav.frontline, href: `/${locale}/frontline` },
+      { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
+      { name: dict.nav.dossier, href: `/${locale}/dossier` },
+      { name: dict.nav.arsenal, href: `/${locale}/arsenal` },
+    ],
+    analysis: [
+      { name: dict.nav.deepDives, href: `/${locale}/analysis` },
+      { name: dict.nav.counterNarrative, href: `/${locale}/counter-narrative` },
+      { name: dict.nav.chronicles, href: `/${locale}/chronicles` },
+    ],
+    resources: [
+      { name: dict.nav.library, href: `/${locale}/library` },
+      { name: dict.nav.sources, href: `/${locale}/sources` },
+    ],
+  };
+
   return (
     <footer className="border-t border-midnight-600 bg-midnight-900">
       {/* Newsletter Section */}
       <div className="border-b border-midnight-700 bg-midnight-800">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:gap-6 lg:flex-row">
-            <div className="text-center lg:text-left">
+            <div className="text-center lg:text-start">
               <h3 className="font-heading text-lg sm:text-xl font-bold uppercase tracking-wider text-slate-light">
-                Intelligence Brief
+                {locale === 'ar' ? 'موجز استخباراتي' : 'Intelligence Brief'}
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-slate-dark">
-                Weekly strategic analysis delivered to your inbox
+                {locale === 'ar'
+                  ? 'تحليل استراتيجي أسبوعي يصل إلى بريدك الإلكتروني'
+                  : 'Weekly strategic analysis delivered to your inbox'}
               </p>
             </div>
             <form className="flex flex-col sm:flex-row w-full max-w-md gap-2">
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={locale === 'ar' ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
                 className="flex-1 rounded-lg border border-midnight-500 bg-midnight-700 px-4 py-3 font-body text-sm text-slate-light placeholder-slate-dark transition-colors focus:border-tactical-red focus:outline-none focus:ring-1 focus:ring-tactical-red"
+                dir={locale === 'ar' ? 'rtl' : 'ltr'}
               />
               <button
                 type="submit"
                 className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-tactical-red-hover whitespace-nowrap"
               >
                 <Mail className="h-4 w-4" />
-                Subscribe
+                {locale === 'ar' ? 'اشترك' : 'Subscribe'}
               </button>
             </form>
           </div>
@@ -63,7 +69,7 @@ export default function Footer() {
         <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href={`/${locale}`} className="flex items-center gap-3">
               <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
                 <Image
                   src="/images/observer-silhouette.png"
@@ -74,14 +80,12 @@ export default function Footer() {
               </div>
               <div>
                 <span className="font-heading text-lg sm:text-xl font-bold tracking-wider text-slate-light">
-                  THE OBSERVER
+                  {dict.header.title}
                 </span>
               </div>
             </Link>
             <p className="mt-3 sm:mt-4 max-w-sm text-xs sm:text-sm leading-relaxed text-slate-dark">
-              Independent geopolitical intelligence and strategic analysis.
-              Cutting through the noise to deliver clarity on global conflicts
-              and power dynamics.
+              {dict.footer.description}
             </p>
             <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
               <a
@@ -108,7 +112,7 @@ export default function Footer() {
           {/* Links */}
           <div>
             <h4 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light">
-              Intelligence
+              {dict.nav.intelligence}
             </h4>
             <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
               {footerLinks.intelligence.map((link) => (
@@ -126,7 +130,7 @@ export default function Footer() {
 
           <div>
             <h4 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light">
-              Analysis
+              {locale === 'ar' ? 'تحليل' : 'Analysis'}
             </h4>
             <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
               {footerLinks.analysis.map((link) => (
@@ -144,7 +148,7 @@ export default function Footer() {
 
           <div className="col-span-2 sm:col-span-1">
             <h4 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light">
-              Resources
+              {locale === 'ar' ? 'موارد' : 'Resources'}
             </h4>
             <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
               {footerLinks.resources.map((link) => (
@@ -164,18 +168,18 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 sm:mt-12 flex flex-col items-center justify-between gap-3 sm:gap-4 border-t border-midnight-700 pt-6 sm:pt-8 lg:flex-row">
           <p className="text-[10px] sm:text-xs text-slate-dark text-center">
-            &copy; {new Date().getFullYear()} The Observer. All rights reserved.
+            {dict.footer.copyright}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs text-slate-dark">
             <span className="flex items-center gap-1">
               <Shield className="h-3 w-3" />
-              Secure & Independent
+              {locale === 'ar' ? 'آمن ومستقل' : 'Secure & Independent'}
             </span>
-            <Link href="/privacy" className="hover:text-tactical-red">
-              Privacy
+            <Link href={`/${locale}/privacy`} className="hover:text-tactical-red">
+              {dict.footer.privacy}
             </Link>
-            <Link href="/terms" className="hover:text-tactical-red">
-              Terms
+            <Link href={`/${locale}/terms`} className="hover:text-tactical-red">
+              {dict.footer.terms}
             </Link>
           </div>
         </div>

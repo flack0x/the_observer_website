@@ -23,6 +23,7 @@ import {
   Area,
 } from "recharts";
 import Link from "next/link";
+import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface Metrics {
   computed_at: string;
@@ -111,9 +112,15 @@ function StatCard({
   );
 }
 
-export default function IntelDashboard() {
+interface IntelDashboardProps {
+  locale: Locale;
+  dict: Dictionary;
+}
+
+export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const isArabic = locale === 'ar';
 
   useEffect(() => {
     async function fetchMetrics() {
@@ -172,19 +179,19 @@ export default function IntelDashboard() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-900 border border-midnight-600 mb-4">
               <Activity className="h-4 w-4 text-tactical-red" />
               <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-medium">
-                Live Intelligence
+                {dict.home.liveIntelligence}
               </span>
             </div>
             <h2 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-slate-light">
-              Analytics Dashboard
+              {dict.home.intelDashboard}
             </h2>
           </div>
           <Link
-            href="/situation-room"
+            href={`/${locale}/situation-room`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-midnight-600 text-sm text-slate-medium hover:border-tactical-red hover:text-tactical-red transition-colors"
           >
             <BarChart3 className="h-4 w-4" />
-            Full Dashboard
+            {dict.home.fullDashboard}
           </Link>
         </motion.div>
 
@@ -192,29 +199,29 @@ export default function IntelDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={BarChart3}
-            label="Total Articles"
+            label={dict.dashboard.totalArticles}
             value={metrics.total_articles}
             color="#B91C1C"
             delay={0}
           />
           <StatCard
             icon={Zap}
-            label="This Week"
+            label={dict.dashboard.thisWeek}
             value={metrics.temporal.articles_this_week}
-            subValue={`${metrics.temporal.articles_today} today`}
+            subValue={`${metrics.temporal.articles_today} ${dict.dashboard.today}`}
             color="#D4AF37"
             delay={0.1}
           />
           <StatCard
             icon={Globe}
-            label="Countries"
+            label={dict.dashboard.countries}
             value={Object.keys(metrics.countries).length}
             color="#1B3A57"
             delay={0.2}
           />
           <StatCard
             icon={Users}
-            label="Organizations"
+            label={dict.dashboard.organizations}
             value={Object.keys(metrics.organizations).length}
             color="#6B7B4C"
             delay={0.3}

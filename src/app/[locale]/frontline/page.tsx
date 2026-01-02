@@ -11,13 +11,21 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useArticles } from "@/lib/hooks";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
-
-const categories = ["All", "Breaking", "Military", "Intelligence", "Economic", "Diplomatic", "Analysis"];
+const categoriesEN = ["All", "Breaking", "Military", "Intelligence", "Economic", "Diplomatic", "Analysis"];
+const categoriesAR = ["الكل", "عاجل", "عسكري", "استخباراتي", "اقتصادي", "دبلوماسي", "تحليل"];
 
 export default function FrontlinePage() {
-  const { articles, loading, error } = useArticles("en");
+  const params = useParams();
+  const locale = (params.locale as Locale) || 'en';
+  const isArabic = locale === 'ar';
+  const dict = getDictionary(locale);
+  const categories = isArabic ? categoriesAR : categoriesEN;
+
+  const { articles, loading, error } = useArticles(locale);
 
   // Transform real articles
   const newsArticles = articles.map((article, index) => ({
@@ -26,9 +34,9 @@ export default function FrontlinePage() {
     title: article.title,
     excerpt: article.excerpt,
     timestamp: article.timestamp,
-    location: "Region",
+    location: isArabic ? "المنطقة" : "Region",
     isBreaking: index === 0,
-    readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} min`,
+    readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} ${isArabic ? 'دقيقة' : 'min'}`,
   }));
 
   // Show loading state
@@ -37,7 +45,7 @@ export default function FrontlinePage() {
       <div className="min-h-screen bg-midnight-900 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-tactical-red mx-auto mb-4" />
-          <p className="text-slate-medium">Loading intelligence reports...</p>
+          <p className="text-slate-medium">{dict.common.loading}</p>
         </div>
       </div>
     );
@@ -49,11 +57,12 @@ export default function FrontlinePage() {
       <div className="min-h-screen bg-midnight-900 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-tactical-amber mx-auto mb-4" />
-          <p className="text-slate-medium">Unable to load reports. Please try again.</p>
+          <p className="text-slate-medium">{dict.common.noArticles}</p>
         </div>
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-midnight-900">
       {/* Hero */}
@@ -69,9 +78,9 @@ export default function FrontlinePage() {
             </div>
             <div>
               <h1 className="font-heading text-3xl font-bold uppercase tracking-wider text-slate-light">
-                The Frontline
+                {dict.frontline.title}
               </h1>
-              <p className="text-slate-dark">Real-time intelligence reports and breaking developments</p>
+              <p className="text-slate-dark">{dict.frontline.subtitle}</p>
             </div>
           </motion.div>
         </div>
@@ -83,14 +92,14 @@ export default function FrontlinePage() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-slate-dark" />
-              <span className="text-sm text-slate-dark">Filter:</span>
+              <span className="text-sm text-slate-dark">{isArabic ? 'تصفية:' : 'Filter:'}</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
+              {categories.map((category, index) => (
                 <button
                   key={category}
                   className={`rounded-full px-4 py-1.5 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
-                    category === "All"
+                    index === 0
                       ? "bg-tactical-red text-white"
                       : "border border-midnight-600 text-slate-medium hover:border-tactical-red hover:text-tactical-red"
                   }`}
@@ -99,12 +108,13 @@ export default function FrontlinePage() {
                 </button>
               ))}
             </div>
-            <div className="ml-auto flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-700 px-3 py-2">
+            <div className={`${isArabic ? 'mr-auto' : 'ml-auto'} flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-700 px-3 py-2`}>
               <Search className="h-4 w-4 text-slate-dark" />
               <input
                 type="text"
-                placeholder="Search reports..."
+                placeholder={dict.common.search + '...'}
                 className="bg-transparent text-sm text-slate-light placeholder-slate-dark outline-none"
+                dir={isArabic ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -130,11 +140,11 @@ export default function FrontlinePage() {
                     className="mb-4 inline-flex items-center gap-1 rounded-full bg-tactical-red px-3 py-1 text-xs font-bold uppercase text-white"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    Breaking
+                    {isArabic ? 'عاجل' : 'Breaking'}
                   </motion.div>
                 )}
 
-                <div className="mb-3 flex items-center gap-3">
+                <div className="mb-3 flex items-center gap-3 flex-wrap">
                   <span className="rounded bg-midnight-600 px-2 py-1 font-heading text-xs font-medium uppercase text-slate-medium">
                     {article.category}
                   </span>
@@ -157,13 +167,13 @@ export default function FrontlinePage() {
                 </p>
 
                 <div className="flex items-center justify-between border-t border-midnight-700 pt-4">
-                  <span className="text-xs text-slate-dark">{article.readTime} read</span>
+                  <span className="text-xs text-slate-dark">{article.readTime} {isArabic ? 'قراءة' : 'read'}</span>
                   <Link
-                    href={`/frontline/${article.id}`}
+                    href={`/${locale}/frontline/${article.id}`}
                     className="flex items-center gap-1 font-heading text-xs font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
                   >
-                    Full Report
-                    <ArrowRight className="h-3 w-3" />
+                    {isArabic ? 'التقرير الكامل' : 'Full Report'}
+                    <ArrowRight className={`h-3 w-3 ${isArabic ? 'rotate-180' : ''}`} />
                   </Link>
                 </div>
               </motion.article>
@@ -173,7 +183,7 @@ export default function FrontlinePage() {
           {/* Load More */}
           <div className="mt-12 flex justify-center">
             <button className="flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-800 px-8 py-3 font-heading text-sm font-medium uppercase tracking-wider text-slate-light transition-all hover:border-tactical-red hover:text-tactical-red">
-              Load More Reports
+              {isArabic ? 'تحميل المزيد' : 'Load More Reports'}
             </button>
           </div>
         </div>

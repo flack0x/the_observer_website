@@ -55,8 +55,8 @@ export function useArticles(channel: "en" | "ar" | "all" = "en") {
 }
 
 // Hook for breaking news ticker
-export function useBreakingNews() {
-  const { articles, loading } = useArticles("en");
+export function useBreakingNews(locale: "en" | "ar" = "en") {
+  const { articles, loading } = useArticles(locale);
 
   const breakingNews = articles.slice(0, 5).map((article) => {
     const prefix = article.category.toUpperCase();
