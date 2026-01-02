@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getArticles, getAllArticles } from "@/lib/telegram";
 import { fetchArticlesFromDB, dbArticleToFrontend } from "@/lib/supabase";
 
-export const revalidate = 300; // Revalidate every 5 minutes
+export const revalidate = 60; // Revalidate every 1 minute
+export const dynamic = 'force-dynamic'; // Always fetch fresh data
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,6 +25,8 @@ export async function GET(request: Request) {
             return NextResponse.json({
               en: enArticles.map(dbArticleToFrontend),
               ar: arArticles.map(dbArticleToFrontend),
+            }, {
+              headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
             });
           }
         } else {
@@ -35,7 +38,9 @@ export async function GET(request: Request) {
               ...dbArticleToFrontend(article),
               isBreaking: index === 0,
             }));
-            return NextResponse.json(articles);
+            return NextResponse.json(articles, {
+              headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
+            });
           }
         }
       } catch (dbError) {
