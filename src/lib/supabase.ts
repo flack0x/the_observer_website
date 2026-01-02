@@ -72,3 +72,19 @@ function getRelativeTime(date: Date): string {
 
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+// Fetch a single article by telegram_id (for article detail pages)
+export async function fetchArticleById(telegramId: string): Promise<DBArticle | null> {
+  const { data, error } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('telegram_id', telegramId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching article:', error);
+    return null;
+  }
+
+  return data;
+}
