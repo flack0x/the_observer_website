@@ -150,18 +150,21 @@ function cleanText(text: string): string {
 
 // Extract title from post text - improved logic
 function extractTitle(text: string): string {
-  // First, try to find bold text at the start (markdown format: **title**)
-  const boldMatch = text.match(/^\s*(?:[_*]*[🔴🔵📌🖋]*[_*]*)?\s*\*\*([^*]+)\*\*/);
+  const lines = text.split("\n").filter((line) => line.trim());
+
+  // Only check first 3 lines for bold title
+  const firstLines = lines.slice(0, 3).join("\n");
+
+  // Look for bold text at the start: **title**
+  const boldMatch = firstLines.match(/^\s*(?:[_*]*[🔴🔵📌🖋]*[_*]*)?\s*\*\*([^*\n]+)\*\*/);
   if (boldMatch) {
     const title = cleanText(boldMatch[1]);
-    if (title.length >= 15 && title.length <= 300) {
+    if (title.length >= 20 && title.length <= 300) {
       return title.length > 250 ? title.substring(0, 250) : title;
     }
   }
 
   // Fallback: Look for the first substantial line
-  const lines = text.split("\n").filter((line) => line.trim());
-
   for (const line of lines.slice(0, 5)) {
     // Skip lines that are just links or channel mentions
     if (line.startsWith("http") || line.startsWith("@") || line.includes("Link to")) {
@@ -170,25 +173,51 @@ function extractTitle(text: string): string {
     if (line.includes("t.me/") && line.length < 50) {
       continue;
     }
+    // Skip markdown link syntax
+    if (line.startsWith("[") && line.includes("](")) {
+      continue;
+    }
 
     const cleaned = cleanText(line);
 
     // Check if it looks like a title
     const hasLetters = /[a-zA-Z\u0600-\u06FF]/.test(cleaned);
-    const isReasonableLength = cleaned.length >= 15 && cleaned.length <= 300;
+    const isReasonableLength = cleaned.length >= 20 && cleaned.length <= 300;
 
-    // Skip section headers like "V. Yemen and..." or numbered items
-    const isSectionHeader = /^[IVX]+\.\s|^\d+\.\s|^[أ-ي]\.\s/.test(cleaned);
+    // Skip section headers like "V. Yemen...", "1. Topic...", etc.
+    const isSectionHeader = /^[IVX]+\.?\s|^\d+\.?\s|^[أ-ي]\.?\s/.test(cleaned);
+    const isShortHeader = cleaned.length < 30 && cleaned.endsWith(":");
+    const isConclusion = ["conclusion", "الخاتمة", "خاتمة", "introduction", "مقدمة"].includes(
+      cleaned.toLowerCase()
+    );
 
-    if (hasLetters && isReasonableLength && !isSectionHeader) {
+    if (hasLetters && isReasonableLength && !isSectionHeader && !isShortHeader && !isConclusion) {
       return cleaned.length > 250 ? cleaned.substring(0, 250) : cleaned;
     }
   }
 
-  // Last resort: first line
+  // Last resort: Generate title from first substantial content
+  for (const line of lines.slice(0, 5)) {
+    const cleaned = cleanText(line);
+    if (cleaned.length >= 50) {
+      if (cleaned.length > 100) {
+        // Try to cut at punctuation
+        for (const punct of [". ", ": ", " - ", ", "]) {
+          const idx = cleaned.indexOf(punct, 40);
+          if (idx > 0 && idx < 100) {
+            return cleaned.substring(0, idx + 1).trim();
+          }
+        }
+        return cleaned.substring(0, 97) + "...";
+      }
+      return cleaned;
+    }
+  }
+
+  // Absolute fallback
   if (lines.length > 0) {
     const cleaned = cleanText(lines[0]);
-    return cleaned.length > 250 ? cleaned.substring(0, 250) : cleaned;
+    return cleaned.length > 250 ? cleaned.substring(0, 250) : cleaned || "Untitled";
   }
 
   return "Untitled";

@@ -77,44 +77,65 @@ def extract_title(text: str, channel: str) -> str:
     - English: Usually starts with **Title Here**
     - Arabic: Usually starts with emoji + **Title** or just **Title**
     """
-    # First, try to find bold text at the start (markdown format: **title**)
-    # This pattern looks for **text** at or near the beginning
-    bold_pattern = r'^\s*(?:[_*]*[🔴🔵📌🖋]*[_*]*)?\s*\*\*([^*]+)\*\*'
-    match = re.search(bold_pattern, text, re.MULTILINE)
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
+
+    # Only check the first 3 lines for a bold title
+    first_lines = '\n'.join(lines[:3])
+
+    # Look for bold text pattern at the start: **title**
+    bold_pattern = r'^\s*(?:[_*]*[🔴🔵📌🖋]*[_*]*)?\s*\*\*([^*\n]+)\*\*'
+    match = re.match(bold_pattern, first_lines)
 
     if match:
         title = match.group(1).strip()
-        # Clean the title
         title = clean_text(title)
-        if len(title) >= 15 and len(title) <= 300:
+        # Must be reasonable length and not a short word
+        if len(title) >= 20 and len(title) <= 300:
             return title[:250] if len(title) > 250 else title
 
     # Fallback: Look for the first substantial line
-    lines = [line.strip() for line in text.split('\n') if line.strip()]
-
     for line in lines[:5]:
         # Skip lines that are just links or channel mentions
         if line.startswith('http') or line.startswith('@') or 'Link to' in line:
             continue
         if 't.me/' in line and len(line) < 50:
             continue
+        # Skip markdown link syntax
+        if line.startswith('[') and '](' in line:
+            continue
 
         cleaned = clean_text(line)
 
         # Check if it looks like a title (has letters, reasonable length)
         has_letters = bool(re.search(r'[a-zA-Z\u0600-\u06FF]', cleaned))
-        is_reasonable_length = 15 <= len(cleaned) <= 300
+        is_reasonable_length = 20 <= len(cleaned) <= 300
 
-        # Skip section headers like "V. Yemen and..." or numbered items
-        is_section_header = bool(re.match(r'^[IVX]+\.\s|^\d+\.\s|^[أ-ي]\.\s', cleaned))
+        # Skip section headers like "V. Yemen...", "1. Topic...", "IV.", "خاتمة" etc.
+        is_section_header = bool(re.match(r'^[IVX]+\.?\s|^\d+\.?\s|^[أ-ي]\.?\s', cleaned))
+        is_short_header = len(cleaned) < 30 and cleaned.endswith(':')
+        is_conclusion = cleaned.lower() in ['conclusion', 'الخاتمة', 'خاتمة', 'introduction', 'مقدمة']
 
-        if has_letters and is_reasonable_length and not is_section_header:
+        if has_letters and is_reasonable_length and not is_section_header and not is_short_header and not is_conclusion:
             return cleaned[:250] if len(cleaned) > 250 else cleaned
 
-    # Last resort: first line
+    # Last resort: Generate title from first substantial content
+    for line in lines[:5]:
+        cleaned = clean_text(line)
+        if len(cleaned) >= 50:
+            # Truncate at a reasonable point
+            if len(cleaned) > 100:
+                # Try to cut at punctuation
+                for punct in ['. ', ': ', ' - ', ', ']:
+                    idx = cleaned.find(punct, 40, 100)
+                    if idx > 0:
+                        return cleaned[:idx + 1].strip()
+                return cleaned[:97] + '...'
+            return cleaned
+
+    # Absolute fallback
     if lines:
         cleaned = clean_text(lines[0])
-        return cleaned[:250] if len(cleaned) > 250 else cleaned
+        return cleaned[:250] if len(cleaned) > 250 else (cleaned if cleaned else 'Untitled')
 
     return 'Untitled'
 
