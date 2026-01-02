@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Radio } from "lucide-react";
+import { Radio } from "lucide-react";
 import { useBreakingNews } from "@/lib/hooks";
 
 // Fallback news while loading
@@ -16,10 +16,13 @@ export default function BreakingNewsTicker() {
   const { breakingNews, loading } = useBreakingNews();
   const news = loading || breakingNews.length === 0 ? fallbackNews : breakingNews;
 
+  // Join all news with separator for a single text string
+  const tickerText = news.join("  ●  ");
+
   return (
     <div className="relative z-50 h-8 bg-tactical-red border-b border-tactical-red-hover">
       <div className="flex h-full items-center">
-        {/* Breaking Label - extends to left edge */}
+        {/* Breaking Label */}
         <div className="relative z-10 flex h-full shrink-0 items-center bg-midnight-900">
           <div className="flex items-center gap-2 px-4">
             <span className="ticker-pulse">
@@ -29,31 +32,14 @@ export default function BreakingNewsTicker() {
               Breaking
             </span>
           </div>
-          {/* Angled edge for style */}
           <div className="h-full w-4 bg-midnight-900 -skew-x-12 -mr-2" />
         </div>
 
-        {/* Ticker Content - CSS-only animation for smooth performance */}
+        {/* Ticker - minimal DOM, single text element */}
         <div className="ticker-container">
           <div className="ticker-track">
-            {/* First set */}
-            {news.map((item, index) => (
-              <div key={`a-${index}`} className="ticker-item">
-                <span className="px-6 font-heading text-[10px] font-medium uppercase tracking-wide text-white">
-                  {item}
-                </span>
-                <AlertTriangle className="h-2.5 w-2.5 text-white/60 flex-shrink-0" />
-              </div>
-            ))}
-            {/* Duplicate set for seamless loop */}
-            {news.map((item, index) => (
-              <div key={`b-${index}`} className="ticker-item">
-                <span className="px-6 font-heading text-[10px] font-medium uppercase tracking-wide text-white">
-                  {item}
-                </span>
-                <AlertTriangle className="h-2.5 w-2.5 text-white/60 flex-shrink-0" />
-              </div>
-            ))}
+            <span className="ticker-text">{tickerText}</span>
+            <span className="ticker-text">{tickerText}</span>
           </div>
         </div>
       </div>
