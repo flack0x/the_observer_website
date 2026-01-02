@@ -70,45 +70,70 @@ export async function fetchTelegramChannel(
 function parseChannelHTML(html: string, channelUsername: string): TelegramPost[] {
   const posts: TelegramPost[] = [];
 
-  // Match message containers
-  const messageRegex =
-    /<div class="tgme_widget_message_wrap[^"]*"[^>]*>[\s\S]*?<div class="tgme_widget_message text_not_supported_wrap[^"]*"[^>]*data-post="([^"]+)"[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/g;
+  // Multiple regex patterns to handle different Telegram HTML structures
+  const patterns = [
+    // Pattern 1: Standard message text div
+    /data-post="([^"]+)"[\s\S]*?<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<div class="tgme_widget_message_footer|<\/div>\s*<\/div>)/g,
+    // Pattern 2: Simpler pattern
+    /data-post="([^"]+)"[\s\S]*?js-message_text[^>]*>([\s\S]*?)<\/div>/g,
+    // Pattern 3: Even simpler fallback
+    /data-post="([^"]+)"[\s\S]*?message_text[^>]*>([\s\S]*?)<\/div>/g,
+  ];
 
-  // Simpler regex to find message blocks
-  const simpleMessageRegex =
-    /data-post="([^"]+)"[\s\S]*?<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/g;
+  const seenIds = new Set<string>();
 
-  let match;
-  while ((match = simpleMessageRegex.exec(html)) !== null) {
-    const postId = match[1];
-    const textHtml = match[2];
+  for (const pattern of patterns) {
+    let match;
+    const regex = new RegExp(pattern.source, pattern.flags);
 
-    // Clean up the text
-    const text = textHtml
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<[^>]+>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .trim();
+    while ((match = regex.exec(html)) !== null) {
+      const postId = match[1];
 
-    if (text.length > 50) {
-      // Only include substantial posts
-      posts.push({
-        id: postId,
-        date: new Date().toISOString(), // Will be updated if we can parse date
-        timestamp: Date.now(),
-        text: text,
-        html: textHtml,
-        link: `https://t.me/${postId}`,
-        channel: channelUsername,
-      });
+      // Skip if we've already processed this post
+      if (seenIds.has(postId)) continue;
+      seenIds.add(postId);
+
+      const textHtml = match[2];
+
+      // Clean up the text
+      const text = textHtml
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\n\s*\n/g, "\n\n")
+        .trim();
+
+      if (text.length > 100) {
+        // Only include substantial posts (increased threshold)
+        posts.push({
+          id: postId,
+          date: new Date().toISOString(),
+          timestamp: Date.now() - (posts.length * 3600000), // Stagger timestamps
+          text: text,
+          html: textHtml,
+          link: `https://t.me/${postId}`,
+          channel: channelUsername,
+        });
+      }
     }
+
+    // If we found posts with this pattern, don't try other patterns
+    if (posts.length > 0) break;
   }
 
-  return posts.slice(0, 20); // Return last 20 posts
+  // Sort by ID descending (newer posts have higher IDs) and return last 20
+  return posts
+    .sort((a, b) => {
+      const idA = parseInt(a.id.split('/')[1] || '0');
+      const idB = parseInt(b.id.split('/')[1] || '0');
+      return idB - idA;
+    })
+    .slice(0, 20);
 }
 
 // Clean up title text
@@ -134,25 +159,54 @@ export function parsePostsToArticles(
     const lines = post.text.split("\n").filter((line) => line.trim());
 
     // First substantial line is usually the title/headline
-    let title = cleanTitle(lines[0] || "Untitled");
+    let title = "";
 
-    // If title is too short, try to get more context
-    if (title.length < 20 && lines.length > 1) {
-      title = cleanTitle(lines.slice(0, 2).join(" - "));
+    // Look for a good title line (should be substantial but not too long)
+    for (const line of lines.slice(0, 3)) {
+      const cleaned = cleanTitle(line);
+      // Good title: between 20-200 chars, contains letters
+      if (cleaned.length >= 20 && cleaned.length <= 200 && /[a-zA-Z\u0600-\u06FF]/.test(cleaned)) {
+        title = cleaned;
+        break;
+      }
     }
 
-    // Truncate if too long
-    if (title.length > 120) {
-      title = title.substring(0, 117) + "...";
+    // Fallback: use first line
+    if (!title) {
+      title = cleanTitle(lines[0] || "Untitled");
     }
 
-    // Rest is the excerpt - skip first line(s) used for title
-    const excerptLines = lines.slice(1, 5).map(l => cleanTitle(l)).filter(l => l.length > 10);
-    let excerpt = excerptLines.join(" ").substring(0, 350);
+    // Truncate if still too long
+    if (title.length > 150) {
+      // Try to cut at a colon or dash for cleaner truncation
+      const colonIndex = title.indexOf(":");
+      const dashIndex = title.indexOf("–");
+      const cutPoint = colonIndex > 30 ? colonIndex : (dashIndex > 30 ? dashIndex : 147);
+      title = title.substring(0, Math.min(cutPoint + 1, 147)).trim();
+      if (!title.endsWith(":") && !title.endsWith("–")) {
+        title += "...";
+      }
+    }
 
-    // Clean up excerpt
-    if (excerpt.length > 300) {
-      excerpt = excerpt.substring(0, excerpt.lastIndexOf(" ", 300)) + "...";
+    // Find where title ends in the original lines
+    const titleLineIndex = lines.findIndex(l => cleanTitle(l) === title || cleanTitle(l).startsWith(title.replace("...", "")));
+
+    // Rest is the excerpt - skip title line
+    const startIndex = titleLineIndex >= 0 ? titleLineIndex + 1 : 1;
+    const excerptLines = lines.slice(startIndex, startIndex + 6)
+      .map(l => cleanTitle(l))
+      .filter(l => l.length > 20 && !l.startsWith("Link to") && !l.startsWith("🔵") && !l.includes("@observer"));
+
+    let excerpt = excerptLines.join(" ").substring(0, 400);
+
+    // Clean up excerpt - cut at sentence boundary if possible
+    if (excerpt.length > 350) {
+      const lastPeriod = excerpt.lastIndexOf(".", 350);
+      if (lastPeriod > 200) {
+        excerpt = excerpt.substring(0, lastPeriod + 1);
+      } else {
+        excerpt = excerpt.substring(0, excerpt.lastIndexOf(" ", 350)) + "...";
+      }
     }
 
     // Determine category based on content
@@ -181,10 +235,19 @@ function detectCategory(text: string): string {
   const lowerText = text.toLowerCase();
 
   if (
+    lowerText.includes("breaking") ||
+    lowerText.includes("urgent") ||
+    lowerText.includes("عاجل")
+  ) {
+    return "Breaking";
+  }
+  if (
     lowerText.includes("military") ||
     lowerText.includes("weapon") ||
     lowerText.includes("army") ||
     lowerText.includes("forces") ||
+    lowerText.includes("troops") ||
+    lowerText.includes("battlefield") ||
     lowerText.includes("عسكري")
   ) {
     return "Military";
@@ -194,6 +257,7 @@ function detectCategory(text: string): string {
     lowerText.includes("sanction") ||
     lowerText.includes("dollar") ||
     lowerText.includes("gas deal") ||
+    lowerText.includes("trade") ||
     lowerText.includes("اقتصاد")
   ) {
     return "Economic";
@@ -202,9 +266,24 @@ function detectCategory(text: string): string {
     lowerText.includes("intelligence") ||
     lowerText.includes("leaked") ||
     lowerText.includes("exposed") ||
+    lowerText.includes("covert") ||
     lowerText.includes("استخبارات")
   ) {
     return "Intelligence";
+  }
+  if (
+    lowerText.includes("saudi") ||
+    lowerText.includes("emirati") ||
+    lowerText.includes("yemen") ||
+    lowerText.includes("gaza") ||
+    lowerText.includes("israel") ||
+    lowerText.includes("iran") ||
+    lowerText.includes("coalition") ||
+    lowerText.includes("withdrawal") ||
+    lowerText.includes("alliance") ||
+    lowerText.includes("سياسي")
+  ) {
+    return "Political";
   }
   if (
     lowerText.includes("diplomatic") ||
@@ -213,13 +292,6 @@ function detectCategory(text: string): string {
     lowerText.includes("دبلوماسي")
   ) {
     return "Diplomatic";
-  }
-  if (
-    lowerText.includes("breaking") ||
-    lowerText.includes("urgent") ||
-    lowerText.includes("عاجل")
-  ) {
-    return "Breaking";
   }
 
   return "Analysis";

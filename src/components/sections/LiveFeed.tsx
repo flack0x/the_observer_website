@@ -6,7 +6,7 @@ import { Clock, ArrowRight, Radio, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useArticles } from "@/lib/hooks";
 
-const categories = ["All", "Military", "Political", "Economic", "Intelligence"];
+const categories = ["All", "Political", "Military", "Economic", "Intelligence", "Analysis"];
 
 export default function LiveFeed() {
   const [activeCategory, setActiveCategory] = useState("All");
