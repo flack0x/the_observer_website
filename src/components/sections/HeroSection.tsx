@@ -8,29 +8,16 @@ import Image from "next/image";
 export default function HeroSection() {
   return (
     <section className="relative min-h-[85vh] overflow-hidden bg-midnight-900">
-      {/* Observer Silhouette Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Desktop: Right-aligned silhouette */}
-        <div className="hidden lg:block absolute right-0 bottom-0 w-[45%] h-full">
+      {/* Observer Silhouette Background - Centered behind text */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="relative w-full h-full max-w-3xl">
           <Image
             src="/images/observer-silhouette.png"
             alt=""
             fill
-            className="object-contain object-right-bottom opacity-[0.08]"
+            className="object-contain opacity-[0.12] lg:opacity-[0.15]"
             priority
           />
-        </div>
-        {/* Mobile/Tablet: Centered silhouette */}
-        <div className="lg:hidden absolute inset-0 flex items-end justify-center">
-          <div className="relative w-[80%] h-[50%]">
-            <Image
-              src="/images/observer-silhouette.png"
-              alt=""
-              fill
-              className="object-contain object-bottom opacity-[0.05]"
-              priority
-            />
-          </div>
         </div>
       </div>
 
