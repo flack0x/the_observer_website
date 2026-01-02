@@ -39,6 +39,9 @@ export const CHANNELS = {
   },
 } as const;
 
+// Emoji pattern for cleaning
+const EMOJI_REGEX = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]|🔴|🔵|🟢|🟡|⚫|⚪|🔻|🔺|📌|🖋|👍|✅|❌|⚠️|🚨|📢|📣/gu;
+
 // Fetch posts from a public Telegram channel
 export async function fetchTelegramChannel(
   channel: "en" | "ar"
@@ -136,161 +139,176 @@ function parseChannelHTML(html: string, channelUsername: string): TelegramPost[]
     .slice(0, 20);
 }
 
-// Clean up title text
-function cleanTitle(text: string): string {
+// Clean up text by removing emojis and markdown
+function cleanText(text: string): string {
   return text
-    // Remove common emojis
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
-    .replace(/[\u{2600}-\u{26FF}]/gu, "")
-    .replace(/[\u{2700}-\u{27BF}]/gu, "")
-    .replace(/🔴|🔵|🟢|🟡|⚫|⚪|🔻|🔺/g, "")
-    // Remove leading/trailing symbols
-    .replace(/^[\s\-–—:•*#]+/, "")
-    .replace(/[\s\-–—:•*#]+$/, "")
+    .replace(EMOJI_REGEX, "")
+    .replace(/[_*]{1,2}/g, "") // Remove markdown bold/italic
+    .replace(/\s+/g, " ")
     .trim();
 }
 
-// Convert raw posts to structured articles
-export function parsePostsToArticles(
-  posts: TelegramPost[],
-  channel: "en" | "ar"
-): ParsedArticle[] {
-  return posts.map((post, index) => {
-    const lines = post.text.split("\n").filter((line) => line.trim());
+// Extract title from post text - improved logic
+function extractTitle(text: string): string {
+  // First, try to find bold text at the start (markdown format: **title**)
+  const boldMatch = text.match(/^\s*(?:[_*]*[🔴🔵📌🖋]*[_*]*)?\s*\*\*([^*]+)\*\*/);
+  if (boldMatch) {
+    const title = cleanText(boldMatch[1]);
+    if (title.length >= 15 && title.length <= 300) {
+      return title.length > 250 ? title.substring(0, 250) : title;
+    }
+  }
 
-    // First substantial line is usually the title/headline
-    let title = "";
+  // Fallback: Look for the first substantial line
+  const lines = text.split("\n").filter((line) => line.trim());
 
-    // Look for a good title line (should be substantial but not too long)
-    for (const line of lines.slice(0, 3)) {
-      const cleaned = cleanTitle(line);
-      // Good title: between 20-200 chars, contains letters
-      if (cleaned.length >= 20 && cleaned.length <= 200 && /[a-zA-Z\u0600-\u06FF]/.test(cleaned)) {
-        title = cleaned;
-        break;
-      }
+  for (const line of lines.slice(0, 5)) {
+    // Skip lines that are just links or channel mentions
+    if (line.startsWith("http") || line.startsWith("@") || line.includes("Link to")) {
+      continue;
+    }
+    if (line.includes("t.me/") && line.length < 50) {
+      continue;
     }
 
-    // Fallback: use first line
-    if (!title) {
-      title = cleanTitle(lines[0] || "Untitled");
+    const cleaned = cleanText(line);
+
+    // Check if it looks like a title
+    const hasLetters = /[a-zA-Z\u0600-\u06FF]/.test(cleaned);
+    const isReasonableLength = cleaned.length >= 15 && cleaned.length <= 300;
+
+    // Skip section headers like "V. Yemen and..." or numbered items
+    const isSectionHeader = /^[IVX]+\.\s|^\d+\.\s|^[أ-ي]\.\s/.test(cleaned);
+
+    if (hasLetters && isReasonableLength && !isSectionHeader) {
+      return cleaned.length > 250 ? cleaned.substring(0, 250) : cleaned;
     }
+  }
 
-    // Truncate if still too long
-    if (title.length > 150) {
-      // Try to cut at a colon or dash for cleaner truncation
-      const colonIndex = title.indexOf(":");
-      const dashIndex = title.indexOf("–");
-      const cutPoint = colonIndex > 30 ? colonIndex : (dashIndex > 30 ? dashIndex : 147);
-      title = title.substring(0, Math.min(cutPoint + 1, 147)).trim();
-      if (!title.endsWith(":") && !title.endsWith("–")) {
-        title += "...";
-      }
-    }
+  // Last resort: first line
+  if (lines.length > 0) {
+    const cleaned = cleanText(lines[0]);
+    return cleaned.length > 250 ? cleaned.substring(0, 250) : cleaned;
+  }
 
-    // Find where title ends in the original lines
-    const titleLineIndex = lines.findIndex(l => cleanTitle(l) === title || cleanTitle(l).startsWith(title.replace("...", "")));
-
-    // Rest is the excerpt - skip title line
-    const startIndex = titleLineIndex >= 0 ? titleLineIndex + 1 : 1;
-    const excerptLines = lines.slice(startIndex, startIndex + 6)
-      .map(l => cleanTitle(l))
-      .filter(l => l.length > 20 && !l.startsWith("Link to") && !l.startsWith("🔵") && !l.includes("@observer"));
-
-    let excerpt = excerptLines.join(" ").substring(0, 400);
-
-    // Clean up excerpt - cut at sentence boundary if possible
-    if (excerpt.length > 350) {
-      const lastPeriod = excerpt.lastIndexOf(".", 350);
-      if (lastPeriod > 200) {
-        excerpt = excerpt.substring(0, lastPeriod + 1);
-      } else {
-        excerpt = excerpt.substring(0, excerpt.lastIndexOf(" ", 350)) + "...";
-      }
-    }
-
-    // Determine category based on content
-    const category = detectCategory(post.text);
-
-    // Calculate relative time
-    const timestamp = getRelativeTime(index);
-
-    return {
-      id: post.id,
-      title: title,
-      excerpt: excerpt || title,
-      content: post.text,
-      timestamp: timestamp,
-      date: new Date(),
-      link: post.link,
-      channel: channel,
-      category: category,
-      isBreaking: index === 0, // Most recent post is "breaking"
-    };
-  });
+  return "Untitled";
 }
 
-// Detect article category from content
+// Extract excerpt from post text
+function extractExcerpt(text: string, title: string): string {
+  const lines = text.split("\n").filter((line) => line.trim());
+
+  // Find where the title is and start after it
+  let startIdx = 0;
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const cleaned = cleanText(lines[i]);
+    if (title.includes(cleaned) || cleaned.includes(title)) {
+      startIdx = i + 1;
+      break;
+    }
+  }
+
+  // Collect excerpt lines
+  const excerptParts: string[] = [];
+  for (const line of lines.slice(startIdx, startIdx + 8)) {
+    const cleaned = cleanText(line);
+
+    // Skip links, channel mentions, and very short lines
+    if (
+      line.includes("http") ||
+      line.includes("t.me/") ||
+      line.includes("@observer") ||
+      line.includes("@almuraqb") ||
+      line.includes("Link to")
+    ) {
+      continue;
+    }
+    if (cleaned.length < 20) continue;
+
+    excerptParts.push(cleaned);
+
+    // Stop if we have enough content
+    if (excerptParts.join(" ").length > 300) break;
+  }
+
+  let excerpt = excerptParts.join(" ");
+
+  // Trim to ~350 chars at a sentence boundary
+  if (excerpt.length > 350) {
+    const lastPeriod = excerpt.lastIndexOf(".", 350);
+    if (lastPeriod > 100) {
+      excerpt = excerpt.substring(0, lastPeriod + 1);
+    } else {
+      const lastSpace = excerpt.lastIndexOf(" ", 350);
+      if (lastSpace > 100) {
+        excerpt = excerpt.substring(0, lastSpace) + "...";
+      } else {
+        excerpt = excerpt.substring(0, 347) + "...";
+      }
+    }
+  }
+
+  return excerpt || title;
+}
+
+// Detect article category from content - improved with more keywords
 function detectCategory(text: string): string {
   const lowerText = text.toLowerCase();
 
-  if (
-    lowerText.includes("breaking") ||
-    lowerText.includes("urgent") ||
-    lowerText.includes("عاجل")
-  ) {
+  // Breaking/Urgent
+  const breakingKeywords = ["breaking", "urgent", "عاجل", "خبر عاجل", "طارئ"];
+  if (breakingKeywords.some((word) => lowerText.includes(word))) {
     return "Breaking";
   }
-  if (
-    lowerText.includes("military") ||
-    lowerText.includes("weapon") ||
-    lowerText.includes("army") ||
-    lowerText.includes("forces") ||
-    lowerText.includes("troops") ||
-    lowerText.includes("battlefield") ||
-    lowerText.includes("عسكري")
-  ) {
+
+  // Military
+  const militaryKeywords = [
+    "military", "weapon", "army", "forces", "troops", "battlefield", "missile",
+    "drone", "strike", "attack", "defense", "war", "combat", "artillery",
+    "عسكري", "جيش", "قوات", "صاروخ", "طائرة مسيرة", "ضربة", "هجوم", "دفاع",
+    "حرب", "معركة", "سلاح", "انسحاب"
+  ];
+  if (militaryKeywords.some((word) => lowerText.includes(word))) {
     return "Military";
   }
-  if (
-    lowerText.includes("economic") ||
-    lowerText.includes("sanction") ||
-    lowerText.includes("dollar") ||
-    lowerText.includes("gas deal") ||
-    lowerText.includes("trade") ||
-    lowerText.includes("اقتصاد")
-  ) {
-    return "Economic";
-  }
-  if (
-    lowerText.includes("intelligence") ||
-    lowerText.includes("leaked") ||
-    lowerText.includes("exposed") ||
-    lowerText.includes("covert") ||
-    lowerText.includes("استخبارات")
-  ) {
+
+  // Intelligence
+  const intelKeywords = [
+    "intelligence", "leaked", "exposed", "covert", "secret", "spy", "agent",
+    "استخبارات", "تسريب", "كشف", "سري", "جاسوس", "عميل"
+  ];
+  if (intelKeywords.some((word) => lowerText.includes(word))) {
     return "Intelligence";
   }
-  if (
-    lowerText.includes("saudi") ||
-    lowerText.includes("emirati") ||
-    lowerText.includes("yemen") ||
-    lowerText.includes("gaza") ||
-    lowerText.includes("israel") ||
-    lowerText.includes("iran") ||
-    lowerText.includes("coalition") ||
-    lowerText.includes("withdrawal") ||
-    lowerText.includes("alliance") ||
-    lowerText.includes("سياسي")
-  ) {
+
+  // Economic
+  const economicKeywords = [
+    "economic", "economy", "sanction", "dollar", "trade", "oil", "gas",
+    "market", "financial", "bank", "currency",
+    "اقتصاد", "اقتصادي", "عقوبات", "دولار", "تجارة", "نفط", "غاز", "سوق", "بنك"
+  ];
+  if (economicKeywords.some((word) => lowerText.includes(word))) {
+    return "Economic";
+  }
+
+  // Political
+  const politicalKeywords = [
+    "saudi", "emirati", "yemen", "gaza", "israel", "iran", "coalition",
+    "government", "president", "minister", "parliament", "election", "vote",
+    "سعودي", "إماراتي", "يمن", "غزة", "إسرائيل", "إيران", "تحالف",
+    "حكومة", "رئيس", "وزير", "برلمان", "انتخاب", "سياسي", "سياسة"
+  ];
+  if (politicalKeywords.some((word) => lowerText.includes(word))) {
     return "Political";
   }
-  if (
-    lowerText.includes("diplomatic") ||
-    lowerText.includes("negotiation") ||
-    lowerText.includes("summit") ||
-    lowerText.includes("دبلوماسي")
-  ) {
+
+  // Diplomatic
+  const diplomaticKeywords = [
+    "diplomatic", "diplomacy", "negotiation", "summit", "treaty", "agreement",
+    "ambassador", "embassy", "talks",
+    "دبلوماسي", "دبلوماسية", "مفاوضات", "قمة", "معاهدة", "اتفاق", "سفير", "سفارة"
+  ];
+  if (diplomaticKeywords.some((word) => lowerText.includes(word))) {
     return "Diplomatic";
   }
 
@@ -312,6 +330,53 @@ function getRelativeTime(index: number): string {
     "4 days ago",
   ];
   return times[Math.min(index, times.length - 1)];
+}
+
+// Check if post is a valid article (not just a link or short post)
+function isValidArticle(text: string): boolean {
+  if (!text || text.length < 150) return false;
+
+  const lines = text.split("\n").filter((l) => l.trim());
+  const linkLines = lines.filter(
+    (l) => l.includes("t.me/") || l.startsWith("http")
+  ).length;
+
+  // Skip if it's primarily links
+  if (lines.length <= 3 && linkLines >= lines.length - 1) return false;
+
+  // Must have substantial text content
+  const cleaned = cleanText(text);
+  if (cleaned.length < 100) return false;
+
+  return true;
+}
+
+// Convert raw posts to structured articles
+export function parsePostsToArticles(
+  posts: TelegramPost[],
+  channel: "en" | "ar"
+): ParsedArticle[] {
+  return posts
+    .filter((post) => isValidArticle(post.text))
+    .map((post, index) => {
+      const title = extractTitle(post.text);
+      const excerpt = extractExcerpt(post.text, title);
+      const category = detectCategory(post.text);
+      const timestamp = getRelativeTime(index);
+
+      return {
+        id: post.id,
+        title: title,
+        excerpt: excerpt,
+        content: post.text,
+        timestamp: timestamp,
+        date: new Date(),
+        link: post.link,
+        channel: channel,
+        category: category,
+        isBreaking: index === 0, // Most recent post is "breaking"
+      };
+    });
 }
 
 // Main function to get articles for the website
