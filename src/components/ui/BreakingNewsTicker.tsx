@@ -48,10 +48,10 @@ export default function BreakingNewsTicker() {
       });
 
   return (
-    <div className="relative z-50 h-9 bg-midnight-900 border-b border-midnight-700">
+    <div className="relative z-50 h-9 bg-tactical-red border-b border-tactical-red-hover">
       <div className="flex h-full items-center">
         {/* Live Label */}
-        <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-red">
+        <div className="relative z-10 flex h-full shrink-0 items-center bg-red-600">
           <div className="flex items-center gap-2 px-4">
             <span className="ticker-pulse">
               <Radio className="h-3 w-3 text-white" />
@@ -60,7 +60,7 @@ export default function BreakingNewsTicker() {
               Live
             </span>
           </div>
-          <div className="h-full w-4 bg-tactical-red skew-x-12 -mr-2" />
+          <div className="h-full w-4 bg-red-600 skew-x-12 -mr-2" />
         </div>
 
         {/* Ticker */}
