@@ -74,73 +74,85 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
+def truncate_title(text: str, max_length: int = 100) -> str:
+    """Truncate text to a reasonable title length at a natural break point."""
+    text = text.strip()
+    if len(text) <= max_length:
+        return text
+
+    # Try to cut at punctuation within limits
+    for punct in ['. ', ': ', ' — ', ' - ', ', ', '; ']:
+        idx = text.find(punct, 30, max_length)
+        if idx > 0:
+            return text[:idx].strip()
+
+    # Cut at last word boundary before max_length
+    last_space = text.rfind(' ', 30, max_length)
+    if last_space > 30:
+        return text[:last_space].strip() + '...'
+
+    return text[:max_length - 3].strip() + '...'
+
+
 def extract_title(text: str, channel: str) -> str:
     """
-    Extract the title from a Telegram message.
-
-    Patterns:
-    - English: Usually starts with **Title Here**
-    - Arabic: Usually starts with emoji + **Title** or just **Title**
+    Extract a SHORT, concise title from a Telegram message.
+    Target: 60-100 characters max.
     """
     lines = [line.strip() for line in text.split('\n') if line.strip()]
 
     # Only check the first 3 lines for a bold title
     first_lines = '\n'.join(lines[:3])
 
-    # Look for bold text pattern at the start: **title**
-    bold_pattern = r'^\s*(?:[_*]*[🔴🔵📌🖋]*[_*]*)?\s*\*\*([^*\n]+)\*\*'
-    match = re.match(bold_pattern, first_lines)
+    # Pattern 1: Look for bold text **title** - extract just the bold part
+    bold_matches = re.findall(r'\*\*([^*]+)\*\*', first_lines)
+    if bold_matches:
+        # Get the first bold text that looks like a title
+        for bold_text in bold_matches:
+            cleaned = clean_text(bold_text)
+            # Skip very short items (likely just a name/location)
+            if len(cleaned) >= 10:
+                return truncate_title(cleaned, 100)
 
-    if match:
-        title = match.group(1).strip()
-        title = clean_text(title)
-        # Must be reasonable length and not a short word
-        if len(title) >= 20 and len(title) <= 300:
-            return title[:250] if len(title) > 250 else title
+    # Pattern 2: Bullet point articles - extract topic from first bullet
+    # Format: "• **Topic**, description here..."
+    bullet_pattern = r'^[•\-\*]\s*\*?\*?([^,•\n]{10,60})'
+    for line in lines[:3]:
+        match = re.match(bullet_pattern, line)
+        if match:
+            topic = clean_text(match.group(1))
+            if len(topic) >= 10:
+                return truncate_title(topic, 100)
 
-    # Fallback: Look for the first substantial line
+    # Pattern 3: First line without bullets/formatting as title
     for line in lines[:5]:
         # Skip lines that are just links or channel mentions
         if line.startswith('http') or line.startswith('@') or 'Link to' in line:
             continue
         if 't.me/' in line and len(line) < 50:
             continue
-        # Skip markdown link syntax
         if line.startswith('[') and '](' in line:
             continue
 
-        cleaned = clean_text(line)
+        # Remove leading bullets/markers
+        cleaned = re.sub(r'^[•\-\*\d\.]+\s*', '', line)
+        cleaned = clean_text(cleaned)
 
-        # Check if it looks like a title (has letters, reasonable length)
+        # Check if it looks like a title
         has_letters = bool(re.search(r'[a-zA-Z\u0600-\u06FF]', cleaned))
-        is_reasonable_length = 20 <= len(cleaned) <= 300
 
-        # Skip section headers like "V. Yemen...", "1. Topic...", "IV.", "خاتمة" etc.
-        is_section_header = bool(re.match(r'^[IVX]+\.?\s|^\d+\.?\s|^[أ-ي]\.?\s', cleaned))
-        is_short_header = len(cleaned) < 30 and cleaned.endswith(':')
+        # Skip section headers
+        is_section_header = bool(re.match(r'^[IVX]+\.?\s|^\d+\.?\s', cleaned))
         is_conclusion = cleaned.lower() in ['conclusion', 'الخاتمة', 'خاتمة', 'introduction', 'مقدمة']
 
-        if has_letters and is_reasonable_length and not is_section_header and not is_short_header and not is_conclusion:
-            return cleaned[:250] if len(cleaned) > 250 else cleaned
-
-    # Last resort: Generate title from first substantial content
-    for line in lines[:5]:
-        cleaned = clean_text(line)
-        if len(cleaned) >= 50:
-            # Truncate at a reasonable point
-            if len(cleaned) > 100:
-                # Try to cut at punctuation
-                for punct in ['. ', ': ', ' - ', ', ']:
-                    idx = cleaned.find(punct, 40, 100)
-                    if idx > 0:
-                        return cleaned[:idx + 1].strip()
-                return cleaned[:97] + '...'
-            return cleaned
+        if has_letters and len(cleaned) >= 15 and not is_section_header and not is_conclusion:
+            return truncate_title(cleaned, 100)
 
     # Absolute fallback
     if lines:
         cleaned = clean_text(lines[0])
-        return cleaned[:250] if len(cleaned) > 250 else (cleaned if cleaned else 'Untitled')
+        cleaned = re.sub(r'^[•\-\*\d\.]+\s*', '', cleaned)
+        return truncate_title(cleaned, 100) if cleaned else 'Untitled'
 
     return 'Untitled'
 
