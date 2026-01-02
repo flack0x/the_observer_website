@@ -233,19 +233,46 @@ export async function GET(request: Request) {
     const allArticles = [...enArticles, ...arArticles];
     console.log(`Fetched ${allArticles.length} articles (EN: ${enArticles.length}, AR: ${arArticles.length})`);
 
-    // Upsert to Supabase
-    let successCount = 0;
+    // Only INSERT new articles - never overwrite existing ones
+    let insertedCount = 0;
+    let skippedCount = 0;
     let errorCount = 0;
 
     for (const article of allArticles) {
       try {
-        await supabase
+        // Check if article already exists
+        const { data: existing } = await supabase
           .from('articles')
-          .upsert(article, { onConflict: 'telegram_id' });
-        successCount++;
+          .select('telegram_id')
+          .eq('telegram_id', article.telegram_id)
+          .single();
+
+        if (existing) {
+          // Article exists - skip to preserve existing data
+          skippedCount++;
+          continue;
+        }
+
+        // Insert new article only
+        const { error } = await supabase
+          .from('articles')
+          .insert(article);
+
+        if (error) {
+          // Might be duplicate, skip
+          if (error.code === '23505') {
+            skippedCount++;
+          } else {
+            errorCount++;
+            console.error(`Error inserting ${article.telegram_id}:`, error);
+          }
+        } else {
+          insertedCount++;
+          console.log(`Inserted new article: ${article.telegram_id}`);
+        }
       } catch (err) {
         errorCount++;
-        console.error(`Error upserting ${article.telegram_id}:`, err);
+        console.error(`Error processing ${article.telegram_id}:`, err);
       }
     }
 
@@ -255,7 +282,8 @@ export async function GET(request: Request) {
       fetched: allArticles.length,
       english: enArticles.length,
       arabic: arArticles.length,
-      upserted: successCount,
+      inserted: insertedCount,
+      skipped: skippedCount,
       errors: errorCount,
     };
 
