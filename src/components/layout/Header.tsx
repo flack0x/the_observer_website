@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -9,7 +10,6 @@ import {
   Globe,
   Radio,
   ChevronDown,
-  Binoculars,
   Send,
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
@@ -47,9 +47,14 @@ export default function Header() {
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group shrink-0">
-              <div className="relative">
-                <Binoculars className="h-6 w-6 text-tactical-red transition-all group-hover:text-tactical-amber" />
+            <Link href="/" className="flex items-center gap-3 group shrink-0">
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <Image
+                  src="/images/observer-silhouette.png"
+                  alt="The Observer"
+                  fill
+                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                />
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-heading text-base font-bold tracking-wider text-slate-light">

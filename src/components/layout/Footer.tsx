@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Binoculars, Send, Mail, Shield, FileText, BookOpen } from "lucide-react";
+import Image from "next/image";
+import { Send, Mail, Shield } from "lucide-react";
 
 const footerLinks = {
   intelligence: [
@@ -26,7 +27,17 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="border-t border-midnight-600 bg-midnight-900">
+    <footer className="relative border-t border-midnight-600 bg-midnight-900 overflow-hidden">
+      {/* Background Silhouette */}
+      <div className="absolute right-0 top-0 w-[400px] h-[400px] pointer-events-none opacity-[0.03]">
+        <Image
+          src="/images/observer-silhouette.png"
+          alt=""
+          fill
+          className="object-contain"
+        />
+      </div>
+
       {/* Newsletter Section */}
       <div className="border-b border-midnight-700 bg-midnight-800">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
@@ -62,8 +73,15 @@ export default function Footer() {
         <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 sm:gap-3">
-              <Binoculars className="h-6 w-6 sm:h-8 sm:w-8 text-tactical-red" />
+            <Link href="/" className="flex items-center gap-3">
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
+                <Image
+                  src="/images/observer-silhouette.png"
+                  alt="The Observer"
+                  fill
+                  className="object-contain"
+                />
+              </div>
               <div>
                 <span className="font-heading text-lg sm:text-xl font-bold tracking-wider text-slate-light">
                   THE OBSERVER

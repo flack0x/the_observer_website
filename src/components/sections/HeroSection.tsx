@@ -3,24 +3,10 @@
 import { motion } from "framer-motion";
 import { Eye, ChevronDown, Target, Shield, Radio } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function HeroSection() {
   return (
     <section className="relative min-h-[85vh] overflow-hidden bg-midnight-900">
-      {/* Observer Silhouette Background - Positioned behind main text */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute left-1/2 -translate-x-1/2 top-[10%] w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] lg:w-[700px] lg:h-[700px]">
-          <Image
-            src="/images/observer-silhouette.png"
-            alt=""
-            fill
-            className="object-contain object-top opacity-[0.10] lg:opacity-[0.12]"
-            priority
-          />
-        </div>
-      </div>
-
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Grid Pattern */}
