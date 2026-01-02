@@ -2,34 +2,34 @@
 
 /* Custom Theme Configuration for The Observer */
 @theme {
-  /* Primary - Warmer Dark Backgrounds */
-  --color-midnight-900: #141618;
-  --color-midnight-800: #1A1D20;
-  --color-midnight-700: #232729;
-  --color-midnight-600: #2E3235;
-  --color-midnight-500: #3A3F42;
-  --color-midnight-400: #4A5054;
+  /* Primary - Light/White Backgrounds */
+  --color-midnight-900: #F8F9FA;
+  --color-midnight-800: #FFFFFF;
+  --color-midnight-700: #F1F3F5;
+  --color-midnight-600: #E9ECEF;
+  --color-midnight-500: #DEE2E6;
+  --color-midnight-400: #CED4DA;
 
   /* Secondary - Navy Blue & Gold */
   --color-tactical-red: #1B3A57;
   --color-tactical-red-hover: #153047;
-  --color-tactical-red-glow: rgba(27, 58, 87, 0.5);
+  --color-tactical-red-glow: rgba(27, 58, 87, 0.15);
   --color-tactical-amber: #D4AF37;
   --color-tactical-amber-dark: #B8960C;
 
-  /* Neutral - Ivory Cream Tones */
-  --color-slate-light: #FAF8F3;
-  --color-slate-medium: #C9C5BA;
-  --color-slate-dark: #8A867D;
+  /* Neutral - Dark Text Tones */
+  --color-slate-light: #1A1D20;
+  --color-slate-medium: #495057;
+  --color-slate-dark: #6C757D;
 
   /* Earth Tones - Accent Colors */
   --color-earth-olive: #6B7B4C;
   --color-earth-sand: #C2B280;
   --color-earth-desert: #967B5D;
 
-  /* Ivory Cream - New accent */
-  --color-ivory: #FAF8F3;
-  --color-ivory-dark: #EDE9DF;
+  /* Ivory Cream - Now used for subtle backgrounds */
+  --color-ivory: #FDFCFA;
+  --color-ivory-dark: #F5F3EF;
 
   /* Fonts */
   --font-heading: "Montserrat", system-ui, sans-serif;
@@ -96,8 +96,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Grid Pattern Background */
 .bg-grid-pattern {
   background-image:
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 50px 50px;
 }
 
@@ -118,11 +118,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-midnight-800);
+  background: var(--color-midnight-700);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-midnight-500);
+  background: var(--color-midnight-400);
   border-radius: 4px;
 }
 
@@ -148,7 +148,7 @@ a {
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
 /* Classified Stamp Effect */
