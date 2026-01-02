@@ -8,14 +8,14 @@ import Image from "next/image";
 export default function HeroSection() {
   return (
     <section className="relative min-h-[85vh] overflow-hidden bg-midnight-900">
-      {/* Observer Silhouette Background - Centered behind text */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="relative w-full h-full max-w-3xl">
+      {/* Observer Silhouette Background - Positioned behind main text */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[10%] w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] lg:w-[700px] lg:h-[700px]">
           <Image
             src="/images/observer-silhouette.png"
             alt=""
             fill
-            className="object-contain opacity-[0.12] lg:opacity-[0.15]"
+            className="object-contain object-top opacity-[0.10] lg:opacity-[0.12]"
             priority
           />
         </div>
