@@ -16,6 +16,7 @@ import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 from telethon import TelegramClient
+from telethon.sessions import StringSession
 from telethon.tl.types import Message
 from supabase import create_client, Client
 
@@ -30,6 +31,10 @@ load_dotenv()
 API_ID = os.getenv('TELEGRAM_API_ID')
 API_HASH = os.getenv('TELEGRAM_API_HASH')
 PHONE = os.getenv('TELEGRAM_PHONE')  # Your phone number
+
+# String session for CI/CD (GitHub Actions)
+# Generate with: python scripts/export_session.py
+SESSION_STRING = os.getenv('TELEGRAM_SESSION_STRING')
 
 # Supabase credentials
 SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://gbqvivmfivsuvvdkoiuc.supabase.co')
@@ -371,9 +376,20 @@ async def main():
 
     # Initialize Telegram client
     print("Connecting to Telegram...")
-    client = TelegramClient('observer_session', int(API_ID), API_HASH)
 
-    await client.start(phone=PHONE)
+    # Use StringSession for CI/CD, file session for local development
+    if SESSION_STRING:
+        print("Using StringSession (CI/CD mode)")
+        client = TelegramClient(StringSession(SESSION_STRING), int(API_ID), API_HASH)
+        await client.connect()
+        if not await client.is_user_authorized():
+            print("Error: StringSession is not authorized!")
+            return
+    else:
+        print("Using file session (local mode)")
+        session_path = os.path.join(os.path.dirname(__file__), 'observer_session')
+        client = TelegramClient(session_path, int(API_ID), API_HASH)
+        await client.start(phone=PHONE)
     print("Connected to Telegram!")
 
     all_articles = []
