@@ -1,11 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { ParsedArticle } from "./telegram";
+
+// Article type (matches what API returns from Supabase)
+export interface Article {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  timestamp: string;
+  date: Date;
+  link: string;
+  channel: "en" | "ar";
+  category: string;
+  isBreaking: boolean;
+}
 
 // Hook to fetch articles on the client side
 export function useArticles(channel: "en" | "ar" | "all" = "en") {
-  const [articles, setArticles] = useState<ParsedArticle[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
