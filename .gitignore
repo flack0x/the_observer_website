@@ -37,3 +37,10 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+scripts/.env
+scripts/*.session
+scripts/*.session-journal
+__pycache__/
+*.pyc
