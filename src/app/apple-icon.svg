@@ -1,15 +1,14 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="180" height="180" rx="40" fill="#1B3A57"/>
-  <!-- Simplified observer silhouette - head profile with cap and binoculars -->
-  <!-- Cap -->
-  <path d="M45 68 L45 56 Q45 45 56 45 L101 45 Q112 45 112 56 L112 62" stroke="#FFFFFF" stroke-width="8" fill="none" stroke-linecap="round"/>
-  <!-- Cap brim -->
-  <path d="M101 56 L135 51" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
-  <!-- Head outline -->
-  <path d="M45 68 Q34 79 34 96 Q34 113 45 124 L45 146 Q56 158 79 158 L79 135" stroke="#FFFFFF" stroke-width="8" fill="none" stroke-linecap="round"/>
-  <!-- Binoculars -->
-  <circle cx="135" cy="73" r="22" stroke="#FFFFFF" stroke-width="8" fill="none"/>
-  <circle cx="135" cy="73" r="9" fill="#D4AF37"/>
-  <!-- Arm holding binoculars -->
-  <path d="M79 135 Q101 124 112 96 L112 73" stroke="#FFFFFF" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <!-- Left lens -->
+  <circle cx="60" cy="95" r="28" stroke="#FFFFFF" stroke-width="8" fill="none"/>
+  <circle cx="60" cy="95" r="12" fill="#D4AF37"/>
+  <!-- Right lens -->
+  <circle cx="120" cy="95" r="28" stroke="#FFFFFF" stroke-width="8" fill="none"/>
+  <circle cx="120" cy="95" r="12" fill="#D4AF37"/>
+  <!-- Bridge -->
+  <path d="M88 95H92" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <!-- Top handles -->
+  <path d="M60 67V50" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M120 67V50" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
 </svg>
