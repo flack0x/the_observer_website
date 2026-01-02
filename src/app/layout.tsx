@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://the-observer-website.vercel.app'),
   title: "The Observer | Geopolitical Intelligence & Analysis",
   description:
     "In-depth geopolitical analysis, military intelligence, and strategic assessments of global conflicts and power dynamics.",

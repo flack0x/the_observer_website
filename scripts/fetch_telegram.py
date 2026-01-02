@@ -11,12 +11,17 @@ Setup:
 
 import os
 import re
+import sys
 import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.tl.types import Message
 from supabase import create_client, Client
+
+# Fix Windows console encoding for Arabic/emoji
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 # Load environment variables
 load_dotenv()
@@ -123,7 +128,7 @@ def parse_message(message: Message, channel: str, channel_username: str) -> dict
         'telegram_date': message.date.isoformat(),
     }
 
-async def fetch_channel_messages(client: TelegramClient, channel_username: str, channel: str, limit: int = 500) -> list[dict]:
+async def fetch_channel_messages(client: TelegramClient, channel_username: str, channel: str, limit: int = 2000) -> list[dict]:
     """Fetch messages from a Telegram channel."""
     articles = []
 
