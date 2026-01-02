@@ -27,17 +27,7 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="relative border-t border-midnight-600 bg-midnight-900 overflow-hidden">
-      {/* Background Silhouette */}
-      <div className="absolute right-0 top-0 w-[400px] h-[400px] pointer-events-none opacity-[0.03]">
-        <Image
-          src="/images/observer-silhouette.png"
-          alt=""
-          fill
-          className="object-contain"
-        />
-      </div>
-
+    <footer className="border-t border-midnight-600 bg-midnight-900">
       {/* Newsletter Section */}
       <div className="border-b border-midnight-700 bg-midnight-800">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
