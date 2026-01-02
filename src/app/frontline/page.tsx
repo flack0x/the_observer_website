@@ -13,72 +13,47 @@ import {
 import Link from "next/link";
 import { useArticles } from "@/lib/hooks";
 
-// Fallback data while loading
-const fallbackArticles = [
-  {
-    id: "1",
-    category: "Breaking",
-    title: "Egypt Signs $35 Billion Gas Deal with Israel",
-    excerpt:
-      "A 15-year natural gas agreement valued at $34-35 billion creates Egyptian economic dependency while financing Israeli military operations.",
-    timestamp: "2 hours ago",
-    location: "Region",
-    isBreaking: true,
-    readTime: "8 min",
-  },
-  {
-    id: "2",
-    category: "Analysis",
-    title: "Trump Grants Israel 'Sovereignty' Over Occupied Golan",
-    excerpt:
-      "December 2025 decision violates international law as Trump admits the region is 'worth trillions of dollars.'",
-    timestamp: "5 hours ago",
-    location: "Region",
-    isBreaking: false,
-    readTime: "10 min",
-  },
-  {
-    id: "3",
-    category: "Intelligence",
-    title: "Gaza AI Systems Exposed: Lavender, Gospel, Where's Daddy?",
-    excerpt:
-      "Israeli AI targeting systems revealed with corporate backing from Palantir, Google, Amazon, and Microsoft.",
-    timestamp: "8 hours ago",
-    location: "Region",
-    isBreaking: false,
-    readTime: "12 min",
-  },
-  {
-    id: "4",
-    category: "Military",
-    title: "Iraq PMF Faces Weapons Monopoly Demands",
-    excerpt:
-      "Questions emerge over timing of weapons control demands on Popular Mobilization Forces.",
-    timestamp: "12 hours ago",
-    location: "Region",
-    isBreaking: false,
-    readTime: "7 min",
-  },
-];
 
 const categories = ["All", "Breaking", "Military", "Intelligence", "Economic", "Diplomatic", "Analysis"];
 
 export default function FrontlinePage() {
-  const { articles, loading } = useArticles("en");
+  const { articles, loading, error } = useArticles("en");
 
-  // Transform real articles or use fallback
-  const newsArticles = loading || articles.length === 0
-    ? fallbackArticles
-    : articles.map((article, index) => ({
-        id: article.id,
-        category: article.category,
-        title: article.title,
-        excerpt: article.excerpt,
-        timestamp: article.timestamp,
-        location: "Region",
-        isBreaking: index === 0,
-        readTime: `${Math.ceil(article.content.split(" ").length / 200)} min`,
-      }));
+  // Transform real articles
+  const newsArticles = articles.map((article, index) => ({
+    id: article.id,
+    category: article.category,
+    title: article.title,
+    excerpt: article.excerpt,
+    timestamp: article.timestamp,
+    location: "Region",
+    isBreaking: index === 0,
+    readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} min`,
+  }));
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-midnight-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-tactical-red mx-auto mb-4" />
+          <p className="text-slate-medium">Loading intelligence reports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || newsArticles.length === 0) {
+    return (
+      <div className="min-h-screen bg-midnight-900 flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-tactical-amber mx-auto mb-4" />
+          <p className="text-slate-medium">Unable to load reports. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-midnight-900">
       {/* Hero */}
