@@ -18,6 +18,8 @@ import { getDictionary, type Locale } from "@/lib/i18n";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
 import { getRelativeTime } from "@/lib/time";
 
+const ARTICLES_PER_PAGE = 6;
+
 export default function FrontlinePage() {
   const params = useParams();
   const locale = (params.locale as Locale) || 'en';
@@ -26,8 +28,20 @@ export default function FrontlinePage() {
   const categories = getCategoryList(locale);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE);
 
   const { articles, loading, error } = useArticles(locale);
+
+  // Reset visible count when filters change
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+    setVisibleCount(ARTICLES_PER_PAGE);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setVisibleCount(ARTICLES_PER_PAGE);
+  };
 
   // Filter articles by category and search
   const filteredByCategory = filterByCategory(articles, activeCategory, locale);
@@ -111,7 +125,7 @@ export default function FrontlinePage() {
               {categories.map((category) => (
                 <button
                   key={category}
-                  onClick={() => setActiveCategory(category)}
+                  onClick={() => handleCategoryChange(category)}
                   className={`rounded-full px-4 py-1.5 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
                     activeCategory === category
                       ? "bg-tactical-red text-white"
@@ -127,7 +141,7 @@ export default function FrontlinePage() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 placeholder={dict.common.search + '...'}
                 className="bg-transparent text-sm text-slate-light placeholder-slate-dark outline-none w-32 sm:w-48"
                 dir={isArabic ? 'rtl' : 'ltr'}
@@ -140,8 +154,15 @@ export default function FrontlinePage() {
       {/* Articles Grid */}
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Results count */}
+          <p className="text-sm text-slate-dark mb-6">
+            {isArabic
+              ? `عرض ${Math.min(visibleCount, newsArticles.length)} من ${newsArticles.length} تقرير`
+              : `Showing ${Math.min(visibleCount, newsArticles.length)} of ${newsArticles.length} reports`}
+          </p>
+
           <div className="grid gap-6 lg:grid-cols-2">
-            {newsArticles.map((article, index) => (
+            {newsArticles.slice(0, visibleCount).map((article, index) => (
               <motion.article
                 key={article.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -197,11 +218,19 @@ export default function FrontlinePage() {
           </div>
 
           {/* Load More */}
-          <div className="mt-12 flex justify-center">
-            <button className="flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-800 px-8 py-3 font-heading text-sm font-medium uppercase tracking-wider text-slate-light transition-all hover:border-tactical-red hover:text-tactical-red">
-              {isArabic ? 'تحميل المزيد' : 'Load More Reports'}
-            </button>
-          </div>
+          {visibleCount < newsArticles.length && (
+            <div className="mt-12 flex justify-center">
+              <button
+                onClick={() => setVisibleCount(prev => prev + ARTICLES_PER_PAGE)}
+                className="flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-800 px-8 py-3 font-heading text-sm font-medium uppercase tracking-wider text-slate-light transition-all hover:border-tactical-red hover:text-tactical-red"
+              >
+                {isArabic ? 'تحميل المزيد' : 'Load More Reports'}
+                <span className="text-xs text-slate-dark">
+                  ({newsArticles.length - visibleCount} {isArabic ? 'متبقي' : 'remaining'})
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </section>
     </div>
