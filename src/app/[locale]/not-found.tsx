@@ -1,15 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { Eye, Home, ArrowLeft } from "lucide-react";
+import { useParams } from "next/navigation";
 import { getDictionary, type Locale } from "@/lib/i18n";
-import { headers } from "next/headers";
 
-export default async function NotFound() {
-  // Extract locale from the URL path
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
-  const localeMatch = pathname.match(/^\/(en|ar)/);
-  const locale: Locale = localeMatch ? (localeMatch[1] as Locale) : "en";
-
+export default function NotFound() {
+  const params = useParams();
+  const locale = (params?.locale as Locale) || "en";
   const dict = getDictionary(locale);
   const isArabic = locale === "ar";
 
@@ -18,7 +16,7 @@ export default async function NotFound() {
       <div className="max-w-md w-full text-center">
         <div className="flex justify-center mb-6">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-midnight-800 border border-midnight-700">
-            <Eye className="h-10 w-10 text-slate-dark" />
+            <Eye className="h-10 w-10 text-slate-dark" aria-hidden="true" />
           </div>
         </div>
 
@@ -39,7 +37,7 @@ export default async function NotFound() {
             href={`/${locale}`}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-tactical-red text-white rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
           >
-            <Home className="h-4 w-4" />
+            <Home className="h-4 w-4" aria-hidden="true" />
             {dict.notFound.goHome}
           </Link>
 
@@ -47,7 +45,7 @@ export default async function NotFound() {
             href={`/${locale}/frontline`}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-midnight-700 text-slate-light rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-midnight-600 border border-midnight-600 transition-colors"
           >
-            <ArrowLeft className={`h-4 w-4 ${isArabic ? "rotate-180" : ""}`} />
+            <ArrowLeft className={`h-4 w-4 ${isArabic ? "rotate-180" : ""}`} aria-hidden="true" />
             {dict.nav.frontline}
           </Link>
         </div>
