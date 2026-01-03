@@ -40,7 +40,7 @@ export default function Footer({ locale, dict }: FooterProps) {
       setEmail("");
     } catch {
       setStatus("error");
-      setMessage(locale === "ar" ? "حدث خطأ. حاول مرة أخرى." : "Something went wrong. Please try again.");
+      setMessage(dict.footer.errorMessage);
     }
   };
 
@@ -57,12 +57,10 @@ export default function Footer({ locale, dict }: FooterProps) {
           <div className="flex flex-col items-center justify-between gap-4 sm:gap-6 lg:flex-row">
             <div className="text-center lg:text-start">
               <h3 className="font-heading text-lg sm:text-xl font-bold uppercase tracking-wider text-slate-light">
-                {locale === 'ar' ? 'موجز استخباراتي' : 'Intelligence Brief'}
+                {dict.footer.intelligenceBrief}
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-slate-dark">
-                {locale === 'ar'
-                  ? 'تحليل استراتيجي أسبوعي يصل إلى بريدك الإلكتروني'
-                  : 'Weekly strategic analysis delivered to your inbox'}
+                {dict.footer.newsletterSubtitle}
               </p>
             </div>
             {status === "success" ? (
@@ -76,7 +74,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={locale === 'ar' ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
+                  placeholder={dict.footer.emailPlaceholder}
                   className="flex-1 rounded-lg border border-midnight-500 bg-midnight-700 px-4 py-3 font-body text-sm text-slate-light placeholder-slate-dark transition-colors focus:border-tactical-red focus:outline-none focus:ring-1 focus:ring-tactical-red"
                   dir={locale === 'ar' ? 'rtl' : 'ltr'}
                   disabled={status === "loading"}
@@ -93,7 +91,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                   ) : (
                     <Mail className="h-4 w-4" />
                   )}
-                  {locale === 'ar' ? 'اشترك' : 'Subscribe'}
+                  {dict.footer.subscribe}
                 </button>
               </form>
             )}
@@ -152,7 +150,7 @@ export default function Footer({ locale, dict }: FooterProps) {
           {/* Navigation Links */}
           <div>
             <h4 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light">
-              {locale === 'ar' ? 'التنقل' : 'Navigate'}
+              {dict.footer.navigate}
             </h4>
             <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
               {footerLinks.map((link) => (
@@ -177,7 +175,7 @@ export default function Footer({ locale, dict }: FooterProps) {
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs text-slate-dark">
             <span className="flex items-center gap-1">
               <Shield className="h-3 w-3" />
-              {locale === 'ar' ? 'آمن ومستقل' : 'Secure & Independent'}
+              {dict.footer.secureIndependent}
             </span>
             <Link href={`/${locale}/privacy`} className="hover:text-tactical-red">
               {dict.footer.privacy}

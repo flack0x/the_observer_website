@@ -21,17 +21,11 @@ type ColorKey = keyof typeof colorStyles;
 export default function Community({ locale, dict }: CommunityProps) {
   const isArabic = locale === 'ar';
 
-  const discussions: { topic: string; activity: string; color: ColorKey }[] = isArabic
-    ? [
-        { topic: "تحديثات الوضع في غزة", activity: "نشط جداً", color: "tactical-red" },
-        { topic: "التحليل الإقليمي", activity: "نشط", color: "tactical-amber" },
-        { topic: "التطورات الاقتصادية", activity: "رائج", color: "earth-olive" },
-      ]
-    : [
-        { topic: "Gaza Situation Updates", activity: "Very Active", color: "tactical-red" },
-        { topic: "Regional Analysis", activity: "Active", color: "tactical-amber" },
-        { topic: "Economic Developments", activity: "Trending", color: "earth-olive" },
-      ];
+  const discussions: { topic: string; activity: string; color: ColorKey }[] = [
+    { topic: dict.community.topic1, activity: dict.community.veryActive, color: "tactical-red" },
+    { topic: dict.community.topic2, activity: dict.community.active, color: "tactical-amber" },
+    { topic: dict.community.topic3, activity: dict.community.trending, color: "earth-olive" },
+  ];
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
@@ -46,16 +40,14 @@ export default function Community({ locale, dict }: CommunityProps) {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-800 border border-midnight-600 mb-4">
             <Users className="h-4 w-4 text-tactical-amber" />
             <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-medium">
-              {isArabic ? 'انضم للشبكة' : 'Join The Network'}
+              {dict.community.joinNetwork}
             </span>
           </div>
           <h2 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-slate-light mb-3">
-            {isArabic ? 'كن جزءاً من النقاش' : 'Be Part of the Conversation'}
+            {dict.community.bePartOfConversation}
           </h2>
           <p className="text-slate-medium max-w-2xl mx-auto">
-            {isArabic
-              ? 'انضم إلى آلاف المحللين والباحثين والباحثين عن الحقيقة في مجتمعنا الاستخباراتي المتنامي.'
-              : 'Join thousands of analysts, researchers, and truth-seekers in our growing intelligence community.'}
+            {dict.community.description}
           </p>
         </motion.div>
 
@@ -79,16 +71,14 @@ export default function Community({ locale, dict }: CommunityProps) {
               <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-red transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
-              {isArabic ? 'تيليجرام (الإنجليزية)' : 'Telegram (English)'}
+              {dict.community.telegramEnglish}
             </h3>
             <p className="text-sm text-slate-medium mb-4">
-              {isArabic
-                ? 'تحديثات فورية وأخبار عاجلة ونقاشات مجتمعية بالإنجليزية.'
-                : 'Real-time updates, breaking news, and community discussions in English.'}
+              {dict.community.telegramEnglishDesc}
             </p>
             <div className="flex items-center gap-2 text-sm text-slate-dark">
               <Users className="h-4 w-4" />
-              <span>{isArabic ? '+٥٠ ألف عضو' : '50K+ members'}</span>
+              <span>{dict.community.membersEnglish}</span>
             </div>
           </motion.a>
 
@@ -110,16 +100,14 @@ export default function Community({ locale, dict }: CommunityProps) {
               <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-amber transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
-              {isArabic ? 'تيليجرام (العربية)' : 'Telegram (العربية)'}
+              {dict.community.telegramArabic}
             </h3>
             <p className="text-sm text-slate-medium mb-4">
-              {isArabic
-                ? 'التحديثات والأخبار العاجلة والنقاشات المجتمعية باللغة العربية.'
-                : 'Real-time updates, breaking news, and community discussions in Arabic.'}
+              {dict.community.telegramArabicDesc}
             </p>
             <div className="flex items-center gap-2 text-sm text-slate-dark">
               <Users className="h-4 w-4" />
-              <span>{isArabic ? '+٣٠ ألف عضو' : '30K+ members'}</span>
+              <span>{dict.community.membersArabic}</span>
             </div>
           </motion.a>
 
@@ -137,12 +125,10 @@ export default function Community({ locale, dict }: CommunityProps) {
               </div>
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
-              {isArabic ? 'اتصل بنا' : 'Contact Us'}
+              {dict.community.contactUs}
             </h3>
             <p className="text-sm text-slate-medium mb-4">
-              {isArabic
-                ? 'لديك معلومة أو سؤال أو تريد التعاون؟ تواصل مع فريقنا.'
-                : 'Have a tip, question, or want to collaborate? Reach out to our team.'}
+              {dict.community.contactDesc}
             </p>
             <a
               href="mailto:contact@theobserver.com"
@@ -165,7 +151,7 @@ export default function Community({ locale, dict }: CommunityProps) {
           <div className="flex items-center gap-3 mb-6">
             <MessageCircle className="h-5 w-5 text-tactical-red" />
             <h3 className="font-heading text-lg font-bold uppercase tracking-wider text-slate-light">
-              {isArabic ? 'نبض المجتمع' : 'Community Pulse'}
+              {dict.community.communityPulse}
             </h3>
           </div>
 
@@ -193,7 +179,7 @@ export default function Community({ locale, dict }: CommunityProps) {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-tactical-red text-white font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
             >
               <MessageCircle className="h-4 w-4" />
-              {isArabic ? 'انضم للنقاش' : 'Join the Discussion'}
+              {dict.community.joinDiscussion}
             </a>
           </div>
         </motion.div>

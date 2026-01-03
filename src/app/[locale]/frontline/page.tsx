@@ -61,7 +61,7 @@ export default function FrontlinePage() {
     title: article.title,
     excerpt: article.excerpt,
     timestamp: getRelativeTime(article.date, locale),
-    location: isArabic ? "المنطقة" : "Region",
+    location: dict.frontline.region,
     isBreaking: article.isBreaking,
     readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} ${isArabic ? 'دقيقة' : 'min'}`,
   }));
@@ -119,7 +119,7 @@ export default function FrontlinePage() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-slate-dark" />
-              <span className="text-sm text-slate-dark">{isArabic ? 'تصفية:' : 'Filter:'}</span>
+              <span className="text-sm text-slate-dark">{dict.frontline.filter}</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
@@ -156,9 +156,9 @@ export default function FrontlinePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Results count */}
           <p className="text-sm text-slate-dark mb-6">
-            {isArabic
-              ? `عرض ${Math.min(visibleCount, newsArticles.length)} من ${newsArticles.length} تقرير`
-              : `Showing ${Math.min(visibleCount, newsArticles.length)} of ${newsArticles.length} reports`}
+            {dict.frontline.showingOf
+              .replace('{current}', String(Math.min(visibleCount, newsArticles.length)))
+              .replace('{total}', String(newsArticles.length))}
           </p>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -177,7 +177,7 @@ export default function FrontlinePage() {
                     className="mb-4 inline-flex items-center gap-1 rounded-full bg-tactical-red px-3 py-1 text-xs font-bold uppercase text-white"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    {isArabic ? 'عاجل' : 'Breaking'}
+                    {dict.frontline.breaking}
                   </motion.div>
                 )}
 
@@ -204,12 +204,12 @@ export default function FrontlinePage() {
                 </p>
 
                 <div className="flex items-center justify-between border-t border-midnight-700 pt-4">
-                  <span className="text-xs text-slate-dark">{article.readTime} {isArabic ? 'قراءة' : 'read'}</span>
+                  <span className="text-xs text-slate-dark">{article.readTime} {dict.frontline.read}</span>
                   <Link
                     href={`/${locale}/frontline/${article.id}`}
                     className="flex items-center gap-1 font-heading text-xs font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
                   >
-                    {isArabic ? 'التقرير الكامل' : 'Full Report'}
+                    {dict.frontline.fullReport}
                     <ArrowRight className={`h-3 w-3 ${isArabic ? 'rotate-180' : ''}`} />
                   </Link>
                 </div>
@@ -224,9 +224,9 @@ export default function FrontlinePage() {
                 onClick={() => setVisibleCount(prev => prev + ARTICLES_PER_PAGE)}
                 className="flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-800 px-8 py-3 font-heading text-sm font-medium uppercase tracking-wider text-slate-light transition-all hover:border-tactical-red hover:text-tactical-red"
               >
-                {isArabic ? 'تحميل المزيد' : 'Load More Reports'}
+                {dict.frontline.loadMore}
                 <span className="text-xs text-slate-dark">
-                  ({newsArticles.length - visibleCount} {isArabic ? 'متبقي' : 'remaining'})
+                  ({newsArticles.length - visibleCount} {dict.frontline.remaining})
                 </span>
               </button>
             </div>
