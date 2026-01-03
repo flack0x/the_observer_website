@@ -31,6 +31,10 @@
   --color-ivory: #fafaf9;
   --color-ivory-dark: #e7e5e4;
 
+  /* Cream - Light background for content areas */
+  --color-cream: #f5f3ef;
+  --color-cream-dark: #e8e4dc;
+
   /* Fonts */
   --font-heading: "Montserrat", system-ui, sans-serif;
   --font-body: "Lora", Georgia, serif;

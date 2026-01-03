@@ -29,7 +29,7 @@ export default function Community({ locale, dict }: CommunityProps) {
   ];
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
+    <section className="py-12 sm:py-16 lg:py-20" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -38,16 +38,16 @@ export default function Community({ locale, dict }: CommunityProps) {
           viewport={{ once: true }}
           className="text-center mb-10 sm:mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-800 border border-midnight-600 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-900 border border-midnight-700 mb-4">
             <Users className="h-4 w-4 text-tactical-amber" aria-hidden="true" />
-            <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-medium">
+            <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-light">
               {dict.community.joinNetwork}
             </span>
           </div>
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-slate-light mb-3">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-midnight-900 mb-3">
             {dict.community.bePartOfConversation}
           </h2>
-          <p className="text-slate-medium max-w-2xl mx-auto">
+          <p className="text-midnight-600 max-w-2xl mx-auto">
             {dict.community.description}
           </p>
         </motion.div>

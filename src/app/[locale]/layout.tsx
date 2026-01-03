@@ -66,7 +66,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className={`min-h-screen bg-midnight-900 text-slate-light antialiased overflow-x-hidden ${direction === 'rtl' ? 'font-arabic' : ''}`}>
         <div className="flex min-h-screen flex-col overflow-x-hidden">
           <Header locale={validLocale} dict={dict} />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 bg-cream">{children}</main>
           <Footer locale={validLocale} dict={dict} />
         </div>
       </body>

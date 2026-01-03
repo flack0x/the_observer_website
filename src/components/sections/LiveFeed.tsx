@@ -25,7 +25,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
   const displayArticles = filteredArticles.slice(0, 6);
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
+    <section className="py-12 sm:py-16 lg:py-20" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mb-8 sm:mb-10">
@@ -37,10 +37,10 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                 <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-tactical-red animate-pulse" />
               </div>
               <div>
-                <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-light">
+                <h2 className="font-heading text-xl sm:text-2xl font-bold uppercase tracking-wider text-midnight-900">
                   {dict.home.liveFeed}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-dark flex items-center gap-2">
+                <p className="text-xs sm:text-sm text-midnight-600 flex items-center gap-2">
                   <Clock className="h-3 w-3" aria-hidden="true" />
                   {isArabic ? 'تم التحديث منذ لحظات' : 'Updated moments ago'}
                 </p>
@@ -154,7 +154,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
         <div className="mt-8 sm:hidden">
           <Link
             href={`/${locale}/frontline`}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-midnight-800 border border-midnight-700 font-heading text-sm font-medium uppercase tracking-wider text-slate-light hover:border-tactical-red hover:text-tactical-red transition-all"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-midnight-900 border border-midnight-700 font-heading text-sm font-medium uppercase tracking-wider text-slate-light hover:border-tactical-red hover:text-tactical-red transition-all"
           >
             {dict.common.viewAll}
             <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
