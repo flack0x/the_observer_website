@@ -1,7 +1,5 @@
 import { locales, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -29,9 +27,7 @@ export default async function TermsPage({ params }: Props) {
   const isArabic = validLocale === 'ar';
 
   return (
-    <>
-      <Header locale={validLocale} dict={dict} />
-      <main className="min-h-screen bg-midnight-900 py-12 sm:py-16">
+    <div className="min-h-screen bg-midnight-900 py-12 sm:py-16">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <Link
             href={`/${validLocale}`}
@@ -123,8 +119,6 @@ export default async function TermsPage({ params }: Props) {
             )}
           </div>
         </div>
-      </main>
-      <Footer locale={validLocale} dict={dict} />
-    </>
+    </div>
   );
 }
