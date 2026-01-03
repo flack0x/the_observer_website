@@ -15,6 +15,7 @@ const dictionaries = {
       library: 'The Library',
       chronicles: 'Chronicles',
       joinIntel: 'Join Intel',
+      about: 'About',
     },
     // Navigation descriptions
     navDesc: {
@@ -105,6 +106,30 @@ const dictionaries = {
       copyright: '© 2024 The Observer. All rights reserved.',
       description: 'Independent geopolitical analysis and intelligence coverage.',
     },
+    // About page
+    about: {
+      title: 'About The Observer',
+      subtitle: 'Independent geopolitical intelligence',
+      missionTitle: 'Our Mission',
+      missionText: 'The Observer was founded with a singular purpose: to cut through the noise of mainstream media narratives and provide clear, factual, and contextualized intelligence on global conflicts and power dynamics. We believe that understanding geopolitics requires more than headlines—it demands deep analysis, historical context, and a commitment to truth over agenda.',
+      whatWeDoTitle: 'What We Do',
+      whatWeDoText: 'We monitor, analyze, and report on geopolitical developments across the Middle East, North Africa, and beyond. Our coverage spans military operations, diplomatic maneuvers, economic warfare, and intelligence activities that shape the world order.',
+      principlesTitle: 'Our Principles',
+      principle1Title: 'Independence',
+      principle1Text: 'We operate without affiliation to any government, political party, or corporate interest. Our analysis is guided solely by facts and evidence.',
+      principle2Title: 'Accuracy',
+      principle2Text: 'Every claim we make is sourced and verified. We distinguish clearly between confirmed facts, credible reports, and analysis.',
+      principle3Title: 'Context',
+      principle3Text: 'We provide the historical and geopolitical context necessary to understand events, not just report them.',
+      principle4Title: 'Transparency',
+      principle4Text: 'We cite our sources and acknowledge when information is incomplete or uncertain.',
+      whyItMattersTitle: 'Why It Matters',
+      whyItMattersText: 'In an era of information warfare and manufactured narratives, access to independent, fact-based intelligence is not a luxury—it\'s a necessity. The Observer exists to serve those who refuse to accept the official story at face value and seek to understand the forces that truly shape our world.',
+      joinUsTitle: 'Join the Network',
+      joinUsText: 'Follow our Telegram channels for real-time updates and join a community of analysts, researchers, and truth-seekers dedicated to understanding geopolitical reality.',
+      telegramEnglish: 'English Channel',
+      telegramArabic: 'Arabic Channel',
+    },
   },
   ar: {
     // Navigation
@@ -120,6 +145,7 @@ const dictionaries = {
       library: 'المكتبة',
       chronicles: 'السجلات',
       joinIntel: 'انضم إلينا',
+      about: 'من نحن',
     },
     // Navigation descriptions
     navDesc: {
@@ -209,6 +235,30 @@ const dictionaries = {
       terms: 'الشروط',
       copyright: '© ٢٠٢٤ المُراقِب. جميع الحقوق محفوظة.',
       description: 'تحليل جيوسياسي مستقل وتغطية استخباراتية.',
+    },
+    // About page
+    about: {
+      title: 'عن المُراقِب',
+      subtitle: 'استخبارات جيوسياسية مستقلة',
+      missionTitle: 'مهمتنا',
+      missionText: 'تأسس المُراقِب بهدف واحد: اختراق ضجيج الروايات الإعلامية السائدة وتقديم معلومات استخباراتية واضحة وموثقة ومُسيَّقة حول الصراعات العالمية وديناميكيات القوى. نؤمن بأن فهم الجيوسياسة يتطلب أكثر من العناوين الرئيسية—إنه يتطلب تحليلاً عميقاً، وسياقاً تاريخياً، والتزاماً بالحقيقة فوق أي أجندة.',
+      whatWeDoTitle: 'ما نفعله',
+      whatWeDoText: 'نراقب ونحلل ونُعِدّ التقارير حول التطورات الجيوسياسية في الشرق الأوسط وشمال أفريقيا وما وراءهما. تغطيتنا تشمل العمليات العسكرية، والمناورات الدبلوماسية، والحرب الاقتصادية، والأنشطة الاستخباراتية التي تشكّل النظام العالمي.',
+      principlesTitle: 'مبادئنا',
+      principle1Title: 'الاستقلالية',
+      principle1Text: 'نعمل دون انتماء لأي حكومة أو حزب سياسي أو مصلحة تجارية. تحليلنا يسترشد فقط بالحقائق والأدلة.',
+      principle2Title: 'الدقة',
+      principle2Text: 'كل ادعاء نطرحه موثق ومُتحقق منه. نميّز بوضوح بين الحقائق المؤكدة والتقارير الموثوقة والتحليلات.',
+      principle3Title: 'السياق',
+      principle3Text: 'نقدم السياق التاريخي والجيوسياسي الضروري لفهم الأحداث، وليس مجرد نقلها.',
+      principle4Title: 'الشفافية',
+      principle4Text: 'نذكر مصادرنا ونعترف عندما تكون المعلومات ناقصة أو غير مؤكدة.',
+      whyItMattersTitle: 'لماذا يهم',
+      whyItMattersText: 'في عصر حروب المعلومات والروايات المُصنَّعة، الوصول إلى استخبارات مستقلة قائمة على الحقائق ليس ترفاً—بل ضرورة. المُراقِب موجود لخدمة أولئك الذين يرفضون قبول الرواية الرسمية ظاهرياً ويسعون لفهم القوى التي تشكّل عالمنا حقاً.',
+      joinUsTitle: 'انضم إلى الشبكة',
+      joinUsText: 'تابع قنواتنا على تيليجرام للتحديثات الفورية وانضم إلى مجتمع من المحللين والباحثين والباحثين عن الحقيقة الملتزمين بفهم الواقع الجيوسياسي.',
+      telegramEnglish: 'القناة الإنجليزية',
+      telegramArabic: 'القناة العربية',
     },
   },
 };

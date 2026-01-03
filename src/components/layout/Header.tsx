@@ -28,6 +28,7 @@ export default function Header({ locale, dict }: HeaderProps) {
   const navigation = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
     { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
+    { name: dict.nav.about, href: `/${locale}/about` },
   ];
 
   const switchLanguage = () => {

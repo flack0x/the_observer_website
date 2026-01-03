@@ -9,6 +9,7 @@ const staticPaths = [
   '',
   '/frontline',
   '/situation-room',
+  '/about',
   '/privacy',
   '/terms',
 ];
