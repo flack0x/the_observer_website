@@ -85,7 +85,8 @@ export default function Footer({ locale, dict }: FooterProps) {
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-tactical-red-hover whitespace-nowrap disabled:opacity-50"
+                  aria-busy={status === "loading"}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-tactical-red"
                 >
                   {status === "loading" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

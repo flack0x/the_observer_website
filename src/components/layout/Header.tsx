@@ -87,6 +87,7 @@ export default function Header({ locale, dict }: HeaderProps) {
               {/* Language Toggle */}
               <button
                 onClick={switchLanguage}
+                aria-label={locale === "en" ? "Switch to Arabic" : "التبديل إلى الإنجليزية"}
                 className="flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
               >
                 <Globe className="h-3 w-3" />
@@ -108,6 +109,10 @@ export default function Header({ locale, dict }: HeaderProps) {
               <button
                 className="lg:hidden rounded-md p-1.5 text-slate-medium hover:bg-midnight-700 hover:text-slate-light"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen
+                  ? (locale === "en" ? "Close menu" : "إغلاق القائمة")
+                  : (locale === "en" ? "Open menu" : "فتح القائمة")}
+                aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>

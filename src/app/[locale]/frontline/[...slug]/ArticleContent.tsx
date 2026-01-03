@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowLeft, Clock, ExternalLink, Share2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Clock, ExternalLink, Share2, Check } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
@@ -22,6 +23,13 @@ interface ArticleContentProps {
 
 export default function ArticleContent({ article, locale, dict }: ArticleContentProps) {
   const isArabic = locale === 'ar';
+  const [showCopied, setShowCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
+  };
 
   // Format content into paragraphs
   const paragraphs = article.content
@@ -86,14 +94,25 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               {dict.common.viewOnTelegram}
             </a>
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                alert(isArabic ? "تم نسخ الرابط!" : "Link copied!");
-              }}
-              className="flex items-center gap-2 text-sm text-slate-medium hover:text-tactical-red transition-colors"
+              onClick={handleCopyLink}
+              className="relative flex items-center gap-2 text-sm text-slate-medium hover:text-tactical-red transition-colors"
+              aria-label={dict.common.share}
             >
               <Share2 className="h-4 w-4" />
               {dict.common.share}
+              <AnimatePresence>
+                {showCopied && (
+                  <motion.span
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded bg-earth-olive text-white text-xs whitespace-nowrap"
+                  >
+                    <Check className="h-3 w-3" />
+                    {isArabic ? "تم النسخ!" : "Copied!"}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </motion.header>
