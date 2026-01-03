@@ -1,35 +1,35 @@
 @import "tailwindcss";
 
-/* Custom Theme Configuration for The Observer */
+/* Custom Theme Configuration for The Observer - Dark Intelligence Theme */
 @theme {
-  /* Primary - Light/White Backgrounds */
-  --color-midnight-900: #F8F9FA;
-  --color-midnight-800: #FFFFFF;
-  --color-midnight-700: #F1F3F5;
-  --color-midnight-600: #E9ECEF;
-  --color-midnight-500: #DEE2E6;
-  --color-midnight-400: #CED4DA;
+  /* Midnight Scale - Dark backgrounds (900 = darkest) */
+  --color-midnight-900: #0a0f14;
+  --color-midnight-800: #111920;
+  --color-midnight-700: #1a2332;
+  --color-midnight-600: #243044;
+  --color-midnight-500: #334155;
+  --color-midnight-400: #475569;
 
-  /* Secondary - Navy Blue & Gold */
-  --color-tactical-red: #1B3A57;
-  --color-tactical-red-hover: #153047;
-  --color-tactical-red-glow: rgba(27, 58, 87, 0.15);
-  --color-tactical-amber: #D4AF37;
-  --color-tactical-amber-dark: #B8960C;
+  /* Tactical Colors - Red accent for alerts/CTAs */
+  --color-tactical-red: #dc2626;
+  --color-tactical-red-hover: #b91c1c;
+  --color-tactical-red-glow: rgba(220, 38, 38, 0.25);
+  --color-tactical-amber: #d97706;
+  --color-tactical-amber-dark: #b45309;
 
-  /* Neutral - Dark Text Tones */
-  --color-slate-light: #1A1D20;
-  --color-slate-medium: #495057;
-  --color-slate-dark: #6C757D;
+  /* Slate Scale - Text colors (light = brightest for dark bg) */
+  --color-slate-light: #f1f5f9;
+  --color-slate-medium: #94a3b8;
+  --color-slate-dark: #64748b;
 
   /* Earth Tones - Accent Colors */
-  --color-earth-olive: #6B7B4C;
-  --color-earth-sand: #C2B280;
-  --color-earth-desert: #967B5D;
+  --color-earth-olive: #84cc16;
+  --color-earth-sand: #fbbf24;
+  --color-earth-desert: #a8a29e;
 
-  /* Ivory Cream - Now used for subtle backgrounds */
-  --color-ivory: #FDFCFA;
-  --color-ivory-dark: #F5F3EF;
+  /* Ivory - For special highlights */
+  --color-ivory: #fafaf9;
+  --color-ivory-dark: #e7e5e4;
 
   /* Fonts */
   --font-heading: "Montserrat", system-ui, sans-serif;
