@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 
 // Article type (matches what API returns from Supabase)
+// Note: Use getRelativeTime(date, locale) from time.ts for display
 export interface Article {
   id: string;
   title: string;
   excerpt: string;
   content: string;
-  timestamp: string;
   date: Date;
   link: string;
   channel: "en" | "ar";

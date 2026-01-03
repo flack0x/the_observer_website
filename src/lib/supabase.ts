@@ -45,13 +45,13 @@ export async function fetchArticlesFromDB(
 }
 
 // Convert DB article to the format used by the frontend
+// Note: `date` is a Date object - use getRelativeTime(date, locale) from time.ts for display
 export function dbArticleToFrontend(article: DBArticle) {
   return {
     id: article.telegram_id,
     title: article.title,
     excerpt: article.excerpt,
     content: article.content,
-    timestamp: getRelativeTime(new Date(article.telegram_date)),
     date: new Date(article.telegram_date),
     link: article.telegram_link,
     channel: article.channel,
@@ -61,22 +61,6 @@ export function dbArticleToFrontend(article: DBArticle) {
     isStructured: article.is_structured || false,
     isBreaking: article.category === 'Breaking',
   };
-}
-
-// Generate relative timestamps for display
-function getRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // Fetch a single article by telegram_id (for article detail pages)

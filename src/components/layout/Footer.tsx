@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Send, Mail, Shield } from "lucide-react";
+import { Send, Mail, Shield, CheckCircle, Loader2 } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface FooterProps {
@@ -11,6 +12,38 @@ interface FooterProps {
 }
 
 export default function Footer({ locale, dict }: FooterProps) {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, locale }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(data.error);
+        return;
+      }
+
+      setStatus("success");
+      setMessage(data.message);
+      setEmail("");
+    } catch {
+      setStatus("error");
+      setMessage(locale === "ar" ? "حدث خطأ. حاول مرة أخرى." : "Something went wrong. Please try again.");
+    }
+  };
+
   const footerLinks = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
     { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
@@ -32,21 +65,40 @@ export default function Footer({ locale, dict }: FooterProps) {
                   : 'Weekly strategic analysis delivered to your inbox'}
               </p>
             </div>
-            <form className="flex flex-col sm:flex-row w-full max-w-md gap-2">
-              <input
-                type="email"
-                placeholder={locale === 'ar' ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
-                className="flex-1 rounded-lg border border-midnight-500 bg-midnight-700 px-4 py-3 font-body text-sm text-slate-light placeholder-slate-dark transition-colors focus:border-tactical-red focus:outline-none focus:ring-1 focus:ring-tactical-red"
-                dir={locale === 'ar' ? 'rtl' : 'ltr'}
-              />
-              <button
-                type="submit"
-                className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-tactical-red-hover whitespace-nowrap"
-              >
-                <Mail className="h-4 w-4" />
-                {locale === 'ar' ? 'اشترك' : 'Subscribe'}
-              </button>
-            </form>
+            {status === "success" ? (
+              <div className="flex items-center gap-2 rounded-lg bg-earth-olive/20 px-4 py-3 text-earth-olive">
+                <CheckCircle className="h-5 w-5" />
+                <span className="text-sm font-medium">{message}</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row w-full max-w-md gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={locale === 'ar' ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
+                  className="flex-1 rounded-lg border border-midnight-500 bg-midnight-700 px-4 py-3 font-body text-sm text-slate-light placeholder-slate-dark transition-colors focus:border-tactical-red focus:outline-none focus:ring-1 focus:ring-tactical-red"
+                  dir={locale === 'ar' ? 'rtl' : 'ltr'}
+                  disabled={status === "loading"}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-tactical-red-hover whitespace-nowrap disabled:opacity-50"
+                >
+                  {status === "loading" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  {locale === 'ar' ? 'اشترك' : 'Subscribe'}
+                </button>
+              </form>
+            )}
+            {status === "error" && (
+              <p className="mt-2 text-xs text-tactical-red">{message}</p>
+            )}
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { Clock, ArrowRight, Radio, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useArticles } from "@/lib/hooks";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
+import { getRelativeTime } from "@/lib/time";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface LiveFeedProps {
@@ -100,7 +101,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                   </span>
                   <span className="text-[10px] sm:text-xs text-slate-dark flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {article.timestamp}
+                    {getRelativeTime(article.date, locale)}
                   </span>
                 </div>
 

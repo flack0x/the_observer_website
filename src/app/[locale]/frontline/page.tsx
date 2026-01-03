@@ -16,6 +16,7 @@ import { useParams } from "next/navigation";
 import { useArticles } from "@/lib/hooks";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
+import { getRelativeTime } from "@/lib/time";
 
 export default function FrontlinePage() {
   const params = useParams();
@@ -45,7 +46,7 @@ export default function FrontlinePage() {
     categoryDisplay: getCategoryDisplay(article.category, locale),
     title: article.title,
     excerpt: article.excerpt,
-    timestamp: article.timestamp,
+    timestamp: getRelativeTime(article.date, locale),
     location: isArabic ? "المنطقة" : "Region",
     isBreaking: article.isBreaking,
     readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} ${isArabic ? 'دقيقة' : 'min'}`,

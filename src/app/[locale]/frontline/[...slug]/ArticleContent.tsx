@@ -4,13 +4,15 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Clock, ExternalLink, Share2 } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
+import { getRelativeTime, formatDate } from "@/lib/time";
+import { getCategoryDisplay } from "@/lib/categories";
 
 interface ArticleContentProps {
   article: {
     title: string;
     excerpt: string;
     content: string;
-    timestamp: string;
+    date: Date;
     category: string;
     link: string;
   };
@@ -59,11 +61,11 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <span className="px-3 py-1 rounded-full bg-tactical-red/10 text-tactical-red font-heading text-xs font-medium uppercase">
-              {article.category}
+              {getCategoryDisplay(article.category, locale)}
             </span>
             <span className="flex items-center gap-1.5 text-sm text-slate-dark">
               <Clock className="h-4 w-4" />
-              {article.timestamp}
+              {getRelativeTime(article.date, locale)}
             </span>
           </div>
 
