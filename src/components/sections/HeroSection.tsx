@@ -96,7 +96,7 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
           >
             <div className="flex flex-row items-center justify-center gap-4 sm:gap-8">
               <div className="flex flex-col items-center text-center">
-                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-red mb-1" />
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-red mb-1" aria-hidden="true" />
                 <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
                   {isArabic ? '+٥٠٠' : '500+'}
                 </div>
@@ -106,7 +106,7 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
               </div>
               <div className="h-12 w-px bg-midnight-600" />
               <div className="flex flex-col items-center text-center">
-                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-amber mb-1" />
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-amber mb-1" aria-hidden="true" />
                 <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
                   {isArabic ? '+٥٠ ألف' : '50K+'}
                 </div>
@@ -116,7 +116,7 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
               </div>
               <div className="h-12 w-px bg-midnight-600" />
               <div className="flex flex-col items-center text-center">
-                <Radio className="h-4 w-4 sm:h-5 sm:w-5 text-earth-olive mb-1" />
+                <Radio className="h-4 w-4 sm:h-5 sm:w-5 text-earth-olive mb-1" aria-hidden="true" />
                 <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
                   {isArabic ? '٢٤/٧' : '24/7'}
                 </div>
@@ -138,7 +138,7 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
               href={`/${locale}/frontline`}
               className="group flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 sm:px-8 sm:py-4 font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover hover:shadow-lg hover:shadow-tactical-red/20"
             >
-              <Eye className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110" />
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110" aria-hidden="true" />
               {isArabic ? 'الدخول إلى الجبهة' : 'Access The Frontline'}
             </Link>
             <Link
@@ -165,7 +165,7 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
             <span className="text-[10px] uppercase tracking-widest text-slate-dark">
               {isArabic ? 'مرر للمزيد' : 'Scroll for Intel'}
             </span>
-            <ChevronDown className="h-4 w-4 text-tactical-red" />
+            <ChevronDown className="h-4 w-4 text-tactical-red" aria-hidden="true" />
           </motion.div>
         </motion.div>
       </div>

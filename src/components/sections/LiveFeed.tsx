@@ -33,7 +33,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
             {/* Title with live indicator */}
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Radio className="h-5 w-5 sm:h-6 sm:w-6 text-tactical-red" />
+                <Radio className="h-5 w-5 sm:h-6 sm:w-6 text-tactical-red" aria-hidden="true" />
                 <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-tactical-red animate-pulse" />
               </div>
               <div>
@@ -41,7 +41,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                   {dict.home.liveFeed}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-dark flex items-center gap-2">
-                  <Clock className="h-3 w-3" />
+                  <Clock className="h-3 w-3" aria-hidden="true" />
                   {isArabic ? 'تم التحديث منذ لحظات' : 'Updated moments ago'}
                 </p>
               </div>
@@ -53,7 +53,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
               className="hidden sm:flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
             >
               {dict.common.viewAll}
-              <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} />
+              <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
             </Link>
           </div>
 
@@ -100,7 +100,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                     {getCategoryDisplay(article.category, locale)}
                   </span>
                   <span className="text-[10px] sm:text-xs text-slate-dark flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3" aria-hidden="true" />
                     {getRelativeTime(article.date, locale)}
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                     className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
                   >
                     {dict.common.readMore}
-                    <ArrowRight className={`h-3 w-3 transition-transform ${isArabic ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} />
+                    <ArrowRight className={`h-3 w-3 transition-transform ${isArabic ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} aria-hidden="true" />
                   </Link>
                 </div>
 
@@ -157,7 +157,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
             className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-midnight-800 border border-midnight-700 font-heading text-sm font-medium uppercase tracking-wider text-slate-light hover:border-tactical-red hover:text-tactical-red transition-all"
           >
             {dict.common.viewAll}
-            <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} />
+            <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
           </Link>
         </div>
       </div>

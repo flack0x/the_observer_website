@@ -66,7 +66,7 @@ export default function Footer({ locale, dict }: FooterProps) {
             </div>
             {status === "success" ? (
               <div className="flex items-center gap-2 rounded-lg bg-earth-olive/20 px-4 py-3 text-earth-olive">
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle className="h-5 w-5" aria-hidden="true" />
                 <span className="text-sm font-medium">{message}</span>
               </div>
             ) : (
@@ -94,7 +94,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                   {status === "loading" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Mail className="h-4 w-4" />
+                    <Mail className="h-4 w-4" aria-hidden="true" />
                   )}
                   {dict.footer.subscribe}
                 </button>
@@ -137,7 +137,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full bg-midnight-700 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-slate-medium transition-colors hover:bg-tactical-red hover:text-white"
               >
-                <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Send className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
                 English
               </a>
               <a
@@ -146,7 +146,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full bg-midnight-700 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-slate-medium transition-colors hover:bg-tactical-red hover:text-white"
               >
-                <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Send className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
                 العربية
               </a>
             </div>
@@ -179,7 +179,7 @@ export default function Footer({ locale, dict }: FooterProps) {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs text-slate-dark">
             <span className="flex items-center gap-1">
-              <Shield className="h-3 w-3" />
+              <Shield className="h-3 w-3" aria-hidden="true" />
               {dict.footer.secureIndependent}
             </span>
             <Link href={`/${locale}/privacy`} className="hover:text-tactical-red">

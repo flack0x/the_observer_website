@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -101,7 +101,7 @@ function StatCard({
         className="inline-flex p-2.5 rounded-lg mb-3"
         style={{ backgroundColor: `${color}15` }}
       >
-        <Icon className="h-5 w-5" style={{ color }} />
+        <Icon className="h-5 w-5" style={{ color }} aria-hidden="true" />
       </div>
       <div className="font-heading text-2xl sm:text-3xl font-bold text-slate-light">
         <AnimatedCounter value={value} />
@@ -173,17 +173,26 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
     );
   }
 
-  // Prepare chart data
-  const countryData = Object.entries(metrics.countries)
-    .slice(0, 6)
-    .map(([name, value]) => ({ name: formatLabel(name), value }));
+  // Prepare chart data (memoized to prevent unnecessary recalculations)
+  const countryData = useMemo(() =>
+    Object.entries(metrics.countries)
+      .slice(0, 6)
+      .map(([name, value]) => ({ name: formatLabel(name), value })),
+    [metrics.countries]
+  );
 
-  const trendData = metrics.temporal.daily_trend.slice(-7).map((d) => ({
-    date: new Date(d.date).toLocaleDateString(isArabic ? "ar-SA" : "en-US", { weekday: "short" }),
-    articles: d.count,
-  }));
+  const trendData = useMemo(() =>
+    metrics.temporal.daily_trend.slice(-7).map((d) => ({
+      date: new Date(d.date).toLocaleDateString(isArabic ? "ar-SA" : "en-US", { weekday: "short" }),
+      articles: d.count,
+    })),
+    [metrics.temporal.daily_trend, isArabic]
+  );
 
-  const trendingTopics = metrics.trending.slice(0, 5);
+  const trendingTopics = useMemo(() =>
+    metrics.trending.slice(0, 5),
+    [metrics.trending]
+  );
 
   return (
     <section
@@ -200,7 +209,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
         >
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-900 border border-midnight-600 mb-4">
-              <Activity className="h-4 w-4 text-tactical-red" />
+              <Activity className="h-4 w-4 text-tactical-red" aria-hidden="true" />
               <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-medium">
                 {dict.home.liveIntelligence}
               </span>
@@ -213,7 +222,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
             href={`/${locale}/situation-room`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-midnight-600 text-sm text-slate-medium hover:border-tactical-red hover:text-tactical-red transition-colors"
           >
-            <BarChart3 className="h-4 w-4" />
+            <BarChart3 className="h-4 w-4" aria-hidden="true" />
             {dict.home.fullDashboard}
           </Link>
         </motion.div>
@@ -262,7 +271,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
             className="bg-midnight-900 rounded-xl p-5 border border-midnight-700"
           >
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="h-4 w-4 text-tactical-amber" />
+              <TrendingUp className="h-4 w-4 text-tactical-amber" aria-hidden="true" />
               <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
                 {dict.dashboard.activity7Day}
               </h3>
@@ -307,7 +316,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
             className="bg-midnight-900 rounded-xl p-5 border border-midnight-700"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Globe className="h-4 w-4 text-tactical-red" />
+              <Globe className="h-4 w-4 text-tactical-red" aria-hidden="true" />
               <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
                 {dict.dashboard.topRegions}
               </h3>
@@ -348,7 +357,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
             className="bg-midnight-900 rounded-xl p-5 border border-midnight-700"
           >
             <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="h-4 w-4 text-tactical-amber" />
+              <AlertTriangle className="h-4 w-4 text-tactical-amber" aria-hidden="true" />
               <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
                 {dict.dashboard.trendingNow}
               </h3>

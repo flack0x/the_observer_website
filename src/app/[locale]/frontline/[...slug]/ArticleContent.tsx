@@ -53,7 +53,7 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
             href={`/${locale}/frontline`}
             className="inline-flex items-center gap-2 text-slate-medium hover:text-tactical-red transition-colors"
           >
-            <ArrowLeft className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} />
+            <ArrowLeft className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
             <span className="text-sm font-heading uppercase tracking-wider">
               {dict.frontline.backToFrontline}
             </span>
@@ -73,7 +73,7 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               {getCategoryDisplay(article.category, locale)}
             </span>
             <span className="flex items-center gap-1.5 text-sm text-slate-dark">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4" aria-hidden="true" />
               {getRelativeTime(article.date, locale)}
             </span>
           </div>
@@ -91,7 +91,7 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-slate-medium hover:text-tactical-red transition-colors"
             >
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
               {dict.common.viewOnTelegram}
             </a>
             <button
@@ -99,7 +99,7 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               className="relative flex items-center gap-2 text-sm text-slate-medium hover:text-tactical-red transition-colors"
               aria-label={dict.common.share}
             >
-              <Share2 className="h-4 w-4" />
+              <Share2 className="h-4 w-4" aria-hidden="true" />
               {dict.common.share}
               <AnimatePresence>
                 {showCopied && (
@@ -109,8 +109,8 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
                     exit={{ opacity: 0, y: -10 }}
                     className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded bg-earth-olive text-white text-xs whitespace-nowrap"
                   >
-                    <Check className="h-3 w-3" />
-                    {isArabic ? "تم النسخ!" : "Copied!"}
+                    <Check className="h-3 w-3" aria-hidden="true" />
+                    {dict.article.copied}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -172,12 +172,10 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
         >
           <div className="bg-midnight-800 rounded-xl p-6 sm:p-8 text-center">
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
-              {isArabic ? 'ابق على اطلاع' : 'Stay Informed'}
+              {dict.article.stayInformed}
             </h3>
             <p className="text-slate-medium text-sm mb-4">
-              {isArabic
-                ? 'انضم إلى قناتنا على تيليجرام للتحديثات الفورية'
-                : 'Join our Telegram channel for real-time updates'}
+              {dict.article.joinChannelDesc}
             </p>
             <a
               href={telegramChannel}
@@ -185,7 +183,7 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-tactical-red text-white rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
             >
-              {isArabic ? 'انضم إلى المُراقِب' : 'Join The Observer'}
+              {dict.article.joinObserver}
             </a>
           </div>
         </motion.div>

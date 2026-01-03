@@ -121,6 +121,13 @@ const dictionaries = {
       loadMore: 'Load More Reports',
       remaining: 'remaining',
     },
+    // Article page
+    article: {
+      copied: 'Copied!',
+      stayInformed: 'Stay Informed',
+      joinChannelDesc: 'Join our Telegram channel for real-time updates',
+      joinObserver: 'Join The Observer',
+    },
     // Community section
     community: {
       joinNetwork: 'Join The Network',
@@ -254,6 +261,13 @@ const dictionaries = {
       fullReport: 'التقرير الكامل',
       loadMore: 'تحميل المزيد',
       remaining: 'متبقي',
+    },
+    // Article page
+    article: {
+      copied: 'تم النسخ!',
+      stayInformed: 'ابق على اطلاع',
+      joinChannelDesc: 'انضم إلى قناتنا على تيليجرام للتحديثات الفورية',
+      joinObserver: 'انضم إلى المُراقِب',
     },
     // Community section
     community: {

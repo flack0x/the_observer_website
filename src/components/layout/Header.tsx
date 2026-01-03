@@ -91,7 +91,7 @@ export default function Header({ locale, dict }: HeaderProps) {
                 aria-label={locale === "en" ? "Switch to Arabic" : "التبديل إلى الإنجليزية"}
                 className="flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
               >
-                <Globe className="h-3 w-3" />
+                <Globe className="h-3 w-3" aria-hidden="true" />
                 {locale === "en" ? "AR" : "EN"}
               </button>
 
@@ -102,7 +102,7 @@ export default function Header({ locale, dict }: HeaderProps) {
                 rel="noopener noreferrer"
                 className="hidden items-center gap-1.5 rounded-full bg-tactical-red px-3 py-1.5 font-heading text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover sm:flex"
               >
-                <Send className="h-3 w-3" />
+                <Send className="h-3 w-3" aria-hidden="true" />
                 {dict.nav.joinIntel}
               </a>
 
@@ -152,7 +152,7 @@ export default function Header({ locale, dict }: HeaderProps) {
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 rounded-full bg-tactical-red px-4 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white hover:bg-tactical-red-hover transition-colors"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-4 w-4" aria-hidden="true" />
                   {dict.nav.joinIntel}
                 </a>
               </div>

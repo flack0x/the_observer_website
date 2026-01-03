@@ -136,9 +136,11 @@ export default function FrontlinePage() {
                 </button>
               ))}
             </div>
-            <div className={`${isArabic ? 'mr-auto' : 'ml-auto'} flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-700 px-3 py-2`}>
-              <Search className="h-4 w-4 text-slate-dark" />
+            <div className={`${isArabic ? 'mr-auto' : 'ml-auto'} flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-700 px-3 py-2 focus-within:border-tactical-red focus-within:ring-1 focus-within:ring-tactical-red transition-colors`}>
+              <Search className="h-4 w-4 text-slate-dark" aria-hidden="true" />
+              <label htmlFor="frontline-search" className="sr-only">{dict.common.search}</label>
               <input
+                id="frontline-search"
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
@@ -186,11 +188,11 @@ export default function FrontlinePage() {
                     {article.categoryDisplay}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-slate-dark">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3" aria-hidden="true" />
                     {article.timestamp}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-slate-dark">
-                    <MapPin className="h-3 w-3" />
+                    <MapPin className="h-3 w-3" aria-hidden="true" />
                     {article.location}
                   </span>
                 </div>
@@ -210,7 +212,7 @@ export default function FrontlinePage() {
                     className="flex items-center gap-1 font-heading text-xs font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
                   >
                     {dict.frontline.fullReport}
-                    <ArrowRight className={`h-3 w-3 ${isArabic ? 'rotate-180' : ''}`} />
+                    <ArrowRight className={`h-3 w-3 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
                   </Link>
                 </div>
               </motion.article>

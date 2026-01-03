@@ -39,7 +39,7 @@ export default function Community({ locale, dict }: CommunityProps) {
           className="text-center mb-10 sm:mb-12"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-800 border border-midnight-600 mb-4">
-            <Users className="h-4 w-4 text-tactical-amber" />
+            <Users className="h-4 w-4 text-tactical-amber" aria-hidden="true" />
             <span className="text-xs font-heading font-medium uppercase tracking-wider text-slate-medium">
               {dict.community.joinNetwork}
             </span>
@@ -67,9 +67,9 @@ export default function Community({ locale, dict }: CommunityProps) {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 rounded-lg bg-tactical-red/10">
-                <Send className="h-6 w-6 text-tactical-red" />
+                <Send className="h-6 w-6 text-tactical-red" aria-hidden="true" />
               </div>
-              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-red transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
+              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-red transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} aria-hidden="true" />
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
               {dict.community.telegramEnglish}
@@ -78,7 +78,7 @@ export default function Community({ locale, dict }: CommunityProps) {
               {dict.community.telegramEnglishDesc}
             </p>
             <div className="flex items-center gap-2 text-sm text-slate-dark">
-              <Users className="h-4 w-4" />
+              <Users className="h-4 w-4" aria-hidden="true" />
               <span>{dict.community.membersEnglish}</span>
             </div>
           </motion.a>
@@ -96,9 +96,9 @@ export default function Community({ locale, dict }: CommunityProps) {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 rounded-lg bg-tactical-amber/10">
-                <Globe className="h-6 w-6 text-tactical-amber" />
+                <Globe className="h-6 w-6 text-tactical-amber" aria-hidden="true" />
               </div>
-              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-amber transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
+              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-amber transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} aria-hidden="true" />
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
               {dict.community.telegramArabic}
@@ -107,7 +107,7 @@ export default function Community({ locale, dict }: CommunityProps) {
               {dict.community.telegramArabicDesc}
             </p>
             <div className="flex items-center gap-2 text-sm text-slate-dark">
-              <Users className="h-4 w-4" />
+              <Users className="h-4 w-4" aria-hidden="true" />
               <span>{dict.community.membersArabic}</span>
             </div>
           </motion.a>
@@ -122,7 +122,7 @@ export default function Community({ locale, dict }: CommunityProps) {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 rounded-lg bg-earth-olive/10">
-                <Mail className="h-6 w-6 text-earth-olive" />
+                <Mail className="h-6 w-6 text-earth-olive" aria-hidden="true" />
               </div>
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
@@ -135,7 +135,7 @@ export default function Community({ locale, dict }: CommunityProps) {
               href={`mailto:${CONTACT_EMAIL}`}
               className="inline-flex items-center gap-2 text-sm font-heading font-medium uppercase tracking-wider text-earth-olive hover:text-tactical-amber transition-colors"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-4 w-4" aria-hidden="true" />
               {CONTACT_EMAIL}
             </a>
           </motion.div>
@@ -150,7 +150,7 @@ export default function Community({ locale, dict }: CommunityProps) {
           className="mt-10 sm:mt-12 bg-midnight-800 rounded-xl p-6 sm:p-8 border border-midnight-700"
         >
           <div className="flex items-center gap-3 mb-6">
-            <MessageCircle className="h-5 w-5 text-tactical-red" />
+            <MessageCircle className="h-5 w-5 text-tactical-red" aria-hidden="true" />
             <h3 className="font-heading text-lg font-bold uppercase tracking-wider text-slate-light">
               {dict.community.communityPulse}
             </h3>
@@ -179,7 +179,7 @@ export default function Community({ locale, dict }: CommunityProps) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-tactical-red text-white font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
             >
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
               {dict.community.joinDiscussion}
             </a>
           </div>
