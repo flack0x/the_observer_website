@@ -19,6 +19,17 @@ export interface Article {
   isBreaking: boolean;
 }
 
+// Parse date strings from API response into Date objects
+function parseArticleDates(articles: unknown[]): Article[] {
+  return articles.map((article) => {
+    const a = article as Record<string, unknown>;
+    return {
+      ...a,
+      date: new Date(a.date as string),
+    } as Article;
+  });
+}
+
 // Hook to fetch articles on the client side
 export function useArticles(channel: "en" | "ar" | "all" = "en") {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -39,10 +50,13 @@ export function useArticles(channel: "en" | "ar" | "all" = "en") {
 
         if (channel === "all") {
           // Combine and sort by most recent
-          const combined = [...(data.en || []), ...(data.ar || [])];
+          const combined = [
+            ...parseArticleDates(data.en || []),
+            ...parseArticleDates(data.ar || []),
+          ];
           setArticles(combined);
         } else {
-          setArticles(data);
+          setArticles(parseArticleDates(data));
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
