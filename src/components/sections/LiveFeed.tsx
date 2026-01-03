@@ -31,7 +31,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
   const displayArticles = filteredArticles.slice(0, 6);
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900">
+    <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mb-8 sm:mb-10">
@@ -59,7 +59,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
               className="hidden sm:flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
             >
               {dict.common.viewAll}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} />
             </Link>
           </div>
 
@@ -131,13 +131,13 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                     className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
                   >
                     {dict.common.readMore}
-                    <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                    <ArrowRight className={`h-3 w-3 transition-transform ${isArabic ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} />
                   </Link>
                 </div>
 
                 {/* First article badge */}
                 {index === 0 && (
-                  <div className="absolute -top-2 -right-2">
+                  <div className={`absolute -top-2 ${isArabic ? '-left-2' : '-right-2'}`}>
                     <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-tactical-red text-white text-[10px] font-heading font-bold uppercase">
                       <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                       {isArabic ? 'الأحدث' : 'Latest'}
@@ -163,7 +163,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
             className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-midnight-800 border border-midnight-700 font-heading text-sm font-medium uppercase tracking-wider text-slate-light hover:border-tactical-red hover:text-tactical-red transition-all"
           >
             {dict.common.viewAll}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} />
           </Link>
         </div>
       </div>

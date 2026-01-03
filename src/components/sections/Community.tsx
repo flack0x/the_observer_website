@@ -25,7 +25,7 @@ export default function Community({ locale, dict }: CommunityProps) {
       ];
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900">
+    <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -67,7 +67,7 @@ export default function Community({ locale, dict }: CommunityProps) {
               <div className="p-3 rounded-lg bg-tactical-red/10">
                 <Send className="h-6 w-6 text-tactical-red" />
               </div>
-              <ArrowRight className="h-5 w-5 text-slate-dark group-hover:text-tactical-red group-hover:translate-x-1 transition-all" />
+              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-red transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
               {isArabic ? 'تيليجرام (الإنجليزية)' : 'Telegram (English)'}
@@ -98,7 +98,7 @@ export default function Community({ locale, dict }: CommunityProps) {
               <div className="p-3 rounded-lg bg-tactical-amber/10">
                 <Globe className="h-6 w-6 text-tactical-amber" />
               </div>
-              <ArrowRight className="h-5 w-5 text-slate-dark group-hover:text-tactical-amber group-hover:translate-x-1 transition-all" />
+              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-amber transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
               {isArabic ? 'تيليجرام (العربية)' : 'Telegram (العربية)'}

@@ -64,7 +64,7 @@ export default function FrontlinePage() {
   }
 
   return (
-    <div className="min-h-screen bg-midnight-900">
+    <div className="min-h-screen bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* Hero */}
       <section className="border-b border-midnight-700 bg-midnight-800 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

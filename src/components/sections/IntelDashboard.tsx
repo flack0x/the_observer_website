@@ -159,14 +159,17 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
     .map(([name, value]) => ({ name: formatLabel(name), value }));
 
   const trendData = metrics.temporal.daily_trend.slice(-7).map((d) => ({
-    date: new Date(d.date).toLocaleDateString("en-US", { weekday: "short" }),
+    date: new Date(d.date).toLocaleDateString(isArabic ? "ar-SA" : "en-US", { weekday: "short" }),
     articles: d.count,
   }));
 
   const trendingTopics = metrics.trending.slice(0, 5);
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-midnight-800 border-y border-midnight-700">
+    <section
+      className="py-12 sm:py-16 lg:py-20 bg-midnight-800 border-y border-midnight-700"
+      dir={isArabic ? 'rtl' : 'ltr'}
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -241,7 +244,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="h-4 w-4 text-tactical-amber" />
               <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
-                7-Day Activity
+                {dict.dashboard.activity7Day}
               </h3>
             </div>
             <div className="h-40">
@@ -286,7 +289,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
             <div className="flex items-center gap-2 mb-4">
               <Globe className="h-4 w-4 text-tactical-red" />
               <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
-                Top Regions
+                {dict.dashboard.topRegions}
               </h3>
             </div>
             <div className="h-40">
@@ -327,7 +330,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="h-4 w-4 text-tactical-amber" />
               <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
-                Trending Now
+                {dict.dashboard.trendingNow}
               </h3>
             </div>
             <div className="space-y-3">
@@ -348,7 +351,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
                       whileInView={{ width: `${width}%` }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.8, delay: 0.1 * i }}
-                      className="absolute inset-y-0 left-0 rounded bg-tactical-red/10"
+                      className={`absolute inset-y-0 rounded bg-tactical-red/10 ${isArabic ? 'right-0' : 'left-0'}`}
                     />
                   </div>
                 );
@@ -365,22 +368,22 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
           transition={{ delay: 0.5 }}
           className="mt-6 bg-midnight-900 rounded-xl p-5 border border-midnight-700"
         >
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
             <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
-              Content Sentiment
+              {dict.dashboard.contentSentiment}
             </h3>
             <div className="flex items-center gap-4 text-xs">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-red-600" />
-                Negative {metrics.sentiment.percentages.negative}%
+                {dict.dashboard.negative} {metrics.sentiment.percentages.negative}%
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-amber-500" />
-                Neutral {metrics.sentiment.percentages.neutral}%
+                {dict.dashboard.neutral} {metrics.sentiment.percentages.neutral}%
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-green-600" />
-                Positive {metrics.sentiment.percentages.positive}%
+                {dict.dashboard.positive} {metrics.sentiment.percentages.positive}%
               </span>
             </div>
           </div>
