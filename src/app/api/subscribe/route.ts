@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { rateLimit, getClientIdentifier, subscribeConfig } from "@/lib/rate-limit";
+import type { Locale } from "@/lib/i18n";
+
+interface SubscribeRequestBody {
+  email: string;
+  locale?: Locale;
+}
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +24,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
+    const body: SubscribeRequestBody = await request.json();
     const { email, locale = "en" } = body;
 
     // Validate email format
