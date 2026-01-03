@@ -31,9 +31,15 @@
   --color-ivory: #fafaf9;
   --color-ivory-dark: #e7e5e4;
 
-  /* Cream - Light background for content areas */
-  --color-cream: #d8d5cf;
-  --color-cream-dark: #ccc9c2;
+  /* Card - Light backgrounds for content cards */
+  --color-card: #f8f7f5;
+  --color-card-dark: #eeedeb;
+  --color-card-border: #e5e4e2;
+
+  /* Card text colors */
+  --color-card-text: #1a1a1a;
+  --color-card-text-muted: #4a4a4a;
+  --color-card-text-subtle: #6b6b6b;
 
   /* Fonts */
   --font-heading: "Montserrat", system-ui, sans-serif;
