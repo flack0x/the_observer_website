@@ -15,6 +15,9 @@ export interface DBArticle {
   excerpt: string;
   content: string;
   category: string;
+  countries: string[];
+  organizations: string[];
+  is_structured: boolean;
   telegram_link: string;
   telegram_date: string;
   created_at: string;
@@ -53,7 +56,10 @@ export function dbArticleToFrontend(article: DBArticle) {
     link: article.telegram_link,
     channel: article.channel,
     category: article.category,
-    isBreaking: false,
+    countries: article.countries || [],
+    organizations: article.organizations || [],
+    isStructured: article.is_structured || false,
+    isBreaking: article.category === 'Breaking',
   };
 }
 

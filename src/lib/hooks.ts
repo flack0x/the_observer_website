@@ -13,6 +13,9 @@ export interface Article {
   link: string;
   channel: "en" | "ar";
   category: string;
+  countries: string[];
+  organizations: string[];
+  isStructured: boolean;
   isBreaking: boolean;
 }
 
