@@ -117,9 +117,12 @@ interface IntelDashboardProps {
   dict: Dictionary;
 }
 
+const REFRESH_INTERVAL = 60000; // Refresh every 60 seconds
+
 export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const isArabic = locale === 'ar';
 
   useEffect(() => {
@@ -129,6 +132,7 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
         if (res.ok) {
           const data = await res.json();
           setMetrics(data);
+          setLastUpdated(new Date());
         }
       } catch (err) {
         console.error("Failed to fetch metrics:", err);
@@ -136,7 +140,14 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
         setLoading(false);
       }
     }
+
+    // Initial fetch
     fetchMetrics();
+
+    // Set up periodic refresh
+    const interval = setInterval(fetchMetrics, REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

@@ -1,10 +1,25 @@
 import { NextResponse } from "next/server";
 import { fetchArticlesFromDB, dbArticleToFrontend } from "@/lib/supabase";
+import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 // Always fetch fresh from database
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  // Rate limiting - 100 requests per minute per IP (default)
+  const clientId = getClientIdentifier(request);
+  const { success, remaining } = rateLimit(`articles:${clientId}`);
+
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: { "X-RateLimit-Remaining": remaining.toString() },
+      }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const channel = searchParams.get("channel") as "en" | "ar" | "all" | null;
   const limit = parseInt(searchParams.get("limit") || "20");

@@ -106,6 +106,17 @@ const dictionaries = {
       copyright: '© 2024 The Observer. All rights reserved.',
       description: 'Independent geopolitical analysis and intelligence coverage.',
     },
+    // Breaking news ticker fallback
+    ticker: {
+      live: 'Live',
+      fallbackNews: [
+        { category: 'BREAKING', title: 'Egypt-Israel $35B gas deal signals new economic dependency dynamics' },
+        { category: 'POLITICAL', title: 'Regional powers reassess strategic alignments amid shifting alliances' },
+        { category: 'MILITARY', title: 'New defense systems deployed across contested maritime zones' },
+        { category: 'INTELLIGENCE', title: 'Covert operations exposed in declassified agency documents' },
+        { category: 'ECONOMIC', title: 'Sanctions impact analysis reveals unexpected market adaptations' },
+      ],
+    },
     // About page
     about: {
       title: 'About The Observer',
@@ -235,6 +246,17 @@ const dictionaries = {
       terms: 'الشروط',
       copyright: '© ٢٠٢٤ المُراقِب. جميع الحقوق محفوظة.',
       description: 'تحليل جيوسياسي مستقل وتغطية استخباراتية.',
+    },
+    // Breaking news ticker fallback
+    ticker: {
+      live: 'مباشر',
+      fallbackNews: [
+        { category: 'عاجل', title: 'صفقة غاز مصرية-إسرائيلية بـ35 مليار دولار تشير إلى ديناميكيات تبعية اقتصادية جديدة' },
+        { category: 'سياسي', title: 'القوى الإقليمية تعيد تقييم توجهاتها الاستراتيجية وسط تحالفات متغيرة' },
+        { category: 'عسكري', title: 'نشر أنظمة دفاعية جديدة عبر المناطق البحرية المتنازع عليها' },
+        { category: 'استخباراتي', title: 'كشف عمليات سرية في وثائق رفعت عنها السرية' },
+        { category: 'اقتصادي', title: 'تحليل تأثير العقوبات يكشف عن تكيفات غير متوقعة في السوق' },
+      ],
     },
     // About page
     about: {

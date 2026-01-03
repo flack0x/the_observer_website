@@ -43,7 +43,7 @@ export default function Header({ locale, dict }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50">
       {/* Breaking News Ticker */}
-      <BreakingNewsTicker locale={locale} />
+      <BreakingNewsTicker locale={locale} dict={dict} />
 
       {/* Main Header */}
       <div className="bg-midnight-800 backdrop-blur-md border-b border-midnight-600">
