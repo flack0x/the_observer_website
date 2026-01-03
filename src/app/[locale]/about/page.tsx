@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import { getDictionary, type Locale, locales } from "@/lib/i18n";
 import { Eye, Target, Shield, BookOpen, Send } from "lucide-react";
 import { TELEGRAM_CHANNELS } from "@/lib/config";
@@ -55,6 +56,15 @@ export default async function AboutPage({ params }: Props) {
       {/* Hero */}
       <section className="border-b border-midnight-700 bg-midnight-800 py-16 sm:py-24">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          {/* Brand Symbol */}
+          <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6">
+            <Image
+              src="/images/observer-silhouette.png"
+              alt="The Observer"
+              fill
+              className="object-contain"
+            />
+          </div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tactical-red/10 border border-tactical-red/20 mb-6">
             <Eye className="h-4 w-4 text-tactical-red" />
             <span className="text-xs font-heading font-medium uppercase tracking-wider text-tactical-red">
