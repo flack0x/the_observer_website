@@ -49,10 +49,10 @@ export default function Header({ locale, dict }: HeaderProps) {
       {/* Main Header */}
       <div className="bg-midnight-800 backdrop-blur-md border-b border-midnight-600">
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-20 items-center justify-between">
             {/* Logo */}
             <Link href={`/${locale}`} className="flex items-center gap-3 group shrink-0">
-              <div className="relative w-12 h-12 flex-shrink-0">
+              <div className="relative w-16 h-16 flex-shrink-0">
                 <Image
                   src="/images/observer-silhouette.png"
                   alt="The Observer"
@@ -61,10 +61,10 @@ export default function Header({ locale, dict }: HeaderProps) {
                 />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-heading text-base font-bold tracking-wider text-slate-light">
+                <span className="font-heading text-lg font-bold tracking-wider text-slate-light">
                   {dict.header.title}
                 </span>
-                <span className="text-[8px] uppercase tracking-[0.15em] text-slate-dark">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-slate-dark">
                   {dict.header.subtitle}
                 </span>
               </div>
