@@ -11,23 +11,10 @@ interface FooterProps {
 }
 
 export default function Footer({ locale, dict }: FooterProps) {
-  const footerLinks = {
-    intelligence: [
-      { name: dict.nav.frontline, href: `/${locale}/frontline` },
-      { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
-      { name: dict.nav.dossier, href: `/${locale}/dossier` },
-      { name: dict.nav.arsenal, href: `/${locale}/arsenal` },
-    ],
-    analysis: [
-      { name: dict.nav.deepDives, href: `/${locale}/analysis` },
-      { name: dict.nav.counterNarrative, href: `/${locale}/counter-narrative` },
-      { name: dict.nav.chronicles, href: `/${locale}/chronicles` },
-    ],
-    resources: [
-      { name: dict.nav.library, href: `/${locale}/library` },
-      { name: dict.nav.sources, href: `/${locale}/sources` },
-    ],
-  };
+  const footerLinks = [
+    { name: dict.nav.frontline, href: `/${locale}/frontline` },
+    { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
+  ];
 
   return (
     <footer className="border-t border-midnight-600 bg-midnight-900">
@@ -66,9 +53,9 @@ export default function Footer({ locale, dict }: FooterProps) {
 
       {/* Main Footer */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {/* Brand */}
-          <div className="col-span-2 sm:col-span-3 lg:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-2">
             <Link href={`/${locale}`} className="flex items-center gap-3">
               <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
                 <Image
@@ -109,49 +96,13 @@ export default function Footer({ locale, dict }: FooterProps) {
             </div>
           </div>
 
-          {/* Links */}
+          {/* Navigation Links */}
           <div>
             <h4 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light">
-              {dict.nav.intelligence}
+              {locale === 'ar' ? 'التنقل' : 'Navigate'}
             </h4>
             <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
-              {footerLinks.intelligence.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-xs sm:text-sm text-slate-dark transition-colors hover:text-tactical-red"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light">
-              {locale === 'ar' ? 'تحليل' : 'Analysis'}
-            </h4>
-            <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
-              {footerLinks.analysis.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-xs sm:text-sm text-slate-dark transition-colors hover:text-tactical-red"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="col-span-2 sm:col-span-1">
-            <h4 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light">
-              {locale === 'ar' ? 'موارد' : 'Resources'}
-            </h4>
-            <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
-              {footerLinks.resources.map((link) => (
+              {footerLinks.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
