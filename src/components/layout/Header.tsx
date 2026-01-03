@@ -49,7 +49,7 @@ export default function Header({ locale, dict }: HeaderProps) {
       {/* Main Header */}
       <div className="bg-midnight-800 backdrop-blur-md border-b border-midnight-600">
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-20 items-center justify-between">
+          <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link href={`/${locale}`} className="flex items-center gap-3 group shrink-0">
               <div className="relative w-16 h-16 flex-shrink-0">
