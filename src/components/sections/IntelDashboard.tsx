@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -173,26 +173,17 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
     );
   }
 
-  // Prepare chart data (memoized to prevent unnecessary recalculations)
-  const countryData = useMemo(() =>
-    Object.entries(metrics.countries)
-      .slice(0, 6)
-      .map(([name, value]) => ({ name: formatLabel(name), value })),
-    [metrics.countries]
-  );
+  // Prepare chart data
+  const countryData = Object.entries(metrics.countries)
+    .slice(0, 6)
+    .map(([name, value]) => ({ name: formatLabel(name), value }));
 
-  const trendData = useMemo(() =>
-    metrics.temporal.daily_trend.slice(-7).map((d) => ({
-      date: new Date(d.date).toLocaleDateString(isArabic ? "ar-SA" : "en-US", { weekday: "short" }),
-      articles: d.count,
-    })),
-    [metrics.temporal.daily_trend, isArabic]
-  );
+  const trendData = metrics.temporal.daily_trend.slice(-7).map((d) => ({
+    date: new Date(d.date).toLocaleDateString(isArabic ? "ar-SA" : "en-US", { weekday: "short" }),
+    articles: d.count,
+  }));
 
-  const trendingTopics = useMemo(() =>
-    metrics.trending.slice(0, 5),
-    [metrics.trending]
-  );
+  const trendingTopics = metrics.trending.slice(0, 5);
 
   return (
     <section
