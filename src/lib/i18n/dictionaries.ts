@@ -154,6 +154,12 @@ const dictionaries = {
         { category: 'ECONOMIC', title: 'Sanctions impact analysis reveals unexpected market adaptations' },
       ],
     },
+    // 404 Not Found
+    notFound: {
+      title: 'Page Not Found',
+      description: "The intelligence you're looking for doesn't exist or has been classified.",
+      goHome: 'Go Home',
+    },
     // About page
     about: {
       title: 'About The Observer',
@@ -331,6 +337,12 @@ const dictionaries = {
         { category: 'استخباراتي', title: 'كشف عمليات سرية في وثائق رفعت عنها السرية' },
         { category: 'اقتصادي', title: 'تحليل تأثير العقوبات يكشف عن تكيفات غير متوقعة في السوق' },
       ],
+    },
+    // 404 Not Found
+    notFound: {
+      title: 'الصفحة غير موجودة',
+      description: 'المعلومات التي تبحث عنها غير موجودة أو تم تصنيفها سرية.',
+      goHome: 'الرئيسية',
     },
     // About page
     about: {

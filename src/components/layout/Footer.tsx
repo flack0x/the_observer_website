@@ -71,7 +71,11 @@ export default function Footer({ locale, dict }: FooterProps) {
               </div>
             ) : (
               <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row w-full max-w-md gap-2">
+                <label htmlFor="newsletter-email" className="sr-only">
+                  {dict.footer.emailPlaceholder}
+                </label>
                 <input
+                  id="newsletter-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

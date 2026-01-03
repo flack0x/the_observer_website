@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { getDictionary, type Locale, locales } from "@/lib/i18n";
 import { Eye, Target, Shield, BookOpen, Send } from "lucide-react";
+import { TELEGRAM_CHANNELS } from "@/lib/config";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -133,7 +134,7 @@ export default async function AboutPage({ params }: Props) {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="https://t.me/observer_5"
+              href={TELEGRAM_CHANNELS.en}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-tactical-red text-white rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
@@ -142,7 +143,7 @@ export default async function AboutPage({ params }: Props) {
               {dict.about.telegramEnglish}
             </a>
             <a
-              href="https://t.me/almuraqb"
+              href={TELEGRAM_CHANNELS.ar}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-midnight-700 text-slate-light rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-midnight-600 border border-midnight-600 transition-colors"
