@@ -9,10 +9,19 @@ interface CommunityProps {
   dict: Dictionary;
 }
 
+// Static color mappings for Tailwind (dynamic classes don't work)
+const colorStyles = {
+  'tactical-red': 'bg-tactical-red/10 text-tactical-red',
+  'tactical-amber': 'bg-tactical-amber/10 text-tactical-amber',
+  'earth-olive': 'bg-earth-olive/10 text-earth-olive',
+} as const;
+
+type ColorKey = keyof typeof colorStyles;
+
 export default function Community({ locale, dict }: CommunityProps) {
   const isArabic = locale === 'ar';
 
-  const discussions = isArabic
+  const discussions: { topic: string; activity: string; color: ColorKey }[] = isArabic
     ? [
         { topic: "تحديثات الوضع في غزة", activity: "نشط جداً", color: "tactical-red" },
         { topic: "التحليل الإقليمي", activity: "نشط", color: "tactical-amber" },
@@ -169,7 +178,7 @@ export default function Community({ locale, dict }: CommunityProps) {
                 <span className="text-sm text-slate-light font-medium">
                   {item.topic}
                 </span>
-                <span className={`text-xs font-heading font-medium uppercase px-2 py-1 rounded-full bg-${item.color}/10 text-${item.color}`}>
+                <span className={`text-xs font-heading font-medium uppercase px-2 py-1 rounded-full ${colorStyles[item.color]}`}>
                   {item.activity}
                 </span>
               </div>

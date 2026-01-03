@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function SituationRoomPage({ params }: Props) {
   const { locale } = await params;
   const validLocale = locales.includes(locale as Locale) ? (locale as Locale) : 'en';
-  const dict = await getDictionary(validLocale);
+  const dict = getDictionary(validLocale);
   const isArabic = validLocale === 'ar';
 
   return (
