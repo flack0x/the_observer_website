@@ -2,11 +2,16 @@
 Telegram Article Fetcher for The Observer
 Fetches articles from Telegram channels and stores them in Supabase.
 
-Setup:
-1. Get Telegram API credentials from https://my.telegram.org/apps
-2. Create a .env file with the required variables (see below)
-3. Run: pip install telethon python-dotenv supabase
-4. Run: python fetch_telegram.py
+Supports structured post format:
+---
+TITLE: Headline here
+CATEGORY: Military | Political | Economic | Intelligence | Diplomatic | Breaking | Analysis
+COUNTRIES: Israel, Yemen, Iran
+ORGS: IDF, Houthis, Hamas
+---
+Article content...
+
+Falls back to auto-detection for older posts without headers.
 """
 
 import os
@@ -27,18 +32,15 @@ if sys.platform == 'win32':
 # Load environment variables
 load_dotenv()
 
-# Telegram API credentials (get from https://my.telegram.org/apps)
+# Telegram API credentials
 API_ID = os.getenv('TELEGRAM_API_ID')
 API_HASH = os.getenv('TELEGRAM_API_HASH')
-PHONE = os.getenv('TELEGRAM_PHONE')  # Your phone number
-
-# String session for CI/CD (GitHub Actions)
-# Generate with: python scripts/export_session.py
+PHONE = os.getenv('TELEGRAM_PHONE')
 SESSION_STRING = os.getenv('TELEGRAM_SESSION_STRING')
 
 # Supabase credentials
 SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://gbqvivmfivsuvvdkoiuc.supabase.co')
-SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_KEY')  # Use service role key for write access
+SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
 
 # Channel configuration
 CHANNELS = {
@@ -46,18 +48,38 @@ CHANNELS = {
     'ar': 'almuraqb',
 }
 
+# Valid categories (English and Arabic)
+VALID_CATEGORIES = {
+    # English
+    'military': 'Military',
+    'political': 'Political',
+    'economic': 'Economic',
+    'intelligence': 'Intelligence',
+    'diplomatic': 'Diplomatic',
+    'breaking': 'Breaking',
+    'analysis': 'Analysis',
+    # Arabic
+    'عسكري': 'Military',
+    'سياسي': 'Political',
+    'اقتصادي': 'Economic',
+    'استخباراتي': 'Intelligence',
+    'دبلوماسي': 'Diplomatic',
+    'عاجل': 'Breaking',
+    'تحليل': 'Analysis',
+}
+
 # Emoji patterns to remove
 EMOJI_PATTERN = re.compile(
     "["
-    "\U0001F300-\U0001F9FF"  # Misc symbols, emoticons, etc.
-    "\U00002600-\U000026FF"  # Misc symbols
-    "\U00002700-\U000027BF"  # Dingbats
-    "\U0001F600-\U0001F64F"  # Emoticons
-    "\U0001F680-\U0001F6FF"  # Transport/map symbols
-    "\U00002300-\U000023FF"  # Misc technical
-    "\U0000FE00-\U0000FE0F"  # Variation selectors
-    "\U0001F1E0-\U0001F1FF"  # Flags
-    "🔴🔵🟢🟡⚫⚪🔻🔺📌🖋👍✅❌⚠️🚨📢📣"
+    "\U0001F300-\U0001F9FF"
+    "\U00002600-\U000026FF"
+    "\U00002700-\U000027BF"
+    "\U0001F600-\U0001F64F"
+    "\U0001F680-\U0001F6FF"
+    "\U00002300-\U000023FF"
+    "\U0000FE00-\U0000FE0F"
+    "\U0001F1E0-\U0001F1FF"
+    "🔴🔵🟢🟡⚫⚪🔻🔺📌🖋👍✅❌⚠️🚨📢📣📂🌍🏛️📊"
     "]+",
     flags=re.UNICODE
 )
@@ -65,13 +87,94 @@ EMOJI_PATTERN = re.compile(
 
 def clean_text(text: str) -> str:
     """Remove emojis and clean up text."""
-    # Remove emojis
     text = EMOJI_PATTERN.sub('', text)
-    # Remove markdown bold/italic markers for cleaning
     text = re.sub(r'[_*]{1,2}', '', text)
-    # Clean up whitespace
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
+
+
+def parse_structured_header(text: str) -> dict | None:
+    """
+    Parse structured headers from post.
+
+    Supports formats:
+    TITLE: ...
+    CATEGORY: ...
+    COUNTRIES: ...
+    ORGS: ...
+    ---
+
+    Or Arabic:
+    العنوان: ...
+    التصنيف: ...
+    الدول: ...
+    المنظمات: ...
+    ---
+    """
+    result = {
+        'title': None,
+        'category': None,
+        'countries': [],
+        'organizations': [],
+        'content_start': 0,
+    }
+
+    lines = text.split('\n')
+    header_end = -1
+
+    # Look for header fields in first 10 lines
+    for i, line in enumerate(lines[:10]):
+        line_clean = line.strip()
+        line_lower = line_clean.lower()
+
+        # Check for separator (end of header)
+        if line_clean == '---' or line_clean == '—--' or line_clean == '———':
+            header_end = i
+            break
+
+        # Parse TITLE / العنوان
+        title_match = re.match(r'^(?:TITLE|العنوان)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
+        if title_match:
+            result['title'] = clean_text(title_match.group(1))[:150]
+            continue
+
+        # Parse CATEGORY / التصنيف
+        cat_match = re.match(r'^(?:CATEGORY|CAT|التصنيف)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
+        if cat_match:
+            cat_value = cat_match.group(1).strip().lower()
+            if cat_value in VALID_CATEGORIES:
+                result['category'] = VALID_CATEGORIES[cat_value]
+            continue
+
+        # Parse COUNTRIES / الدول
+        countries_match = re.match(r'^(?:COUNTRIES|COUNTRY|الدول)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
+        if countries_match:
+            countries_str = countries_match.group(1)
+            result['countries'] = [c.strip() for c in re.split(r'[,،]', countries_str) if c.strip()]
+            continue
+
+        # Parse ORGS / المنظمات
+        orgs_match = re.match(r'^(?:ORGS?|ORGANIZATIONS?|المنظمات)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
+        if orgs_match:
+            orgs_str = orgs_match.group(1)
+            result['organizations'] = [o.strip() for o in re.split(r'[,،]', orgs_str) if o.strip()]
+            continue
+
+    # If we found a header separator and at least a title, return the result
+    if header_end > 0 and result['title']:
+        result['content_start'] = header_end + 1
+        return result
+
+    # Also check if we found title without separator (simpler format)
+    if result['title'] and (result['category'] or result['countries']):
+        # Find where content starts (after last header field)
+        for i, line in enumerate(lines[:10]):
+            if any(line.strip().lower().startswith(prefix) for prefix in
+                   ['title:', 'category:', 'countries:', 'orgs:', 'العنوان:', 'التصنيف:', 'الدول:', 'المنظمات:']):
+                result['content_start'] = i + 1
+        return result
+
+    return None
 
 
 def truncate_title(text: str, max_length: int = 100) -> str:
@@ -80,13 +183,11 @@ def truncate_title(text: str, max_length: int = 100) -> str:
     if len(text) <= max_length:
         return text
 
-    # Try to cut at punctuation within limits
     for punct in ['. ', ': ', ' — ', ' - ', ', ', '; ']:
         idx = text.find(punct, 30, max_length)
         if idx > 0:
             return text[:idx].strip()
 
-    # Cut at last word boundary before max_length
     last_space = text.rfind(' ', 30, max_length)
     if last_space > 30:
         return text[:last_space].strip() + '...'
@@ -94,28 +195,20 @@ def truncate_title(text: str, max_length: int = 100) -> str:
     return text[:max_length - 3].strip() + '...'
 
 
-def extract_title(text: str, channel: str) -> str:
-    """
-    Extract a SHORT, concise title from a Telegram message.
-    Target: 60-100 characters max.
-    """
+def extract_title_legacy(text: str) -> str:
+    """Legacy title extraction for posts without structured headers."""
     lines = [line.strip() for line in text.split('\n') if line.strip()]
-
-    # Only check the first 3 lines for a bold title
     first_lines = '\n'.join(lines[:3])
 
-    # Pattern 1: Look for bold text **title** - extract just the bold part
+    # Pattern 1: Bold text **title**
     bold_matches = re.findall(r'\*\*([^*]+)\*\*', first_lines)
     if bold_matches:
-        # Get the first bold text that looks like a title
         for bold_text in bold_matches:
             cleaned = clean_text(bold_text)
-            # Skip very short items (likely just a name/location)
             if len(cleaned) >= 10:
                 return truncate_title(cleaned, 100)
 
-    # Pattern 2: Bullet point articles - extract topic from first bullet
-    # Format: "• **Topic**, description here..."
+    # Pattern 2: Bullet point articles
     bullet_pattern = r'^[•\-\*]\s*\*?\*?([^,•\n]{10,60})'
     for line in lines[:3]:
         match = re.match(bullet_pattern, line)
@@ -124,9 +217,8 @@ def extract_title(text: str, channel: str) -> str:
             if len(topic) >= 10:
                 return truncate_title(topic, 100)
 
-    # Pattern 3: First line without bullets/formatting as title
+    # Pattern 3: First substantial line
     for line in lines[:5]:
-        # Skip lines that are just links or channel mentions
         if line.startswith('http') or line.startswith('@') or 'Link to' in line:
             continue
         if 't.me/' in line and len(line) < 50:
@@ -134,21 +226,16 @@ def extract_title(text: str, channel: str) -> str:
         if line.startswith('[') and '](' in line:
             continue
 
-        # Remove leading bullets/markers
         cleaned = re.sub(r'^[•\-\*\d\.]+\s*', '', line)
         cleaned = clean_text(cleaned)
 
-        # Check if it looks like a title
         has_letters = bool(re.search(r'[a-zA-Z\u0600-\u06FF]', cleaned))
-
-        # Skip section headers
         is_section_header = bool(re.match(r'^[IVX]+\.?\s|^\d+\.?\s', cleaned))
         is_conclusion = cleaned.lower() in ['conclusion', 'الخاتمة', 'خاتمة', 'introduction', 'مقدمة']
 
         if has_letters and len(cleaned) >= 15 and not is_section_header and not is_conclusion:
             return truncate_title(cleaned, 100)
 
-    # Absolute fallback
     if lines:
         cleaned = clean_text(lines[0])
         cleaned = re.sub(r'^[•\-\*\d\.]+\s*', '', cleaned)
@@ -157,45 +244,46 @@ def extract_title(text: str, channel: str) -> str:
     return 'Untitled'
 
 
-def extract_excerpt(text: str, title: str) -> str:
-    """Extract a meaningful excerpt from the content, skipping the title."""
+def extract_excerpt(text: str, title: str, content_start: int = 0) -> str:
+    """Extract a meaningful excerpt from the content."""
     lines = [line.strip() for line in text.split('\n') if line.strip()]
 
-    # Find where the title is and start after it
-    start_idx = 0
-    for i, line in enumerate(lines[:5]):
-        cleaned = clean_text(line)
-        if title in cleaned or cleaned in title:
-            start_idx = i + 1
-            break
+    # Start from content_start if provided
+    start_idx = content_start
 
-    # Collect excerpt lines
+    # If no content_start, find where title is and start after
+    if start_idx == 0:
+        for i, line in enumerate(lines[:5]):
+            cleaned = clean_text(line)
+            if title in cleaned or cleaned in title:
+                start_idx = i + 1
+                break
+
     excerpt_parts = []
     for line in lines[start_idx:start_idx + 8]:
         cleaned = clean_text(line)
 
-        # Skip links, channel mentions, and very short lines
         if any(skip in line for skip in ['http', 't.me/', '@observer', '@almuraqb', 'Link to']):
             continue
         if len(cleaned) < 20:
             continue
+        # Skip header lines
+        if any(line.strip().lower().startswith(prefix) for prefix in
+               ['title:', 'category:', 'countries:', 'orgs:', 'العنوان:', 'التصنيف:', 'الدول:', 'المنظمات:', '---']):
+            continue
 
         excerpt_parts.append(cleaned)
 
-        # Stop if we have enough content
         if sum(len(p) for p in excerpt_parts) > 300:
             break
 
     excerpt = ' '.join(excerpt_parts)
 
-    # Trim to ~350 chars at a sentence boundary
     if len(excerpt) > 350:
-        # Try to cut at a period
         last_period = excerpt.rfind('.', 100, 350)
         if last_period > 100:
             excerpt = excerpt[:last_period + 1]
         else:
-            # Cut at word boundary
             last_space = excerpt.rfind(' ', 100, 350)
             if last_space > 100:
                 excerpt = excerpt[:last_space] + '...'
@@ -205,16 +293,14 @@ def extract_excerpt(text: str, title: str) -> str:
     return excerpt if excerpt else title
 
 
-def detect_category(text: str) -> str:
-    """Detect article category from content with improved Arabic support."""
+def detect_category_legacy(text: str) -> str:
+    """Legacy category detection for posts without structured headers."""
     lower_text = text.lower()
 
-    # Breaking/Urgent
     breaking_keywords = ['breaking', 'urgent', 'عاجل', 'خبر عاجل', 'طارئ']
     if any(word in lower_text for word in breaking_keywords):
         return 'Breaking'
 
-    # Military
     military_keywords = [
         'military', 'weapon', 'army', 'forces', 'troops', 'battlefield', 'missile',
         'drone', 'strike', 'attack', 'defense', 'war', 'combat', 'artillery',
@@ -224,7 +310,6 @@ def detect_category(text: str) -> str:
     if any(word in lower_text for word in military_keywords):
         return 'Military'
 
-    # Intelligence
     intel_keywords = [
         'intelligence', 'leaked', 'exposed', 'covert', 'secret', 'spy', 'agent',
         'استخبارات', 'تسريب', 'كشف', 'سري', 'جاسوس', 'عميل'
@@ -232,7 +317,6 @@ def detect_category(text: str) -> str:
     if any(word in lower_text for word in intel_keywords):
         return 'Intelligence'
 
-    # Economic
     economic_keywords = [
         'economic', 'economy', 'sanction', 'dollar', 'trade', 'oil', 'gas',
         'market', 'financial', 'bank', 'currency',
@@ -241,7 +325,6 @@ def detect_category(text: str) -> str:
     if any(word in lower_text for word in economic_keywords):
         return 'Economic'
 
-    # Political
     political_keywords = [
         'saudi', 'emirati', 'yemen', 'gaza', 'israel', 'iran', 'coalition',
         'government', 'president', 'minister', 'parliament', 'election', 'vote',
@@ -251,7 +334,6 @@ def detect_category(text: str) -> str:
     if any(word in lower_text for word in political_keywords):
         return 'Political'
 
-    # Diplomatic
     diplomatic_keywords = [
         'diplomatic', 'diplomacy', 'negotiation', 'summit', 'treaty', 'agreement',
         'ambassador', 'embassy', 'talks',
@@ -263,21 +345,76 @@ def detect_category(text: str) -> str:
     return 'Analysis'
 
 
+def detect_countries_legacy(text: str) -> list[str]:
+    """Detect countries mentioned in text."""
+    countries_map = {
+        'israel': 'Israel', 'israeli': 'Israel', 'اسرائيل': 'Israel', 'إسرائيل': 'Israel',
+        'palestine': 'Palestine', 'palestinian': 'Palestine', 'gaza': 'Palestine', 'فلسطين': 'Palestine', 'غزة': 'Palestine',
+        'yemen': 'Yemen', 'yemeni': 'Yemen', 'اليمن': 'Yemen', 'يمن': 'Yemen',
+        'iran': 'Iran', 'iranian': 'Iran', 'إيران': 'Iran', 'ايران': 'Iran',
+        'saudi': 'Saudi Arabia', 'saudi arabia': 'Saudi Arabia', 'السعودية': 'Saudi Arabia',
+        'uae': 'UAE', 'emirati': 'UAE', 'emirates': 'UAE', 'الإمارات': 'UAE',
+        'egypt': 'Egypt', 'egyptian': 'Egypt', 'مصر': 'Egypt',
+        'syria': 'Syria', 'syrian': 'Syria', 'سوريا': 'Syria',
+        'lebanon': 'Lebanon', 'lebanese': 'Lebanon', 'لبنان': 'Lebanon',
+        'iraq': 'Iraq', 'iraqi': 'Iraq', 'العراق': 'Iraq',
+        'jordan': 'Jordan', 'jordanian': 'Jordan', 'الأردن': 'Jordan',
+        'turkey': 'Turkey', 'turkish': 'Turkey', 'تركيا': 'Turkey',
+        'russia': 'Russia', 'russian': 'Russia', 'روسيا': 'Russia',
+        'usa': 'USA', 'america': 'USA', 'american': 'USA', 'أمريكا': 'USA',
+        'china': 'China', 'chinese': 'China', 'الصين': 'China',
+    }
+
+    lower_text = text.lower()
+    found = set()
+
+    for keyword, country in countries_map.items():
+        if keyword in lower_text:
+            found.add(country)
+
+    return list(found)[:5]  # Limit to 5 countries
+
+
+def detect_organizations_legacy(text: str) -> list[str]:
+    """Detect organizations mentioned in text."""
+    orgs_map = {
+        'idf': 'IDF', 'israel defense': 'IDF', 'جيش الدفاع': 'IDF',
+        'hamas': 'Hamas', 'حماس': 'Hamas',
+        'hezbollah': 'Hezbollah', 'حزب الله': 'Hezbollah',
+        'houthi': 'Houthis', 'ansar allah': 'Houthis', 'الحوثي': 'Houthis', 'أنصار الله': 'Houthis',
+        'irgc': 'IRGC', 'revolutionary guard': 'IRGC', 'الحرس الثوري': 'IRGC',
+        'mossad': 'Mossad', 'الموساد': 'Mossad',
+        'cia': 'CIA',
+        'un ': 'UN', 'united nations': 'UN', 'الأمم المتحدة': 'UN',
+        'nato': 'NATO', 'الناتو': 'NATO',
+        'plo': 'PLO', 'منظمة التحرير': 'PLO',
+        'fatah': 'Fatah', 'فتح': 'Fatah',
+        'islamic jihad': 'Islamic Jihad', 'الجهاد الإسلامي': 'Islamic Jihad',
+    }
+
+    lower_text = text.lower()
+    found = set()
+
+    for keyword, org in orgs_map.items():
+        if keyword in lower_text:
+            found.add(org)
+
+    return list(found)[:5]
+
+
 def is_valid_article(text: str) -> bool:
-    """Check if the message is a valid article (not just a link or short post)."""
-    if not text or len(text) < 150:
+    """Check if the message is a valid article."""
+    if not text or len(text) < 100:
         return False
 
-    # Skip messages that are primarily links
     lines = [l.strip() for l in text.split('\n') if l.strip()]
     link_lines = sum(1 for l in lines if 't.me/' in l or l.startswith('http'))
 
     if len(lines) <= 3 and link_lines >= len(lines) - 1:
         return False
 
-    # Must have substantial text content
     cleaned = clean_text(text)
-    if len(cleaned) < 100:
+    if len(cleaned) < 80:
         return False
 
     return True
@@ -290,17 +427,38 @@ def parse_message(message: Message, channel: str, channel_username: str) -> dict
     if not is_valid_article(text):
         return None
 
-    title = extract_title(text, channel)
-    excerpt = extract_excerpt(text, title)
-    category = detect_category(text)
+    # Try to parse structured headers first
+    structured = parse_structured_header(text)
+
+    if structured and structured['title']:
+        # Use structured data
+        title = structured['title']
+        category = structured['category'] or detect_category_legacy(text)
+        countries = structured['countries'] or detect_countries_legacy(text)
+        organizations = structured['organizations'] or detect_organizations_legacy(text)
+        content_start = structured['content_start']
+        is_structured = True
+    else:
+        # Fall back to legacy detection
+        title = extract_title_legacy(text)
+        category = detect_category_legacy(text)
+        countries = detect_countries_legacy(text)
+        organizations = detect_organizations_legacy(text)
+        content_start = 0
+        is_structured = False
+
+    excerpt = extract_excerpt(text, title, content_start)
 
     return {
         'telegram_id': f"{channel_username}/{message.id}",
         'channel': channel,
         'title': title,
         'excerpt': excerpt,
-        'content': text,  # Store full original content with formatting
+        'content': text,
         'category': category,
+        'countries': countries,
+        'organizations': organizations,
+        'is_structured': is_structured,
         'telegram_link': f"https://t.me/{channel_username}/{message.id}",
         'telegram_date': message.date.isoformat(),
     }
@@ -309,6 +467,7 @@ def parse_message(message: Message, channel: str, channel_username: str) -> dict
 async def fetch_channel_messages(client: TelegramClient, channel_username: str, channel: str, limit: int = 2000) -> list[dict]:
     """Fetch messages from a Telegram channel."""
     articles = []
+    structured_count = 0
 
     try:
         entity = await client.get_entity(channel_username)
@@ -321,11 +480,12 @@ async def fetch_channel_messages(client: TelegramClient, channel_username: str, 
                 if article:
                     articles.append(article)
                     count += 1
-                    # Print progress every 50 articles
+                    if article.get('is_structured'):
+                        structured_count += 1
                     if count % 50 == 0:
                         print(f"  Processed {count} articles...")
 
-        print(f"  Total valid articles from @{channel_username}: {len(articles)}")
+        print(f"  Total valid articles: {len(articles)} ({structured_count} with structured headers)")
     except Exception as e:
         print(f"Error fetching @{channel_username}: {e}")
         import traceback
@@ -344,7 +504,6 @@ def upsert_articles(supabase: Client, articles: list[dict], batch_size: int = 50
     success_count = 0
     error_count = 0
 
-    # Process in batches
     for i in range(0, len(articles), batch_size):
         batch = articles[i:i + batch_size]
 
@@ -368,28 +527,22 @@ async def main():
     """Main function to fetch and store articles."""
     print("=" * 60)
     print("The Observer - Telegram Article Fetcher")
+    print("Supports structured post format for better metadata!")
     print("=" * 60)
 
-    # Validate credentials
     if not API_ID or not API_HASH:
         print("\nError: Missing Telegram API credentials.")
-        print("Get them from https://my.telegram.org/apps")
-        print("Then set TELEGRAM_API_ID and TELEGRAM_API_HASH in .env")
         return
 
     if not SUPABASE_KEY:
         print("\nError: Missing Supabase service key.")
-        print("Set SUPABASE_SERVICE_KEY in .env")
         return
 
-    # Initialize Supabase client
     print("\nConnecting to Supabase...")
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    # Initialize Telegram client
     print("Connecting to Telegram...")
 
-    # Use StringSession for CI/CD, file session for local development
     if SESSION_STRING:
         print("Using StringSession (CI/CD mode)")
         client = TelegramClient(StringSession(SESSION_STRING), int(API_ID), API_HASH)
@@ -406,12 +559,10 @@ async def main():
 
     all_articles = []
 
-    # Fetch from all channels
     for channel, username in CHANNELS.items():
         articles = await fetch_channel_messages(client, username, channel)
         all_articles.extend(articles)
 
-    # Store in Supabase
     upsert_articles(supabase, all_articles)
 
     await client.disconnect()
