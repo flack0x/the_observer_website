@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Clock, ArrowRight, Radio, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useArticles } from "@/lib/hooks";
+import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface LiveFeedProps {
@@ -12,22 +13,14 @@ interface LiveFeedProps {
   dict: Dictionary;
 }
 
-const categoriesEN = ["All", "Political", "Military", "Economic", "Intelligence", "Analysis"];
-const categoriesAR = ["الكل", "سياسي", "عسكري", "اقتصادي", "استخباراتي", "تحليل"];
-
 export default function LiveFeed({ locale, dict }: LiveFeedProps) {
   const isArabic = locale === 'ar';
-  const categories = isArabic ? categoriesAR : categoriesEN;
+  const categories = getCategoryList(locale);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const { articles, loading } = useArticles(locale);
 
   // Filter articles by category
-  const filteredArticles = activeCategory === categories[0]
-    ? articles
-    : articles.filter(a =>
-        a.category.toLowerCase().includes(activeCategory.toLowerCase())
-      );
-
+  const filteredArticles = filterByCategory(articles, activeCategory, locale);
   const displayArticles = filteredArticles.slice(0, 6);
 
   return (
@@ -103,7 +96,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                 {/* Category & Time */}
                 <div className="flex items-center justify-between mb-3">
                   <span className="px-2.5 py-1 rounded-full bg-tactical-red/10 text-tactical-red font-heading text-[10px] sm:text-xs font-medium uppercase">
-                    {article.category}
+                    {getCategoryDisplay(article.category, locale)}
                   </span>
                   <span className="text-[10px] sm:text-xs text-slate-dark flex items-center gap-1">
                     <Clock className="h-3 w-3" />

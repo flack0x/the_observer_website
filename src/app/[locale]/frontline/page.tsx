@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Clock,
@@ -14,28 +15,39 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useArticles } from "@/lib/hooks";
 import { getDictionary, type Locale } from "@/lib/i18n";
-
-const categoriesEN = ["All", "Breaking", "Military", "Intelligence", "Economic", "Diplomatic", "Analysis"];
-const categoriesAR = ["الكل", "عاجل", "عسكري", "استخباراتي", "اقتصادي", "دبلوماسي", "تحليل"];
+import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
 
 export default function FrontlinePage() {
   const params = useParams();
   const locale = (params.locale as Locale) || 'en';
   const isArabic = locale === 'ar';
   const dict = getDictionary(locale);
-  const categories = isArabic ? categoriesAR : categoriesEN;
+  const categories = getCategoryList(locale);
+  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { articles, loading, error } = useArticles(locale);
 
-  // Transform real articles
-  const newsArticles = articles.map((article, index) => ({
+  // Filter articles by category and search
+  const filteredByCategory = filterByCategory(articles, activeCategory, locale);
+
+  const filteredArticles = searchQuery
+    ? filteredByCategory.filter(article =>
+        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : filteredByCategory;
+
+  // Transform filtered articles
+  const newsArticles = filteredArticles.map((article) => ({
     id: article.id,
     category: article.category,
+    categoryDisplay: getCategoryDisplay(article.category, locale),
     title: article.title,
     excerpt: article.excerpt,
     timestamp: article.timestamp,
     location: isArabic ? "المنطقة" : "Region",
-    isBreaking: index === 0,
+    isBreaking: article.isBreaking,
     readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} ${isArabic ? 'دقيقة' : 'min'}`,
   }));
 
@@ -95,11 +107,12 @@ export default function FrontlinePage() {
               <span className="text-sm text-slate-dark">{isArabic ? 'تصفية:' : 'Filter:'}</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {categories.map((category, index) => (
+              {categories.map((category) => (
                 <button
                   key={category}
+                  onClick={() => setActiveCategory(category)}
                   className={`rounded-full px-4 py-1.5 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
-                    index === 0
+                    activeCategory === category
                       ? "bg-tactical-red text-white"
                       : "border border-midnight-600 text-slate-medium hover:border-tactical-red hover:text-tactical-red"
                   }`}
@@ -112,8 +125,10 @@ export default function FrontlinePage() {
               <Search className="h-4 w-4 text-slate-dark" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={dict.common.search + '...'}
-                className="bg-transparent text-sm text-slate-light placeholder-slate-dark outline-none"
+                className="bg-transparent text-sm text-slate-light placeholder-slate-dark outline-none w-32 sm:w-48"
                 dir={isArabic ? 'rtl' : 'ltr'}
               />
             </div>
@@ -146,7 +161,7 @@ export default function FrontlinePage() {
 
                 <div className="mb-3 flex items-center gap-3 flex-wrap">
                   <span className="rounded bg-midnight-600 px-2 py-1 font-heading text-xs font-medium uppercase text-slate-medium">
-                    {article.category}
+                    {article.categoryDisplay}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-slate-dark">
                     <Clock className="h-3 w-3" />
