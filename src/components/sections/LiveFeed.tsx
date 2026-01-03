@@ -92,32 +92,32 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                className="group relative bg-card rounded-xl p-5 sm:p-6 border border-card-border hover:border-tactical-red/50 hover:shadow-lg transition-all duration-300"
+                className="group relative bg-midnight-800 rounded-xl p-5 sm:p-6 border border-midnight-700 hover:border-tactical-red/50 transition-all duration-300"
               >
                 {/* Category & Time */}
                 <div className="flex items-center justify-between mb-3">
                   <span className="px-2.5 py-1 rounded-full bg-tactical-red/10 text-tactical-red font-heading text-[10px] sm:text-xs font-medium uppercase">
                     {getCategoryDisplay(article.category, locale)}
                   </span>
-                  <span className="text-[10px] sm:text-xs text-card-text-subtle flex items-center gap-1">
+                  <span className="text-[10px] sm:text-xs text-slate-dark flex items-center gap-1">
                     <Clock className="h-3 w-3" aria-hidden="true" />
                     {getRelativeTime(article.date, locale)}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h3 className="font-heading text-base sm:text-lg font-bold text-card-text leading-tight mb-3 group-hover:text-tactical-red transition-colors line-clamp-2">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-slate-light leading-tight mb-3 group-hover:text-tactical-red transition-colors line-clamp-2">
                   {article.title}
                 </h3>
 
                 {/* Excerpt */}
-                <p className="text-sm text-card-text-muted leading-relaxed line-clamp-3 mb-4">
+                <p className="text-sm text-slate-medium leading-relaxed line-clamp-3 mb-4">
                   {article.excerpt}
                 </p>
 
                 {/* Read more */}
-                <div className="flex items-center justify-between pt-4 border-t border-card-border">
-                  <span className="text-xs text-card-text-subtle">
+                <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
+                  <span className="text-xs text-slate-dark">
                     {isArabic ? '٣ دقائق قراءة' : '3 min read'}
                   </span>
                   <Link

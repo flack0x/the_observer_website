@@ -170,7 +170,7 @@ export default function FrontlinePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="group rounded-xl border border-card-border bg-card p-6 transition-all hover:border-tactical-red hover:shadow-lg card-hover"
+                className="group rounded-xl border border-midnight-600 bg-midnight-800 p-6 transition-all hover:border-tactical-red card-hover"
               >
                 {article.isBreaking && (
                   <motion.div
@@ -184,29 +184,29 @@ export default function FrontlinePage() {
                 )}
 
                 <div className="mb-3 flex items-center gap-3 flex-wrap">
-                  <span className="rounded bg-tactical-red/10 px-2 py-1 font-heading text-xs font-medium uppercase text-tactical-red">
+                  <span className="rounded bg-midnight-600 px-2 py-1 font-heading text-xs font-medium uppercase text-slate-medium">
                     {article.categoryDisplay}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-card-text-subtle">
+                  <span className="flex items-center gap-1 text-xs text-slate-dark">
                     <Clock className="h-3 w-3" aria-hidden="true" />
                     {article.timestamp}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-card-text-subtle">
+                  <span className="flex items-center gap-1 text-xs text-slate-dark">
                     <MapPin className="h-3 w-3" aria-hidden="true" />
                     {article.location}
                   </span>
                 </div>
 
-                <h2 className="mb-3 font-heading text-xl font-bold uppercase leading-tight text-card-text transition-colors group-hover:text-tactical-red">
+                <h2 className="mb-3 font-heading text-xl font-bold uppercase leading-tight text-slate-light transition-colors group-hover:text-tactical-red">
                   {article.title}
                 </h2>
 
-                <p className="mb-4 font-body text-sm leading-relaxed text-card-text-muted">
+                <p className="mb-4 font-body text-sm leading-relaxed text-slate-medium">
                   {article.excerpt}
                 </p>
 
-                <div className="flex items-center justify-between border-t border-card-border pt-4">
-                  <span className="text-xs text-card-text-subtle">{article.readTime} {dict.frontline.read}</span>
+                <div className="flex items-center justify-between border-t border-midnight-700 pt-4">
+                  <span className="text-xs text-slate-dark">{article.readTime} {dict.frontline.read}</span>
                   <Link
                     href={`/${locale}/frontline/${article.id}`}
                     className="flex items-center gap-1 font-heading text-xs font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"

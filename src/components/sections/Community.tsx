@@ -63,21 +63,21 @@ export default function Community({ locale, dict }: CommunityProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0 }}
-            className="group bg-card rounded-xl p-6 border border-card-border hover:border-tactical-red/50 hover:shadow-lg transition-all duration-300"
+            className="group bg-midnight-800 rounded-xl p-6 border border-midnight-700 hover:border-tactical-red/50 transition-all duration-300"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 rounded-lg bg-tactical-red/10">
                 <Send className="h-6 w-6 text-tactical-red" aria-hidden="true" />
               </div>
-              <ArrowRight className={`h-5 w-5 text-card-text-subtle group-hover:text-tactical-red transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} aria-hidden="true" />
+              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-red transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} aria-hidden="true" />
             </div>
-            <h3 className="font-heading text-lg font-bold text-card-text mb-2">
+            <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
               {dict.community.telegramEnglish}
             </h3>
-            <p className="text-sm text-card-text-muted mb-4">
+            <p className="text-sm text-slate-medium mb-4">
               {dict.community.telegramEnglishDesc}
             </p>
-            <div className="flex items-center gap-2 text-sm text-card-text-subtle">
+            <div className="flex items-center gap-2 text-sm text-slate-dark">
               <Users className="h-4 w-4" aria-hidden="true" />
               <span>{dict.community.membersEnglish}</span>
             </div>
@@ -92,21 +92,21 @@ export default function Community({ locale, dict }: CommunityProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="group bg-card rounded-xl p-6 border border-card-border hover:border-tactical-amber/50 hover:shadow-lg transition-all duration-300"
+            className="group bg-midnight-800 rounded-xl p-6 border border-midnight-700 hover:border-tactical-amber/50 transition-all duration-300"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 rounded-lg bg-tactical-amber/10">
                 <Globe className="h-6 w-6 text-tactical-amber" aria-hidden="true" />
               </div>
-              <ArrowRight className={`h-5 w-5 text-card-text-subtle group-hover:text-tactical-amber transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} aria-hidden="true" />
+              <ArrowRight className={`h-5 w-5 text-slate-dark group-hover:text-tactical-amber transition-all ${isArabic ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} aria-hidden="true" />
             </div>
-            <h3 className="font-heading text-lg font-bold text-card-text mb-2">
+            <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
               {dict.community.telegramArabic}
             </h3>
-            <p className="text-sm text-card-text-muted mb-4">
+            <p className="text-sm text-slate-medium mb-4">
               {dict.community.telegramArabicDesc}
             </p>
-            <div className="flex items-center gap-2 text-sm text-card-text-subtle">
+            <div className="flex items-center gap-2 text-sm text-slate-dark">
               <Users className="h-4 w-4" aria-hidden="true" />
               <span>{dict.community.membersArabic}</span>
             </div>
@@ -118,17 +118,17 @@ export default function Community({ locale, dict }: CommunityProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="bg-card rounded-xl p-6 border border-card-border sm:col-span-2 lg:col-span-1"
+            className="bg-midnight-800 rounded-xl p-6 border border-midnight-700 sm:col-span-2 lg:col-span-1"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 rounded-lg bg-earth-olive/10">
                 <Mail className="h-6 w-6 text-earth-olive" aria-hidden="true" />
               </div>
             </div>
-            <h3 className="font-heading text-lg font-bold text-card-text mb-2">
+            <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
               {dict.community.contactUs}
             </h3>
-            <p className="text-sm text-card-text-muted mb-4">
+            <p className="text-sm text-slate-medium mb-4">
               {dict.community.contactDesc}
             </p>
             <a
@@ -147,11 +147,11 @@ export default function Community({ locale, dict }: CommunityProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3 }}
-          className="mt-10 sm:mt-12 bg-card rounded-xl p-6 sm:p-8 border border-card-border"
+          className="mt-10 sm:mt-12 bg-midnight-800 rounded-xl p-6 sm:p-8 border border-midnight-700"
         >
           <div className="flex items-center gap-3 mb-6">
             <MessageCircle className="h-5 w-5 text-tactical-red" aria-hidden="true" />
-            <h3 className="font-heading text-lg font-bold uppercase tracking-wider text-card-text">
+            <h3 className="font-heading text-lg font-bold uppercase tracking-wider text-slate-light">
               {dict.community.communityPulse}
             </h3>
           </div>
@@ -160,9 +160,9 @@ export default function Community({ locale, dict }: CommunityProps) {
             {discussions.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 rounded-lg bg-card-dark border border-card-border"
+                className="flex items-center justify-between p-4 rounded-lg bg-midnight-900 border border-midnight-700"
               >
-                <span className="text-sm text-card-text font-medium">
+                <span className="text-sm text-slate-light font-medium">
                   {item.topic}
                 </span>
                 <span className={`text-xs font-heading font-medium uppercase px-2 py-1 rounded-full ${colorStyles[item.color]}`}>
@@ -172,7 +172,7 @@ export default function Community({ locale, dict }: CommunityProps) {
             ))}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-card-border text-center">
+          <div className="mt-6 pt-6 border-t border-midnight-700 text-center">
             <a
               href={getTelegramChannel(locale)}
               target="_blank"
