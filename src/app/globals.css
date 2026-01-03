@@ -231,6 +231,16 @@ a {
   background-clip: text;
 }
 
+/* Text Gradient for Arabic (with padding to prevent clipping) */
+.text-gradient-ar {
+  background: linear-gradient(135deg, var(--color-tactical-red) 0%, var(--color-tactical-amber) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding: 0.1em 0;
+  display: inline-block;
+}
+
 /* Breaking News Ticker - GPU-accelerated CSS animation */
 .ticker-container {
   flex: 1;

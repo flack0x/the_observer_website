@@ -58,13 +58,13 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-heading text-[2.5rem] font-black uppercase tracking-tight text-slate-light sm:text-6xl lg:text-7xl"
+            className={`font-heading text-[2.5rem] font-black uppercase text-slate-light sm:text-6xl lg:text-7xl ${isArabic ? 'leading-[1.4] tracking-normal' : 'tracking-tight'}`}
           >
             {isArabic ? (
               <>
-                <span className="block">راقب.</span>
-                <span className="block text-gradient">حلل.</span>
-                <span className="block">افهم.</span>
+                <span className="block py-1">راقب.</span>
+                <span className="block py-1 text-gradient-ar">حلل.</span>
+                <span className="block py-1">افهم.</span>
               </>
             ) : (
               <>
