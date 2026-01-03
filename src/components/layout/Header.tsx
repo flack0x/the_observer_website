@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
 import type { Locale, Dictionary } from "@/lib/i18n";
+import { getTelegramChannel } from "@/lib/config";
 
 interface HeaderProps {
   locale: Locale;
@@ -38,7 +39,7 @@ export default function Header({ locale, dict }: HeaderProps) {
     router.push(newPathname);
   };
 
-  const telegramChannel = locale === 'ar' ? 'https://t.me/almuraqb' : 'https://t.me/observer_5';
+  const telegramChannel = getTelegramChannel(locale);
 
   return (
     <header className="sticky top-0 z-50">

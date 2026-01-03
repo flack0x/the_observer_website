@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Send, MessageCircle, Mail, Users, ArrowRight, Globe } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
+import { getTelegramChannel, TELEGRAM_CHANNELS, CONTACT_EMAIL } from "@/lib/config";
 
 interface CommunityProps {
   locale: Locale;
@@ -55,7 +56,7 @@ export default function Community({ locale, dict }: CommunityProps) {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Telegram English */}
           <motion.a
-            href="https://t.me/observer_5"
+            href={TELEGRAM_CHANNELS.en}
             target="_blank"
             rel="noopener noreferrer"
             initial={{ opacity: 0, y: 20 }}
@@ -84,7 +85,7 @@ export default function Community({ locale, dict }: CommunityProps) {
 
           {/* Telegram Arabic */}
           <motion.a
-            href="https://t.me/almuraqb"
+            href={TELEGRAM_CHANNELS.ar}
             target="_blank"
             rel="noopener noreferrer"
             initial={{ opacity: 0, y: 20 }}
@@ -131,11 +132,11 @@ export default function Community({ locale, dict }: CommunityProps) {
               {dict.community.contactDesc}
             </p>
             <a
-              href="mailto:contact@theobserver.com"
+              href={`mailto:${CONTACT_EMAIL}`}
               className="inline-flex items-center gap-2 text-sm font-heading font-medium uppercase tracking-wider text-earth-olive hover:text-tactical-amber transition-colors"
             >
               <Mail className="h-4 w-4" />
-              contact@theobserver.com
+              {CONTACT_EMAIL}
             </a>
           </motion.div>
         </div>
@@ -173,7 +174,7 @@ export default function Community({ locale, dict }: CommunityProps) {
 
           <div className="mt-6 pt-6 border-t border-midnight-700 text-center">
             <a
-              href={isArabic ? "https://t.me/almuraqb" : "https://t.me/observer_5"}
+              href={getTelegramChannel(locale)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-tactical-red text-white font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"

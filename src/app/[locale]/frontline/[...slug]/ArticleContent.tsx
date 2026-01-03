@@ -7,6 +7,7 @@ import { ArrowLeft, Clock, ExternalLink, Share2, Check } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
+import { getTelegramChannel } from "@/lib/config";
 
 interface ArticleContentProps {
   article: {
@@ -37,7 +38,7 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
     .filter((p) => p.trim().length > 0)
     .map((p) => p.trim());
 
-  const telegramChannel = isArabic ? 'https://t.me/almuraqb' : 'https://t.me/observer_5';
+  const telegramChannel = getTelegramChannel(locale);
 
   return (
     <article className="min-h-screen bg-midnight-900 py-8 sm:py-12 lg:py-16">

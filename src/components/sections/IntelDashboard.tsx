@@ -161,7 +161,16 @@ export default function IntelDashboard({ locale, dict }: IntelDashboardProps) {
   }
 
   if (!metrics) {
-    return null;
+    return (
+      <section className="py-12 sm:py-16 lg:py-20 bg-midnight-800 border-y border-midnight-700">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
+          <AlertTriangle className="h-8 w-8 text-tactical-amber mb-3" />
+          <p className="text-slate-medium text-sm">
+            {isArabic ? 'تعذر تحميل البيانات. يرجى المحاولة لاحقاً.' : 'Unable to load data. Please try again later.'}
+          </p>
+        </div>
+      </section>
+    );
   }
 
   // Prepare chart data

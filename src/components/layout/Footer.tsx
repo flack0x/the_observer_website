@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Send, Mail, Shield, CheckCircle, Loader2 } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
+import { TELEGRAM_CHANNELS } from "@/lib/config";
 
 interface FooterProps {
   locale: Locale;
@@ -127,7 +128,7 @@ export default function Footer({ locale, dict }: FooterProps) {
             </p>
             <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
               <a
-                href="https://t.me/observer_5"
+                href={TELEGRAM_CHANNELS.en}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full bg-midnight-700 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-slate-medium transition-colors hover:bg-tactical-red hover:text-white"
@@ -136,7 +137,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                 English
               </a>
               <a
-                href="https://t.me/almuraqb"
+                href={TELEGRAM_CHANNELS.ar}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full bg-midnight-700 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-slate-medium transition-colors hover:bg-tactical-red hover:text-white"
