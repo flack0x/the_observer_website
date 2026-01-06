@@ -464,28 +464,133 @@ def parse_message(message: Message, channel: str, channel_username: str) -> dict
     }
 
 
+def group_multipart_messages(messages: list[Message], time_threshold_seconds: int = 180) -> list[list[Message]]:
+    """
+    Group consecutive messages that are likely parts of the same article.
+    Messages posted within time_threshold_seconds of each other are grouped together.
+    """
+    if not messages:
+        return []
+
+    # Sort by date ascending (oldest first) for proper grouping
+    sorted_messages = sorted(messages, key=lambda m: m.date)
+
+    groups = []
+    current_group = [sorted_messages[0]]
+
+    for i in range(1, len(sorted_messages)):
+        current_msg = sorted_messages[i]
+        prev_msg = sorted_messages[i - 1]
+
+        # Calculate time difference in seconds
+        time_diff = (current_msg.date - prev_msg.date).total_seconds()
+
+        if time_diff <= time_threshold_seconds:
+            # Same group - messages are close together
+            current_group.append(current_msg)
+        else:
+            # New group - save current and start new
+            groups.append(current_group)
+            current_group = [current_msg]
+
+    # Don't forget the last group
+    groups.append(current_group)
+
+    return groups
+
+
+def combine_message_group(messages: list[Message], channel: str, channel_username: str) -> dict | None:
+    """
+    Combine a group of messages into a single article.
+    The first message (oldest) is treated as the main article with the title.
+    Subsequent messages are appended as content.
+    """
+    if not messages:
+        return None
+
+    # Sort by date ascending (oldest first)
+    sorted_messages = sorted(messages, key=lambda m: m.date)
+    first_message = sorted_messages[0]
+
+    # Combine all text content
+    combined_text = '\n\n'.join(m.text for m in sorted_messages if m.text)
+
+    if not is_valid_article(combined_text):
+        return None
+
+    # Try to parse structured headers from the first message
+    structured = parse_structured_header(first_message.text)
+
+    if structured and structured['title']:
+        title = structured['title']
+        category = structured['category'] or detect_category_legacy(combined_text)
+        countries = structured['countries'] or detect_countries_legacy(combined_text)
+        organizations = structured['organizations'] or detect_organizations_legacy(combined_text)
+        content_start = structured['content_start']
+        is_structured = True
+    else:
+        # Fall back to legacy detection on first message only
+        title = extract_title_legacy(first_message.text)
+        category = detect_category_legacy(combined_text)
+        countries = detect_countries_legacy(combined_text)
+        organizations = detect_organizations_legacy(combined_text)
+        content_start = 0
+        is_structured = False
+
+    excerpt = extract_excerpt(combined_text, title, content_start)
+
+    return {
+        'telegram_id': f"{channel_username}/{first_message.id}",
+        'channel': channel,
+        'title': title,
+        'excerpt': excerpt,
+        'content': combined_text,
+        'category': category,
+        'countries': countries,
+        'organizations': organizations,
+        'is_structured': is_structured,
+        'telegram_link': f"https://t.me/{channel_username}/{first_message.id}",
+        'telegram_date': first_message.date.isoformat(),
+        '_part_count': len(sorted_messages),  # For logging
+    }
+
+
 async def fetch_channel_messages(client: TelegramClient, channel_username: str, channel: str, limit: int = 2000) -> list[dict]:
-    """Fetch messages from a Telegram channel."""
+    """Fetch messages from a Telegram channel and combine multi-part posts."""
     articles = []
     structured_count = 0
+    multipart_count = 0
 
     try:
         entity = await client.get_entity(channel_username)
         print(f"\nFetching messages from @{channel_username} ({channel})...")
 
-        count = 0
+        # Collect all valid messages first
+        raw_messages = []
         async for message in client.iter_messages(entity, limit=limit):
             if isinstance(message, Message) and message.text:
-                article = parse_message(message, channel, channel_username)
-                if article:
-                    articles.append(article)
-                    count += 1
-                    if article.get('is_structured'):
-                        structured_count += 1
-                    if count % 50 == 0:
-                        print(f"  Processed {count} articles...")
+                # Basic validation - must have some content
+                if len(message.text.strip()) >= 50:
+                    raw_messages.append(message)
 
-        print(f"  Total valid articles: {len(articles)} ({structured_count} with structured headers)")
+        print(f"  Collected {len(raw_messages)} raw messages")
+
+        # Group multi-part messages (within 3 minutes of each other)
+        message_groups = group_multipart_messages(raw_messages, time_threshold_seconds=180)
+        print(f"  Grouped into {len(message_groups)} article groups")
+
+        # Process each group
+        for group in message_groups:
+            article = combine_message_group(group, channel, channel_username)
+            if article:
+                articles.append(article)
+                if article.get('is_structured'):
+                    structured_count += 1
+                if article.get('_part_count', 1) > 1:
+                    multipart_count += 1
+                    print(f"    Combined {article['_part_count']} parts: {article['title'][:50]}...")
+
+        print(f"  Total articles: {len(articles)} ({structured_count} structured, {multipart_count} multi-part)")
     except Exception as e:
         print(f"Error fetching @{channel_username}: {e}")
         import traceback
@@ -509,8 +614,10 @@ def upsert_articles(supabase: Client, articles: list[dict], batch_size: int = 50
 
         for article in batch:
             try:
+                # Remove internal fields before saving
+                article_data = {k: v for k, v in article.items() if not k.startswith('_')}
                 supabase.table('articles').upsert(
-                    article,
+                    article_data,
                     on_conflict='telegram_id'
                 ).execute()
                 success_count += 1
