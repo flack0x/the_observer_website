@@ -80,6 +80,18 @@ const dictionaries = {
       neutral: 'Neutral',
       positive: 'Positive',
     },
+    // Situation Room Preview
+    situationPreview: {
+      title: 'The Situation Room',
+      subtitle: 'Real-time intelligence dashboard',
+      description: 'Access live analytics showing article coverage, regional focus, trending topics, and sentiment analysis. Visualize the data to understand the patterns.',
+      enterRoom: 'Enter Situation Room',
+      articles: 'Articles',
+      regions: 'Regions',
+      trending: 'Trending',
+      active: 'active',
+      liveFeed: 'LIVE FEED',
+    },
     // Footer
     footer: {
       about: 'About',
@@ -302,6 +314,18 @@ const dictionaries = {
       negative: 'سلبي',
       neutral: 'محايد',
       positive: 'إيجابي',
+    },
+    // Situation Room Preview
+    situationPreview: {
+      title: 'غرفة العمليات',
+      subtitle: 'لوحة معلومات استخباراتية فورية',
+      description: 'الوصول إلى تحليلات حية تُظهر تغطية المقالات، والتركيز الإقليمي، والمواضيع الرائجة، وتحليل المشاعر. تصوّر البيانات لفهم الأنماط.',
+      enterRoom: 'دخول غرفة العمليات',
+      articles: 'مقالات',
+      regions: 'مناطق',
+      trending: 'رائج',
+      active: 'نشط',
+      liveFeed: 'بث مباشر',
     },
     // Footer
     footer: {
