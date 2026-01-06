@@ -24,23 +24,7 @@ import {
 } from "recharts";
 import Link from "next/link";
 import type { Locale, Dictionary } from "@/lib/i18n";
-
-interface Metrics {
-  computed_at: string;
-  total_articles: number;
-  countries: Record<string, number>;
-  organizations: Record<string, number>;
-  categories: Record<string, number>;
-  temporal: {
-    articles_today: number;
-    articles_this_week: number;
-    daily_trend: { date: string; count: number }[];
-  };
-  sentiment: {
-    percentages: Record<string, number>;
-  };
-  trending: { topic: string; mentions: number }[];
-}
+import type { Metrics } from "@/lib/hooks";
 
 function formatLabel(key: string): string {
   return key

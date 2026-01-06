@@ -1,6 +1,6 @@
 // Localized time formatting utilities
 
-export type Locale = 'en' | 'ar';
+import type { Locale } from '@/lib/i18n';
 
 // Arabic numeral conversion
 function toArabicNumerals(num: number): string {

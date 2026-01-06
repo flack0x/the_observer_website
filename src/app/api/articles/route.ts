@@ -40,10 +40,7 @@ export async function GET(request: Request) {
 
     // Fetch single channel
     const dbArticles = await fetchArticlesFromDB(channel, limit);
-    const articles = dbArticles.map((article, index) => ({
-      ...dbArticleToFrontend(article),
-      isBreaking: index === 0,
-    }));
+    const articles = dbArticles.map(dbArticleToFrontend);
 
     return NextResponse.json(articles);
   } catch (error) {

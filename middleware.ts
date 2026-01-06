@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { locales, defaultLocale } from '@/lib/i18n/config';
+import { locales, defaultLocale, type Locale } from '@/lib/i18n/config';
 
 // Paths that should not be localized
 const publicPaths = [
@@ -12,10 +12,15 @@ const publicPaths = [
   '/manifest.json',
 ];
 
-function getLocaleFromPath(pathname: string): string | null {
+// Type guard to check if a string is a valid locale
+function isValidLocale(value: string): value is Locale {
+  return (locales as readonly string[]).includes(value);
+}
+
+function getLocaleFromPath(pathname: string): Locale | null {
   const segments = pathname.split('/');
   const potentialLocale = segments[1];
-  return locales.includes(potentialLocale as any) ? potentialLocale : null;
+  return isValidLocale(potentialLocale) ? potentialLocale : null;
 }
 
 export function middleware(request: NextRequest) {
@@ -43,10 +48,10 @@ export function middleware(request: NextRequest) {
     const preferredLocale = acceptLanguage
       .split(',')
       .map(lang => lang.split(';')[0].trim().split('-')[0])
-      .find(lang => locales.includes(lang as any));
+      .find(lang => isValidLocale(lang));
 
     if (preferredLocale) {
-      detectedLocale = preferredLocale as typeof defaultLocale;
+      detectedLocale = preferredLocale;
     }
   }
 

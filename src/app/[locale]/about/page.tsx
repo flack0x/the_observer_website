@@ -1,8 +1,7 @@
 import { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { getDictionary, type Locale, locales } from "@/lib/i18n";
-import { Eye, Target, Shield, BookOpen, CheckCircle, FileText, AlertCircle, Globe, Crosshair, Scale, DollarSign, Search, Users, ArrowRight, Send } from "lucide-react";
+import { Eye, Target, Shield, BookOpen, CheckCircle, AlertCircle, Globe, Crosshair, Scale, DollarSign, Search, Users, ArrowRight, Send } from "lucide-react";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -242,7 +241,7 @@ export default async function AboutPage({ params }: Props) {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-tactical-red/10">
                 <Send className="h-5 w-5 text-tactical-red" />
               </div>
-              <div className={`text-${isArabic ? 'right' : 'left'}`}>
+              <div className={isArabic ? 'text-right' : 'text-left'}>
                 <div className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
                   {dict.about.telegramEnglish}
                 </div>
@@ -259,7 +258,7 @@ export default async function AboutPage({ params }: Props) {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-tactical-red/10">
                 <Send className="h-5 w-5 text-tactical-red" />
               </div>
-              <div className={`text-${isArabic ? 'right' : 'left'}`}>
+              <div className={isArabic ? 'text-right' : 'text-left'}>
                 <div className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
                   {dict.about.telegramArabic}
                 </div>
