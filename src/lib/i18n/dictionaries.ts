@@ -90,8 +90,12 @@ const dictionaries = {
       articles: 'Articles',
       regions: 'Regions',
       trending: 'Trending',
-      active: 'active',
+      active: 'ACTIVE',
       liveFeed: 'LIVE FEED',
+      thisWeek: 'This Week',
+      topRegions: 'Top Regions',
+      categories: 'Categories',
+      weeklyActivity: '7-Day Activity',
     },
     // Footer
     footer: {
@@ -380,6 +384,10 @@ const dictionaries = {
       trending: 'رائج',
       active: 'نشط',
       liveFeed: 'بث مباشر',
+      thisWeek: 'هذا الأسبوع',
+      topRegions: 'أهم المناطق',
+      categories: 'التصنيفات',
+      weeklyActivity: 'نشاط ٧ أيام',
     },
     // Footer
     footer: {
