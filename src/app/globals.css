@@ -268,8 +268,8 @@ a {
   height: 100%;
   position: relative;
   contain: layout style;
-  mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
+  mask-image: linear-gradient(to right, transparent, black 1rem, black calc(100% - 1rem), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 1rem, black calc(100% - 1rem), transparent);
 }
 
 .ticker-track {
@@ -285,21 +285,21 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0 1.25rem;
+  padding: 0 1.5rem;
 }
 
 .ticker-category {
-  padding: 0.125rem 0.5rem;
+  padding: 0.1875rem 0.5rem;
   border-radius: 2px;
   font-family: var(--font-heading);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   flex-shrink: 0;
-  background: rgba(185, 28, 28, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(185, 28, 28, 0.3);
+  background: rgba(185, 28, 28, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(185, 28, 28, 0.5);
 }
 
 .ticker-title {
@@ -307,13 +307,14 @@ a {
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.01em;
-  color: #9ca3af;
+  color: #d1d5db;
 }
 
 .ticker-separator {
-  color: #374151;
+  color: #4b5563;
   font-size: 12px;
   font-weight: 300;
+  flex-shrink: 0;
 }
 
 @keyframes ticker-scroll {
@@ -325,10 +326,15 @@ a {
   }
 }
 
-/* Mobile - slightly faster, compact */
+/* Mobile - match desktop styling, just slightly compact */
 @media (max-width: 768px) {
+  .ticker-container {
+    mask-image: linear-gradient(to right, transparent, black 0.5rem, black calc(100% - 0.5rem), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 0.5rem, black calc(100% - 0.5rem), transparent);
+  }
+
   .ticker-track {
-    animation-duration: 50s;
+    animation-duration: 60s;
   }
 
   .ticker-item {
@@ -341,8 +347,13 @@ a {
   }
 
   .ticker-category {
-    font-size: 8px;
-    padding: 0.1rem 0.375rem;
+    font-size: 9px;
+    padding: 0.125rem 0.375rem;
+    font-weight: 700;
+  }
+
+  .ticker-separator {
+    font-size: 11px;
   }
 }
 
