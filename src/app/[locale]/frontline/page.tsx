@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useArticles } from "@/lib/hooks";
-import { getDictionary, type Locale } from "@/lib/i18n";
+import { getDictionary, getCountryName, type Locale } from "@/lib/i18n";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
 import { getRelativeTime } from "@/lib/time";
 
@@ -61,7 +61,7 @@ export default function FrontlinePage() {
     title: article.title,
     excerpt: article.excerpt,
     timestamp: getRelativeTime(article.date, locale),
-    location: dict.frontline.region,
+    countries: article.countries || [],
     isBreaking: article.isBreaking,
     readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} ${isArabic ? 'دقيقة' : 'min'}`,
   }));
@@ -183,7 +183,7 @@ export default function FrontlinePage() {
                   </motion.div>
                 )}
 
-                <div className="mb-3 flex items-center gap-3 flex-wrap">
+                <div className="mb-3 flex items-center gap-2 flex-wrap">
                   <span className="rounded bg-midnight-600 px-2 py-1 font-heading text-xs font-medium uppercase text-slate-medium">
                     {article.categoryDisplay}
                   </span>
@@ -191,10 +191,24 @@ export default function FrontlinePage() {
                     <Clock className="h-3 w-3" aria-hidden="true" />
                     {article.timestamp}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-slate-dark">
-                    <MapPin className="h-3 w-3" aria-hidden="true" />
-                    {article.location}
-                  </span>
+                  {article.countries.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <MapPin className="h-3 w-3 text-slate-dark" aria-hidden="true" />
+                      {article.countries.slice(0, 3).map((country) => (
+                        <span
+                          key={country}
+                          className="rounded bg-midnight-700 px-1.5 py-0.5 text-[10px] text-slate-medium"
+                        >
+                          {getCountryName(country, locale)}
+                        </span>
+                      ))}
+                      {article.countries.length > 3 && (
+                        <span className="text-[10px] text-slate-dark">
+                          +{article.countries.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <h2 className="mb-3 font-heading text-xl font-bold uppercase leading-tight text-slate-light transition-colors group-hover:text-tactical-red">

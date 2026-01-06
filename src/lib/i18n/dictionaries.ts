@@ -168,6 +168,46 @@ const dictionaries = {
       description: "The intelligence you're looking for doesn't exist or has been classified.",
       goHome: 'Go Home',
     },
+    // Country names (for translation)
+    countries: {
+      'Russia': 'Russia',
+      'USA': 'USA',
+      'China': 'China',
+      'Iran': 'Iran',
+      'Iraq': 'Iraq',
+      'Israel': 'Israel',
+      'Palestine': 'Palestine',
+      'Lebanon': 'Lebanon',
+      'Syria': 'Syria',
+      'Yemen': 'Yemen',
+      'Saudi Arabia': 'Saudi Arabia',
+      'UAE': 'UAE',
+      'Qatar': 'Qatar',
+      'Kuwait': 'Kuwait',
+      'Bahrain': 'Bahrain',
+      'Oman': 'Oman',
+      'Jordan': 'Jordan',
+      'Egypt': 'Egypt',
+      'Turkey': 'Turkey',
+      'Libya': 'Libya',
+      'Tunisia': 'Tunisia',
+      'Algeria': 'Algeria',
+      'Morocco': 'Morocco',
+      'Sudan': 'Sudan',
+      'Somalia': 'Somalia',
+      'Afghanistan': 'Afghanistan',
+      'Pakistan': 'Pakistan',
+      'India': 'India',
+      'Ukraine': 'Ukraine',
+      'Germany': 'Germany',
+      'France': 'France',
+      'UK': 'UK',
+      'Venezuela': 'Venezuela',
+      'North Korea': 'North Korea',
+      'South Korea': 'South Korea',
+      'Japan': 'Japan',
+      'Taiwan': 'Taiwan',
+    },
     // About page
     about: {
       title: 'About The Observer',
@@ -360,6 +400,46 @@ const dictionaries = {
       description: 'المعلومات التي تبحث عنها غير موجودة أو تم تصنيفها سرية.',
       goHome: 'الرئيسية',
     },
+    // Country names (for translation)
+    countries: {
+      'Russia': 'روسيا',
+      'USA': 'أمريكا',
+      'China': 'الصين',
+      'Iran': 'إيران',
+      'Iraq': 'العراق',
+      'Israel': 'إسرائيل',
+      'Palestine': 'فلسطين',
+      'Lebanon': 'لبنان',
+      'Syria': 'سوريا',
+      'Yemen': 'اليمن',
+      'Saudi Arabia': 'السعودية',
+      'UAE': 'الإمارات',
+      'Qatar': 'قطر',
+      'Kuwait': 'الكويت',
+      'Bahrain': 'البحرين',
+      'Oman': 'عُمان',
+      'Jordan': 'الأردن',
+      'Egypt': 'مصر',
+      'Turkey': 'تركيا',
+      'Libya': 'ليبيا',
+      'Tunisia': 'تونس',
+      'Algeria': 'الجزائر',
+      'Morocco': 'المغرب',
+      'Sudan': 'السودان',
+      'Somalia': 'الصومال',
+      'Afghanistan': 'أفغانستان',
+      'Pakistan': 'باكستان',
+      'India': 'الهند',
+      'Ukraine': 'أوكرانيا',
+      'Germany': 'ألمانيا',
+      'France': 'فرنسا',
+      'UK': 'بريطانيا',
+      'Venezuela': 'فنزويلا',
+      'North Korea': 'كوريا الشمالية',
+      'South Korea': 'كوريا الجنوبية',
+      'Japan': 'اليابان',
+      'Taiwan': 'تايوان',
+    },
     // About page
     about: {
       title: 'عن المُراقِب',
@@ -391,4 +471,15 @@ export type Dictionary = typeof dictionaries.en;
 
 export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale] || dictionaries.en;
+}
+
+// Translate a country name based on locale
+export function getCountryName(country: string, locale: Locale): string {
+  const dict = dictionaries[locale] || dictionaries.en;
+  return dict.countries[country as keyof typeof dict.countries] || country;
+}
+
+// Translate an array of country names
+export function getCountryNames(countries: string[], locale: Locale): string[] {
+  return countries.map(country => getCountryName(country, locale));
 }

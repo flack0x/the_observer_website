@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, ExternalLink, Share2, Check } from "lucide-react";
-import type { Locale, Dictionary } from "@/lib/i18n";
+import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin } from "lucide-react";
+import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
 
@@ -15,6 +15,7 @@ interface ArticleContentProps {
     content: string;
     date: Date;
     category: string;
+    countries: string[];
     link: string;
   };
   locale: Locale;
@@ -74,6 +75,21 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               {getRelativeTime(article.date, locale)}
             </span>
           </div>
+
+          {/* Countries */}
+          {article.countries && article.countries.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap mb-4">
+              <MapPin className="h-4 w-4 text-slate-dark" aria-hidden="true" />
+              {article.countries.map((country) => (
+                <span
+                  key={country}
+                  className="rounded-full bg-midnight-700 border border-midnight-600 px-2.5 py-1 text-xs text-slate-medium"
+                >
+                  {getCountryName(country, locale)}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Title */}
           <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-light leading-tight mb-6">
