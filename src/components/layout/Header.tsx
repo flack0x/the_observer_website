@@ -55,7 +55,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link href={`/${locale}`} className="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0">
-              <div className="relative w-10 h-10 sm:w-20 sm:h-20 sm:-my-2 flex-shrink-0">
+              <div className="relative w-20 h-20 -my-2 sm:w-40 sm:h-40 sm:-my-12 flex-shrink-0">
                 <Image
                   src="/images/observer-silhouette.png"
                   alt="The Observer"
