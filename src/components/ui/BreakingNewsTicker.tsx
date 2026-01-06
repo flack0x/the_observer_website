@@ -4,27 +4,6 @@ import { Radio } from "lucide-react";
 import { useBreakingNews } from "@/lib/hooks";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
-// Category colors
-const categoryColors: Record<string, { bg: string; text: string }> = {
-  MILITARY: { bg: "bg-red-600", text: "text-white" },
-  BREAKING: { bg: "bg-red-600", text: "text-white" },
-  POLITICAL: { bg: "bg-amber-500", text: "text-black" },
-  ECONOMIC: { bg: "bg-green-600", text: "text-white" },
-  INTELLIGENCE: { bg: "bg-blue-500", text: "text-white" },
-  DIPLOMATIC: { bg: "bg-purple-500", text: "text-white" },
-  ANALYSIS: { bg: "bg-amber-500", text: "text-black" },
-  // Arabic categories
-  'عسكري': { bg: "bg-red-600", text: "text-white" },
-  'عاجل': { bg: "bg-red-600", text: "text-white" },
-  'سياسي': { bg: "bg-amber-500", text: "text-black" },
-  'اقتصادي': { bg: "bg-green-600", text: "text-white" },
-  'استخباراتي': { bg: "bg-blue-500", text: "text-white" },
-  'دبلوماسي': { bg: "bg-purple-500", text: "text-white" },
-  'تحليل': { bg: "bg-amber-500", text: "text-black" },
-};
-
-const defaultColor = { bg: "bg-slate-600", text: "text-white" };
-
 interface NewsItem {
   category: string;
   title: string;
@@ -54,50 +33,42 @@ export default function BreakingNewsTicker({ locale = 'en', dict }: BreakingNews
       });
 
   return (
-    <div className="relative z-50 h-9 bg-midnight-700 border-b border-midnight-600">
+    <div className="relative h-8 bg-midnight-900 border-b border-midnight-700/50">
       <div className="flex h-full items-center">
-        {/* Live Label */}
-        <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-amber">
-          <div className="flex items-center gap-2 px-4">
-            <span className="ticker-pulse">
-              <Radio className="h-3 w-3 text-midnight-900" />
-            </span>
-            <span className="font-heading text-[10px] font-bold uppercase tracking-wider text-midnight-900">
-              {dict.ticker.live}
-            </span>
-          </div>
-          <div className="h-full w-4 bg-tactical-amber skew-x-12 -mr-2" />
+        {/* Live Indicator - Clean, minimal */}
+        <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-red px-4 gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+          </span>
+          <span className="font-heading text-[10px] font-bold uppercase tracking-widest text-white">
+            {dict.ticker.live}
+          </span>
         </div>
 
-        {/* Ticker */}
+        {/* Ticker Content */}
         <div className="ticker-container">
           <div className="ticker-track">
             {/* First set */}
-            {newsItems.map((item, index) => {
-              const colors = categoryColors[item.category] || defaultColor;
-              return (
-                <span key={`a-${index}`} className="ticker-item">
-                  <span className={`ticker-category ${colors.bg} ${colors.text}`}>
-                    {item.category}
-                  </span>
-                  <span className="ticker-title">{item.title}</span>
-                  <span className="ticker-separator">●</span>
+            {newsItems.map((item, index) => (
+              <span key={`a-${index}`} className="ticker-item">
+                <span className="ticker-category">
+                  {item.category}
                 </span>
-              );
-            })}
+                <span className="ticker-title">{item.title}</span>
+                <span className="ticker-separator">—</span>
+              </span>
+            ))}
             {/* Duplicate for seamless loop */}
-            {newsItems.map((item, index) => {
-              const colors = categoryColors[item.category] || defaultColor;
-              return (
-                <span key={`b-${index}`} className="ticker-item">
-                  <span className={`ticker-category ${colors.bg} ${colors.text}`}>
-                    {item.category}
-                  </span>
-                  <span className="ticker-title">{item.title}</span>
-                  <span className="ticker-separator">●</span>
+            {newsItems.map((item, index) => (
+              <span key={`b-${index}`} className="ticker-item">
+                <span className="ticker-category">
+                  {item.category}
                 </span>
-              );
-            })}
+                <span className="ticker-title">{item.title}</span>
+                <span className="ticker-separator">—</span>
+              </span>
+            ))}
           </div>
         </div>
       </div>
