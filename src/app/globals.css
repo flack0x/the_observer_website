@@ -157,6 +157,11 @@ h1, h2, h3, h4, h5, h6 {
   color: white;
 }
 
+/* Logo Gold Filter - transforms black silhouette to dark gold */
+.logo-gold {
+  filter: brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.75);
+}
+
 /* Arabic Font Class */
 .font-arabic {
   font-family: var(--font-arabic);

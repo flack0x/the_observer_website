@@ -60,7 +60,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                   src="/images/observer-silhouette.png"
                   alt="The Observer"
                   fill
-                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity logo-gold"
                 />
               </div>
               <div className="flex flex-col leading-none min-w-0">
