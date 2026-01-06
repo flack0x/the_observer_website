@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, memo } from "react";
+import { useMemo, memo } from "react";
 import { useBreakingNews } from "@/lib/hooks";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
@@ -40,37 +40,48 @@ const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) 
 
 export default function BreakingNewsTicker({ locale = 'en', dict }: BreakingNewsTickerProps) {
   const { breakingNews, loading } = useBreakingNews(locale);
-  const fallbackNews = dict.ticker.fallbackNews as NewsItem[];
 
-  // Track if we've ever loaded real data
-  const hasLoadedRef = useRef(false);
-  const cachedNewsRef = useRef<NewsItem[]>(fallbackNews);
-
-  // Memoize news items to prevent unnecessary re-renders
+  // Parse breaking news into structured format - only when we have real data
   const newsItems = useMemo(() => {
-    // If still loading and never loaded before, use fallback
-    if (loading && !hasLoadedRef.current) {
-      return fallbackNews;
+    if (loading || breakingNews.length === 0) {
+      return null;
     }
 
-    // If we have real data, parse and cache it
-    if (!loading && breakingNews.length > 0) {
-      hasLoadedRef.current = true;
-      cachedNewsRef.current = breakingNews.map((item) => {
-        const colonIndex = item.indexOf(":");
-        if (colonIndex > 0) {
-          return {
-            category: item.substring(0, colonIndex).trim(),
-            title: item.substring(colonIndex + 1).trim(),
-          };
-        }
-        return { category: "INTEL", title: item };
-      });
-    }
+    return breakingNews.map((item) => {
+      const colonIndex = item.indexOf(":");
+      if (colonIndex > 0) {
+        return {
+          category: item.substring(0, colonIndex).trim(),
+          title: item.substring(colonIndex + 1).trim(),
+        };
+      }
+      return { category: "INTEL", title: item };
+    });
+  }, [breakingNews, loading]);
 
-    // Return cached news (either real data or fallback)
-    return cachedNewsRef.current;
-  }, [breakingNews, loading, fallbackNews]);
+  // Don't render anything until we have real data
+  if (!newsItems) {
+    return (
+      <div className="relative h-7 bg-midnight-900 border-b border-midnight-700/50">
+        <div className="flex h-full items-center">
+          <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-red px-2.5 sm:px-3 gap-1.5">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+            </span>
+            <span className="font-heading text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white">
+              {dict.ticker.live}
+            </span>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <span className="text-[10px] text-slate-dark animate-pulse">
+              {dict.common.loading}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-7 bg-midnight-900 border-b border-midnight-700/50">
