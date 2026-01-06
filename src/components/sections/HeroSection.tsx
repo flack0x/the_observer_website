@@ -62,15 +62,15 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
           >
             {isArabic ? (
               <>
-                <span className="block py-1">راقب.</span>
-                <span className="block py-1 text-gradient-ar">حلل.</span>
-                <span className="block py-1">افهم.</span>
+                <span className="block py-1">راقب</span>
+                <span className="block py-1 text-gradient-ar">حلل</span>
+                <span className="block py-1">افهم</span>
               </>
             ) : (
               <>
-                <span className="block">Observe.</span>
-                <span className="block text-gradient">Analyze.</span>
-                <span className="block">Understand.</span>
+                <span className="block">Observe</span>
+                <span className="block text-gradient">Analyze</span>
+                <span className="block">Understand</span>
               </>
             )}
           </motion.h1>
