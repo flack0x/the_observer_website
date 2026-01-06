@@ -33,15 +33,15 @@ export default function BreakingNewsTicker({ locale = 'en', dict }: BreakingNews
       });
 
   return (
-    <div className="relative h-8 bg-midnight-900 border-b border-midnight-700/50">
+    <div className="relative h-7 bg-midnight-900 border-b border-midnight-700/50">
       <div className="flex h-full items-center">
-        {/* Live Indicator - Clean, minimal */}
-        <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-red px-4 gap-2">
-          <span className="relative flex h-2 w-2">
+        {/* Live Indicator - Compact */}
+        <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-red px-2.5 sm:px-3 gap-1.5">
+          <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
           </span>
-          <span className="font-heading text-[10px] font-bold uppercase tracking-widest text-white">
+          <span className="font-heading text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white">
             {dict.ticker.live}
           </span>
         </div>
