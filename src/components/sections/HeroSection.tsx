@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Eye, ChevronDown, Target, Shield, Radio } from "lucide-react";
+import { Eye, ChevronDown, Target, Globe, Zap } from "lucide-react";
 import Link from "next/link";
+import { useMetrics } from "@/lib/hooks";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface HeroSectionProps {
@@ -10,8 +11,15 @@ interface HeroSectionProps {
   dict: Dictionary;
 }
 
+// Convert number to Arabic numerals
+function toArabicNumerals(num: number): string {
+  const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return String(num).split('').map(d => arabicNumerals[parseInt(d)] || d).join('');
+}
+
 export default function HeroSection({ locale, dict }: HeroSectionProps) {
   const isArabic = locale === 'ar';
+  const { metrics, loading: metricsLoading } = useMetrics();
 
   return (
     <section className="relative min-h-[85vh] overflow-hidden bg-midnight-900">
@@ -87,7 +95,7 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
               : 'Independent geopolitical intelligence and strategic analysis. Cutting through the noise to reveal the truth behind global conflicts and power dynamics.'}
           </motion.p>
 
-          {/* Stats Row */}
+          {/* Stats Row - Dynamic Data */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -95,33 +103,54 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
             className="mt-10 w-full border-y border-midnight-600 py-6"
           >
             <div className="flex flex-row items-center justify-center gap-4 sm:gap-8">
+              {/* Intel Reports - Real article count */}
               <div className="flex flex-col items-center text-center">
                 <Target className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-red mb-1" aria-hidden="true" />
-                <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
-                  {isArabic ? '+٥٠٠' : '500+'}
-                </div>
+                {metricsLoading ? (
+                  <div className="h-6 sm:h-8 w-12 sm:w-16 bg-midnight-700 rounded animate-pulse" />
+                ) : (
+                  <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
+                    {isArabic
+                      ? toArabicNumerals(metrics?.total_articles || 0)
+                      : (metrics?.total_articles || 0).toLocaleString()}
+                  </div>
+                )}
                 <div className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-dark">
                   {isArabic ? 'تقرير استخباراتي' : 'Intel Reports'}
                 </div>
               </div>
               <div className="h-12 w-px bg-midnight-600" />
+              {/* Regions Covered - Real countries count */}
               <div className="flex flex-col items-center text-center">
-                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-amber mb-1" aria-hidden="true" />
-                <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
-                  {isArabic ? '+٥٠ ألف' : '50K+'}
-                </div>
+                <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-amber mb-1" aria-hidden="true" />
+                {metricsLoading ? (
+                  <div className="h-6 sm:h-8 w-10 sm:w-12 bg-midnight-700 rounded animate-pulse" />
+                ) : (
+                  <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
+                    {isArabic
+                      ? toArabicNumerals(Object.keys(metrics?.countries || {}).length)
+                      : Object.keys(metrics?.countries || {}).length}
+                  </div>
+                )}
                 <div className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                  {isArabic ? 'شبكة' : 'Network'}
+                  {isArabic ? 'منطقة مغطاة' : 'Regions Covered'}
                 </div>
               </div>
               <div className="h-12 w-px bg-midnight-600" />
+              {/* This Week - Real weekly activity */}
               <div className="flex flex-col items-center text-center">
-                <Radio className="h-4 w-4 sm:h-5 sm:w-5 text-earth-olive mb-1" aria-hidden="true" />
-                <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
-                  {isArabic ? '٢٤/٧' : '24/7'}
-                </div>
+                <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-earth-olive mb-1" aria-hidden="true" />
+                {metricsLoading ? (
+                  <div className="h-6 sm:h-8 w-10 sm:w-12 bg-midnight-700 rounded animate-pulse" />
+                ) : (
+                  <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
+                    {isArabic
+                      ? toArabicNumerals(metrics?.temporal?.articles_this_week || 0)
+                      : (metrics?.temporal?.articles_this_week || 0)}
+                  </div>
+                )}
                 <div className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                  {isArabic ? 'مراقبة' : 'Monitoring'}
+                  {isArabic ? 'هذا الأسبوع' : 'This Week'}
                 </div>
               </div>
             </div>

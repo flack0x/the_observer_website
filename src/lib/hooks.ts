@@ -85,3 +85,52 @@ export function useBreakingNews(locale: "en" | "ar" = "en") {
 
   return { breakingNews, loading };
 }
+
+// Metrics type for dashboard/hero stats
+export interface Metrics {
+  computed_at: string;
+  total_articles: number;
+  countries: Record<string, number>;
+  organizations: Record<string, number>;
+  categories: Record<string, number>;
+  temporal: {
+    articles_today: number;
+    articles_this_week: number;
+    daily_trend: { date: string; count: number }[];
+  };
+  sentiment: {
+    percentages: Record<string, number>;
+  };
+  trending: { topic: string; mentions: number }[];
+}
+
+// Hook to fetch metrics for stats display
+export function useMetrics() {
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/metrics");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch metrics");
+        }
+
+        const data = await response.json();
+        setMetrics(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMetrics();
+  }, []);
+
+  return { metrics, loading, error };
+}
