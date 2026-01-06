@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, ArrowRight, Radio, RefreshCw } from "lucide-react";
+import { Clock, ArrowRight, Radio, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useArticles } from "@/lib/hooks";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
@@ -14,6 +14,49 @@ interface LiveFeedProps {
   dict: Dictionary;
 }
 
+// Calculate read time based on word count (average 200 words per minute)
+function calculateReadTime(content: string, locale: Locale): string {
+  const wordCount = content.trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.ceil(wordCount / 200));
+
+  if (locale === 'ar') {
+    // Arabic numbers
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const arabicMinutes = String(minutes).split('').map(d => arabicNumerals[parseInt(d)]).join('');
+    return `${arabicMinutes} دقائق قراءة`;
+  }
+  return `${minutes} min read`;
+}
+
+// Skeleton loading card component
+function SkeletonCard() {
+  return (
+    <div className="bg-midnight-800 rounded-xl p-5 sm:p-6 border border-midnight-700 animate-pulse">
+      {/* Category & Time skeleton */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="h-5 w-20 bg-midnight-700 rounded-full" />
+        <div className="h-4 w-16 bg-midnight-700 rounded" />
+      </div>
+      {/* Title skeleton */}
+      <div className="space-y-2 mb-3">
+        <div className="h-5 w-full bg-midnight-700 rounded" />
+        <div className="h-5 w-3/4 bg-midnight-700 rounded" />
+      </div>
+      {/* Excerpt skeleton */}
+      <div className="space-y-2 mb-4">
+        <div className="h-4 w-full bg-midnight-700 rounded" />
+        <div className="h-4 w-full bg-midnight-700 rounded" />
+        <div className="h-4 w-2/3 bg-midnight-700 rounded" />
+      </div>
+      {/* Footer skeleton */}
+      <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
+        <div className="h-4 w-20 bg-midnight-700 rounded" />
+        <div className="h-4 w-24 bg-midnight-700 rounded" />
+      </div>
+    </div>
+  );
+}
+
 export default function LiveFeed({ locale, dict }: LiveFeedProps) {
   const isArabic = locale === 'ar';
   const categories = getCategoryList(locale);
@@ -23,6 +66,11 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
   // Filter articles by category
   const filteredArticles = filterByCategory(articles, activeCategory, locale);
   const displayArticles = filteredArticles.slice(0, 6);
+
+  // Get last update time from most recent article
+  const lastUpdateTime = articles.length > 0
+    ? getRelativeTime(articles[0].date, locale)
+    : (isArabic ? 'جاري التحميل...' : 'Loading...');
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
@@ -42,7 +90,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-dark flex items-center gap-2">
                   <Clock className="h-3 w-3" aria-hidden="true" />
-                  {isArabic ? 'تم التحديث منذ لحظات' : 'Updated moments ago'}
+                  {isArabic ? `آخر تحديث: ${lastUpdateTime}` : `Last updated: ${lastUpdateTime}`}
                 </p>
               </div>
             </div>
@@ -75,10 +123,12 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State - Skeleton Cards */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <RefreshCw className="h-6 w-6 text-tactical-red animate-spin" />
+          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
           </div>
         )}
 
@@ -117,8 +167,9 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
 
                 {/* Read more */}
                 <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
-                  <span className="text-xs text-slate-dark">
-                    {isArabic ? '٣ دقائق قراءة' : '3 min read'}
+                  <span className="text-xs text-slate-dark flex items-center gap-1">
+                    <BookOpen className="h-3 w-3" aria-hidden="true" />
+                    {calculateReadTime(article.content, locale)}
                   </span>
                   <Link
                     href={`/${locale}/frontline/${article.id}`}
