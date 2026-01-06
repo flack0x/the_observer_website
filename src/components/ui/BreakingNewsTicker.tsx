@@ -23,7 +23,11 @@ const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) 
         <span key={`a-${index}`} className="ticker-item">
           <span className="ticker-category">{item.category}</span>
           <span className="ticker-title">{item.title}</span>
-          <span className="ticker-separator">—</span>
+          <span className="ticker-separator">
+            <span className="ticker-separator-line" />
+            <span className="ticker-separator-dot" />
+            <span className="ticker-separator-line" />
+          </span>
         </span>
       ))}
       {/* Duplicate for seamless loop */}
@@ -31,7 +35,11 @@ const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) 
         <span key={`b-${index}`} className="ticker-item">
           <span className="ticker-category">{item.category}</span>
           <span className="ticker-title">{item.title}</span>
-          <span className="ticker-separator">—</span>
+          <span className="ticker-separator">
+            <span className="ticker-separator-line" />
+            <span className="ticker-separator-dot" />
+            <span className="ticker-separator-line" />
+          </span>
         </span>
       ))}
     </div>
