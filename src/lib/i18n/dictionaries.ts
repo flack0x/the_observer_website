@@ -5,14 +5,8 @@ const dictionaries = {
     // Navigation
     nav: {
       frontline: 'The Frontline',
-      deepDives: 'Deep Dives',
-      intelligence: 'Intelligence',
       situationRoom: 'Situation Room',
       dossier: 'The Dossier',
-      arsenal: 'The Arsenal',
-      sources: 'Primary Sources',
-      counterNarrative: 'Counter-Narrative',
-      library: 'The Library',
       chronicles: 'Chronicles',
       joinIntel: 'Join Intel',
       about: 'About',
@@ -20,13 +14,8 @@ const dictionaries = {
     // Navigation descriptions
     navDesc: {
       frontline: 'Breaking News',
-      deepDives: 'Geopolitical Analysis',
       situationRoom: 'Interactive Maps',
       dossier: 'Key Figures',
-      arsenal: 'Military Analysis',
-      sources: 'Document Archive',
-      counterNarrative: 'Media Critique',
-      library: 'Book Reviews',
       chronicles: 'Historical Timeline',
     },
     // Header
@@ -196,14 +185,8 @@ const dictionaries = {
     // Navigation
     nav: {
       frontline: 'الجبهة',
-      deepDives: 'تحليلات معمقة',
-      intelligence: 'الاستخبارات',
       situationRoom: 'غرفة العمليات',
       dossier: 'الملفات',
-      arsenal: 'الترسانة',
-      sources: 'المصادر الأولية',
-      counterNarrative: 'الرواية المضادة',
-      library: 'المكتبة',
       chronicles: 'السجلات',
       joinIntel: 'انضم إلينا',
       about: 'من نحن',
@@ -211,13 +194,8 @@ const dictionaries = {
     // Navigation descriptions
     navDesc: {
       frontline: 'أخبار عاجلة',
-      deepDives: 'تحليل جيوسياسي',
       situationRoom: 'خرائط تفاعلية',
       dossier: 'شخصيات رئيسية',
-      arsenal: 'تحليل عسكري',
-      sources: 'أرشيف الوثائق',
-      counterNarrative: 'نقد إعلامي',
-      library: 'مراجعات الكتب',
       chronicles: 'الخط الزمني',
     },
     // Header

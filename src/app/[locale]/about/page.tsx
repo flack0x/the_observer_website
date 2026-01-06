@@ -1,8 +1,7 @@
 import { Metadata } from "next";
 import Image from "next/image";
 import { getDictionary, type Locale, locales } from "@/lib/i18n";
-import { Eye, Target, Shield, BookOpen, Send } from "lucide-react";
-import { TELEGRAM_CHANNELS } from "@/lib/config";
+import { Eye, Target, Shield, BookOpen } from "lucide-react";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -133,37 +132,6 @@ export default async function AboutPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Join Us CTA */}
-      <section className="py-16 sm:py-20 bg-midnight-800 border-t border-midnight-700">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-slate-light mb-4">
-            {dict.about.joinUsTitle}
-          </h2>
-          <p className="text-slate-medium leading-relaxed mb-8 max-w-2xl mx-auto">
-            {dict.about.joinUsText}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href={TELEGRAM_CHANNELS.en}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-tactical-red text-white rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
-            >
-              <Send className="h-4 w-4" />
-              {dict.about.telegramEnglish}
-            </a>
-            <a
-              href={TELEGRAM_CHANNELS.ar}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-midnight-700 text-slate-light rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-midnight-600 border border-midnight-600 transition-colors"
-            >
-              <Send className="h-4 w-4" />
-              {dict.about.telegramArabic}
-            </a>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

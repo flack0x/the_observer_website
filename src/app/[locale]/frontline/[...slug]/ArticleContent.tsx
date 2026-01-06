@@ -7,7 +7,6 @@ import { ArrowLeft, Clock, ExternalLink, Share2, Check } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
-import { getTelegramChannel } from "@/lib/config";
 
 interface ArticleContentProps {
   article: {
@@ -37,8 +36,6 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
     .split("\n\n")
     .filter((p) => p.trim().length > 0)
     .map((p) => p.trim());
-
-  const telegramChannel = getTelegramChannel(locale);
 
   return (
     <article className="min-h-screen bg-midnight-900 py-8 sm:py-12 lg:py-16">
@@ -163,30 +160,6 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
           })}
         </motion.div>
 
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-12 pt-8 border-t border-midnight-700"
-        >
-          <div className="bg-midnight-800 rounded-xl p-6 sm:p-8 text-center">
-            <h3 className="font-heading text-lg font-bold text-slate-light mb-2">
-              {dict.article.stayInformed}
-            </h3>
-            <p className="text-slate-medium text-sm mb-4">
-              {dict.article.joinChannelDesc}
-            </p>
-            <a
-              href={telegramChannel}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-tactical-red text-white rounded-lg font-heading text-sm font-bold uppercase tracking-wider hover:bg-tactical-red-hover transition-colors"
-            >
-              {dict.article.joinObserver}
-            </a>
-          </div>
-        </motion.div>
       </div>
     </article>
   );

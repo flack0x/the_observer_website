@@ -29,6 +29,8 @@ export default function Header({ locale, dict }: HeaderProps) {
   const navigation = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
     { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
+    { name: dict.nav.dossier, href: `/${locale}/dossier` },
+    { name: dict.nav.chronicles, href: `/${locale}/chronicles` },
     { name: dict.nav.about, href: `/${locale}/about` },
   ];
 
@@ -72,15 +74,26 @@ export default function Header({ locale, dict }: HeaderProps) {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex lg:items-center lg:gap-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="inline-flex items-center h-9 px-3 font-heading text-[11px] font-semibold uppercase tracking-wider text-slate-medium transition-colors hover:text-tactical-red"
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navigation.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`relative inline-flex items-center h-9 px-3 font-heading text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                      isActive
+                        ? 'text-tactical-red'
+                        : 'text-slate-medium hover:text-tactical-red'
+                    }`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {item.name}
+                    {isActive && (
+                      <span className="absolute bottom-1 left-3 right-3 h-0.5 bg-tactical-red rounded-full" />
+                    )}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Right Side Actions */}
@@ -133,16 +146,24 @@ export default function Header({ locale, dict }: HeaderProps) {
           >
             <div className="px-4 py-4">
               <div className="space-y-1">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center rounded-md px-3 py-3 font-heading text-sm font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                {navigation.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center rounded-md px-3 py-3 font-heading text-sm font-medium uppercase tracking-wider transition-colors ${
+                        isActive
+                          ? 'bg-tactical-red/10 text-tactical-red border-l-2 border-tactical-red'
+                          : 'text-slate-medium hover:bg-midnight-700 hover:text-tactical-red'
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-current={isActive ? 'page' : undefined}
+                    >
+                      {item.name}
+                    </Link>
+                  );
+                })}
               </div>
 
               <div className="mt-4 pt-4 border-t border-midnight-700">
