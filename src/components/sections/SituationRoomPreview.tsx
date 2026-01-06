@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Crosshair, ArrowRight, Activity, TrendingUp, MapPin, FileText, Radio } from "lucide-react";
+import { Crosshair, ArrowRight, Activity, TrendingUp, Building2, Radio, Smile, Meh, Frown } from "lucide-react";
 import Link from "next/link";
 import { useMetrics } from "@/lib/hooks";
 import type { Locale, Dictionary } from "@/lib/i18n";
@@ -17,71 +17,25 @@ function toArabicNumerals(num: number): string {
   return String(num).split('').map(d => arabicNumerals[parseInt(d)] || d).join('');
 }
 
-// Country name translations for display
-const countryNames: Record<string, { en: string; ar: string }> = {
-  'united states': { en: 'United States', ar: 'الولايات المتحدة' },
-  'usa': { en: 'United States', ar: 'الولايات المتحدة' },
-  'russia': { en: 'Russia', ar: 'روسيا' },
-  'china': { en: 'China', ar: 'الصين' },
-  'iran': { en: 'Iran', ar: 'إيران' },
-  'israel': { en: 'Israel', ar: 'إسرائيل' },
-  'ukraine': { en: 'Ukraine', ar: 'أوكرانيا' },
-  'syria': { en: 'Syria', ar: 'سوريا' },
-  'yemen': { en: 'Yemen', ar: 'اليمن' },
-  'lebanon': { en: 'Lebanon', ar: 'لبنان' },
-  'palestine': { en: 'Palestine', ar: 'فلسطين' },
-  'gaza': { en: 'Gaza', ar: 'غزة' },
-  'iraq': { en: 'Iraq', ar: 'العراق' },
-  'turkey': { en: 'Turkey', ar: 'تركيا' },
-  'saudi arabia': { en: 'Saudi Arabia', ar: 'السعودية' },
-  'egypt': { en: 'Egypt', ar: 'مصر' },
-  'venezuela': { en: 'Venezuela', ar: 'فنزويلا' },
-  'north korea': { en: 'North Korea', ar: 'كوريا الشمالية' },
-  'taiwan': { en: 'Taiwan', ar: 'تايوان' },
-  'europe': { en: 'Europe', ar: 'أوروبا' },
-};
-
-function getCountryDisplayName(country: string, locale: Locale): string {
-  const key = country.toLowerCase();
-  return countryNames[key]?.[locale] || country;
-}
-
-// Category colors
-const categoryColors: Record<string, string> = {
-  'military': '#dc2626',
-  'political': '#d97706',
-  'breaking': '#ef4444',
-  'intelligence': '#6366f1',
-  'economic': '#22c55e',
-  'diplomatic': '#0ea5e9',
-  'analysis': '#8b5cf6',
-};
-
 export default function SituationRoomPreview({ locale, dict }: SituationRoomPreviewProps) {
   const isArabic = locale === 'ar';
   const { metrics, loading } = useMetrics();
 
-  // Get top 5 regions from real data
-  const topRegions = metrics?.countries
-    ? Object.entries(metrics.countries)
+  // Get sentiment data
+  const sentiment = metrics?.sentiment?.percentages || { positive: 0, neutral: 0, negative: 0 };
+  const totalSentiment = sentiment.positive + sentiment.neutral + sentiment.negative;
+
+  // Get trending topics (top 5)
+  const trending = metrics?.trending?.slice(0, 5) || [];
+
+  // Get top organizations (top 5)
+  const organizations = metrics?.organizations
+    ? Object.entries(metrics.organizations)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
     : [];
 
-  const maxRegionCount = topRegions.length > 0 ? topRegions[0][1] : 1;
-
-  // Get category distribution
-  const categories = metrics?.categories
-    ? Object.entries(metrics.categories)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 6)
-    : [];
-
-  const totalCategoryCount = categories.reduce((sum, [, count]) => sum + count, 0);
-
-  // Get daily trend for sparkline
-  const dailyTrend = metrics?.temporal?.daily_trend?.slice(-7) || [];
-  const maxTrend = Math.max(...dailyTrend.map(d => d.count), 1);
+  const maxOrgCount = organizations.length > 0 ? organizations[0][1] : 1;
 
   return (
     <section
@@ -119,47 +73,78 @@ export default function SituationRoomPreview({ locale, dict }: SituationRoomPrev
               {dict.situationPreview.description}
             </p>
 
-            {/* Key Stats Row */}
-            <div className="mb-6 sm:mb-8 grid grid-cols-3 gap-3 sm:gap-4">
-              <div className="rounded-lg border border-midnight-600 bg-midnight-700/50 p-3 sm:p-4 text-center">
-                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-red mx-auto mb-1" aria-hidden="true" />
-                {loading ? (
-                  <div className="h-6 w-12 bg-midnight-600 rounded animate-pulse mx-auto" />
-                ) : (
-                  <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
-                    {isArabic ? toArabicNumerals(metrics?.total_articles || 0) : metrics?.total_articles || 0}
-                  </div>
-                )}
-                <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-dark">
-                  {dict.situationPreview.articles}
-                </div>
+            {/* Sentiment Analysis Preview */}
+            <div className="mb-6 sm:mb-8 rounded-xl border border-midnight-600 bg-midnight-700/30 p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-heading text-xs sm:text-sm uppercase tracking-wider text-slate-light">
+                  {dict.situationPreview.sentimentAnalysis || 'Content Sentiment'}
+                </span>
+                <Activity className="h-4 w-4 text-slate-dark" aria-hidden="true" />
               </div>
-              <div className="rounded-lg border border-midnight-600 bg-midnight-700/50 p-3 sm:p-4 text-center">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-tactical-amber mx-auto mb-1" aria-hidden="true" />
-                {loading ? (
-                  <div className="h-6 w-12 bg-midnight-600 rounded animate-pulse mx-auto" />
-                ) : (
-                  <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
-                    {isArabic ? toArabicNumerals(Object.keys(metrics?.countries || {}).length) : Object.keys(metrics?.countries || {}).length}
+
+              {loading ? (
+                <div className="space-y-3">
+                  <div className="h-3 bg-midnight-600 rounded animate-pulse" />
+                  <div className="flex justify-between">
+                    <div className="h-4 w-16 bg-midnight-600 rounded animate-pulse" />
+                    <div className="h-4 w-16 bg-midnight-600 rounded animate-pulse" />
+                    <div className="h-4 w-16 bg-midnight-600 rounded animate-pulse" />
                   </div>
-                )}
-                <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-dark">
-                  {dict.situationPreview.regions}
                 </div>
-              </div>
-              <div className="rounded-lg border border-midnight-600 bg-midnight-700/50 p-3 sm:p-4 text-center">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-earth-olive mx-auto mb-1" aria-hidden="true" />
-                {loading ? (
-                  <div className="h-6 w-12 bg-midnight-600 rounded animate-pulse mx-auto" />
-                ) : (
-                  <div className="font-heading text-lg sm:text-2xl font-bold text-slate-light">
-                    {isArabic ? toArabicNumerals(metrics?.temporal?.articles_this_week || 0) : metrics?.temporal?.articles_this_week || 0}
+              ) : (
+                <>
+                  {/* Sentiment Bar */}
+                  <div className="h-4 rounded-full overflow-hidden flex bg-midnight-800 mb-3">
+                    {totalSentiment > 0 && (
+                      <>
+                        <motion.div
+                          className="h-full bg-earth-olive"
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${(sentiment.positive / totalSentiment) * 100}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.6 }}
+                        />
+                        <motion.div
+                          className="h-full bg-slate-dark"
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${(sentiment.neutral / totalSentiment) * 100}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.6, delay: 0.1 }}
+                        />
+                        <motion.div
+                          className="h-full bg-tactical-red"
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${(sentiment.negative / totalSentiment) * 100}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.6, delay: 0.2 }}
+                        />
+                      </>
+                    )}
                   </div>
-                )}
-                <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-dark">
-                  {dict.situationPreview.thisWeek || 'This Week'}
-                </div>
-              </div>
+
+                  {/* Sentiment Labels */}
+                  <div className="flex justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <Smile className="h-3.5 w-3.5 text-earth-olive" />
+                      <span className="text-slate-medium">
+                        {isArabic ? toArabicNumerals(Math.round(sentiment.positive)) : Math.round(sentiment.positive)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Meh className="h-3.5 w-3.5 text-slate-dark" />
+                      <span className="text-slate-medium">
+                        {isArabic ? toArabicNumerals(Math.round(sentiment.neutral)) : Math.round(sentiment.neutral)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Frown className="h-3.5 w-3.5 text-tactical-red" />
+                      <span className="text-slate-medium">
+                        {isArabic ? toArabicNumerals(Math.round(sentiment.negative)) : Math.round(sentiment.negative)}%
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <Link
@@ -172,7 +157,7 @@ export default function SituationRoomPreview({ locale, dict }: SituationRoomPrev
             </Link>
           </motion.div>
 
-          {/* Data Preview Panel */}
+          {/* Analytics Preview Panel */}
           <motion.div
             initial={{ opacity: 0, x: isArabic ? -30 : 30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -189,134 +174,105 @@ export default function SituationRoomPreview({ locale, dict }: SituationRoomPrev
                     <div className="h-2 w-2 rounded-full bg-earth-olive" />
                   </div>
                   <span className="font-mono text-[10px] sm:text-xs text-slate-dark uppercase tracking-wider">
-                    {dict.situationPreview.liveFeed || 'Live Feed'}
+                    {dict.situationPreview.analyticsPreview || 'Analytics Preview'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Activity className="h-3 w-3 text-tactical-red animate-pulse" aria-hidden="true" />
                   <span className="font-mono text-[10px] text-tactical-red">
-                    {dict.situationPreview.active || 'ACTIVE'}
+                    {dict.situationPreview.active}
                   </span>
                 </div>
               </div>
 
-              {/* Top Regions */}
+              {/* Trending Topics */}
               <div className="p-4 border-b border-midnight-700/50">
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-heading text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                    {dict.situationPreview.topRegions || 'Top Regions'}
-                  </span>
-                  <MapPin className="h-3 w-3 text-slate-dark" aria-hidden="true" />
-                </div>
-                {loading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="h-4 bg-midnight-700 rounded animate-pulse" style={{ width: `${100 - i * 15}%` }} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {topRegions.map(([region, count], index) => (
-                      <div key={region} className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-slate-dark w-4 text-right">
-                          {isArabic ? toArabicNumerals(index + 1) : index + 1}
-                        </span>
-                        <div className="flex-1 h-5 bg-midnight-800 rounded overflow-hidden relative">
-                          <motion.div
-                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-tactical-red/80 to-tactical-red/40 rounded"
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${(count / maxRegionCount) * 100}%` }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1, duration: 0.5 }}
-                          />
-                          <span className="absolute inset-0 flex items-center px-2 font-mono text-[10px] text-slate-light">
-                            {getCountryDisplayName(region, locale)}
-                          </span>
-                        </div>
-                        <span className="font-mono text-[10px] text-slate-dark w-6 text-right">
-                          {isArabic ? toArabicNumerals(count) : count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Category Distribution */}
-              <div className="p-4 border-b border-midnight-700/50">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-heading text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                    {dict.situationPreview.categories || 'Categories'}
-                  </span>
-                  <FileText className="h-3 w-3 text-slate-dark" aria-hidden="true" />
-                </div>
-                {loading ? (
-                  <div className="h-3 bg-midnight-700 rounded animate-pulse" />
-                ) : (
-                  <>
-                    <div className="h-3 rounded-full overflow-hidden flex bg-midnight-800">
-                      {categories.map(([category, count], index) => (
-                        <motion.div
-                          key={category}
-                          className="h-full"
-                          style={{ backgroundColor: categoryColors[category.toLowerCase()] || '#64748b' }}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${(count / totalCategoryCount) * 100}%` }}
-                          viewport={{ once: true }}
-                          transition={{ delay: index * 0.05, duration: 0.5 }}
-                        />
-                      ))}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                      {categories.slice(0, 4).map(([category]) => (
-                        <div key={category} className="flex items-center gap-1">
-                          <div
-                            className="h-1.5 w-1.5 rounded-full"
-                            style={{ backgroundColor: categoryColors[category.toLowerCase()] || '#64748b' }}
-                          />
-                          <span className="font-mono text-[9px] text-slate-dark capitalize">
-                            {category}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Activity Sparkline */}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-heading text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
-                    {dict.situationPreview.weeklyActivity || '7-Day Activity'}
+                    {dict.situationPreview.trendingTopics || 'Trending Topics'}
                   </span>
                   <TrendingUp className="h-3 w-3 text-slate-dark" aria-hidden="true" />
                 </div>
                 {loading ? (
-                  <div className="h-12 bg-midnight-700 rounded animate-pulse" />
-                ) : (
-                  <div className="h-12 flex items-end gap-1">
-                    {dailyTrend.map((day, index) => (
-                      <motion.div
-                        key={day.date}
-                        className="flex-1 bg-gradient-to-t from-tactical-red/80 to-tactical-red/40 rounded-t"
-                        initial={{ height: 0 }}
-                        whileInView={{ height: `${(day.count / maxTrend) * 100}%` }}
-                        viewport={{ once: true }}
-                        transition={{ delay: index * 0.05, duration: 0.3 }}
-                        style={{ minHeight: day.count > 0 ? '4px' : '0' }}
-                      />
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className="h-6 bg-midnight-700 rounded animate-pulse" style={{ width: `${100 - i * 10}%` }} />
                     ))}
                   </div>
+                ) : trending.length > 0 ? (
+                  <div className="space-y-2">
+                    {trending.map((topic, index) => (
+                      <motion.div
+                        key={topic.topic}
+                        initial={{ opacity: 0, x: isArabic ? 10 : -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between py-1.5 px-2 rounded bg-midnight-800/50"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] text-tactical-red font-bold">
+                            #{isArabic ? toArabicNumerals(index + 1) : index + 1}
+                          </span>
+                          <span className="font-mono text-xs text-slate-light truncate max-w-[140px] sm:max-w-[180px]">
+                            {topic.topic}
+                          </span>
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-dark">
+                          {isArabic ? toArabicNumerals(topic.mentions) : topic.mentions} {dict.situationPreview.mentions || 'mentions'}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-xs text-slate-dark">
+                    {dict.common.noData || 'No data available'}
+                  </div>
                 )}
-                {!loading && dailyTrend.length > 0 && (
-                  <div className="mt-1 flex justify-between">
-                    <span className="font-mono text-[8px] text-slate-dark">
-                      {new Date(dailyTrend[0]?.date).toLocaleDateString(locale, { weekday: 'short' })}
-                    </span>
-                    <span className="font-mono text-[8px] text-slate-dark">
-                      {new Date(dailyTrend[dailyTrend.length - 1]?.date).toLocaleDateString(locale, { weekday: 'short' })}
-                    </span>
+              </div>
+
+              {/* Key Organizations */}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-heading text-[10px] sm:text-xs uppercase tracking-wider text-slate-dark">
+                    {dict.situationPreview.keyOrganizations || 'Key Organizations'}
+                  </span>
+                  <Building2 className="h-3 w-3 text-slate-dark" aria-hidden="true" />
+                </div>
+                {loading ? (
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className="h-6 w-16 bg-midnight-700 rounded-full animate-pulse" />
+                    ))}
+                  </div>
+                ) : organizations.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {organizations.map(([org, count], index) => {
+                      const intensity = count / maxOrgCount;
+                      const bgOpacity = 0.2 + (intensity * 0.4);
+                      return (
+                        <motion.div
+                          key={org}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: index * 0.05 }}
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-midnight-600"
+                          style={{ backgroundColor: `rgba(220, 38, 38, ${bgOpacity})` }}
+                        >
+                          <span className="font-mono text-[10px] sm:text-xs text-slate-light">
+                            {org}
+                          </span>
+                          <span className="font-mono text-[9px] text-slate-dark">
+                            ({isArabic ? toArabicNumerals(count) : count})
+                          </span>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-xs text-slate-dark">
+                    {dict.common.noData || 'No data available'}
                   </div>
                 )}
               </div>
