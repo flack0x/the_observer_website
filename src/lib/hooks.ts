@@ -71,21 +71,6 @@ export function useArticles(channel: "en" | "ar" | "all" = "en") {
   return { articles, loading, error };
 }
 
-// Hook for breaking news ticker
-export function useBreakingNews(locale: "en" | "ar" = "en") {
-  const { articles, loading } = useArticles(locale);
-
-  const breakingNews = articles.slice(0, 5).map((article) => {
-    const prefix = article.category.toUpperCase();
-    const title = article.title.length > 80
-      ? article.title.substring(0, 77) + "..."
-      : article.title;
-    return `${prefix}: ${title}`;
-  });
-
-  return { breakingNews, loading };
-}
-
 // Metrics type for dashboard/hero stats
 export interface Metrics {
   computed_at: string;

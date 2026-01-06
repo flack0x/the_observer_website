@@ -18,9 +18,10 @@ import { getTelegramChannel } from "@/lib/config";
 interface HeaderProps {
   locale: Locale;
   dict: Dictionary;
+  breakingNews: string[];
 }
 
-export default function Header({ locale, dict }: HeaderProps) {
+export default function Header({ locale, dict, breakingNews }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -46,7 +47,7 @@ export default function Header({ locale, dict }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50">
       {/* Breaking News Ticker */}
-      <BreakingNewsTicker locale={locale} dict={dict} />
+      <BreakingNewsTicker locale={locale} dict={dict} initialNews={breakingNews} />
 
       {/* Main Header */}
       <div className="bg-midnight-800 backdrop-blur-md border-b border-midnight-600">

@@ -5,6 +5,23 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { locales, localeDirection, type Locale } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
+import { fetchArticlesFromDB, dbArticleToFrontend } from "@/lib/supabase";
+
+// Fetch breaking news for ticker - server-side, no loading state
+async function getBreakingNews(locale: Locale): Promise<string[]> {
+  try {
+    const channel = locale === 'ar' ? 'ar' : 'en';
+    const articles = await fetchArticlesFromDB(channel, 5);
+    return articles.map((article) => {
+      const a = dbArticleToFrontend(article);
+      const prefix = a.category.toUpperCase();
+      const title = a.title.length > 80 ? a.title.substring(0, 77) + "..." : a.title;
+      return `${prefix}: ${title}`;
+    });
+  } catch {
+    return [];
+  }
+}
 
 type Props = {
   children: React.ReactNode;
@@ -53,6 +70,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   const direction = localeDirection[validLocale];
   const dict = getDictionary(validLocale);
 
+  // Fetch breaking news server-side for instant display
+  const breakingNews = await getBreakingNews(validLocale);
+
   return (
     <html lang={validLocale} dir={direction}>
       <head>
@@ -72,7 +92,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           {dict.common.skipToContent}
         </a>
         <div className="flex min-h-screen flex-col overflow-x-hidden">
-          <Header locale={validLocale} dict={dict} />
+          <Header locale={validLocale} dict={dict} breakingNews={breakingNews} />
           <main id="main-content" className="flex-1" tabIndex={-1}>
             {children}
           </main>

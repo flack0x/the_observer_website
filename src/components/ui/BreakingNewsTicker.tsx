@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, memo } from "react";
-import { useBreakingNews } from "@/lib/hooks";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface NewsItem {
@@ -12,6 +11,7 @@ interface NewsItem {
 interface BreakingNewsTickerProps {
   locale?: Locale;
   dict: Dictionary;
+  initialNews: string[];
 }
 
 // Memoized ticker track to prevent animation restart on parent re-renders
@@ -38,16 +38,14 @@ const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) 
   );
 });
 
-export default function BreakingNewsTicker({ locale = 'en', dict }: BreakingNewsTickerProps) {
-  const { breakingNews, loading } = useBreakingNews(locale);
-
-  // Parse breaking news into structured format - only when we have real data
+export default function BreakingNewsTicker({ dict, initialNews }: BreakingNewsTickerProps) {
+  // Parse breaking news into structured format
   const newsItems = useMemo(() => {
-    if (loading || breakingNews.length === 0) {
+    if (initialNews.length === 0) {
       return null;
     }
 
-    return breakingNews.map((item) => {
+    return initialNews.map((item) => {
       const colonIndex = item.indexOf(":");
       if (colonIndex > 0) {
         return {
@@ -57,30 +55,11 @@ export default function BreakingNewsTicker({ locale = 'en', dict }: BreakingNews
       }
       return { category: "INTEL", title: item };
     });
-  }, [breakingNews, loading]);
+  }, [initialNews]);
 
-  // Don't render anything until we have real data
+  // Don't render ticker if no news available
   if (!newsItems) {
-    return (
-      <div className="relative h-7 bg-midnight-900 border-b border-midnight-700/50">
-        <div className="flex h-full items-center">
-          <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-red px-2.5 sm:px-3 gap-1.5">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
-            </span>
-            <span className="font-heading text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white">
-              {dict.ticker.live}
-            </span>
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <span className="text-[10px] text-slate-dark animate-pulse">
-              {dict.common.loading}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
