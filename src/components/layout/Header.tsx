@@ -121,14 +121,14 @@ export default function Header({ locale, dict }: HeaderProps) {
 
               {/* Mobile menu button */}
               <button
-                className="lg:hidden rounded-md p-1.5 text-slate-medium hover:bg-midnight-700 hover:text-slate-light"
+                className="lg:hidden flex items-center justify-center rounded-md p-2 text-slate-light bg-midnight-700 hover:bg-midnight-600 border border-midnight-600"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label={mobileMenuOpen
                   ? (locale === "en" ? "Close menu" : "إغلاق القائمة")
                   : (locale === "en" ? "Open menu" : "فتح القائمة")}
                 aria-expanded={mobileMenuOpen}
               >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
             </div>
           </div>
