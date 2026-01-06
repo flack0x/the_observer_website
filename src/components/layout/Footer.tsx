@@ -116,12 +116,12 @@ export default function Footer({ locale, dict }: FooterProps) {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-2">
             <Link href={`/${locale}`} className="flex items-center gap-3">
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
                 <Image
                   src="/images/observer-silhouette.png"
                   alt="The Observer"
                   fill
-                  className="object-contain"
+                  className="object-contain logo-gold"
                 />
               </div>
               <div>
