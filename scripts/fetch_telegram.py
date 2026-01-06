@@ -599,12 +599,15 @@ async def fetch_channel_messages(client: TelegramClient, channel_username: str, 
     return articles
 
 
-def upsert_articles(supabase: Client, articles: list[dict], batch_size: int = 50):
-    """Insert or update articles in Supabase with batching."""
+def upsert_articles(supabase: Client, articles: list[dict], channel: str, batch_size: int = 50):
+    """Insert or update articles in Supabase with batching, and clean up orphaned entries."""
     if not articles:
         return
 
-    print(f"\nUpserting {len(articles)} articles to Supabase...")
+    print(f"\nUpserting {len(articles)} articles to Supabase for channel '{channel}'...")
+
+    # Get list of valid telegram_ids from the new articles
+    valid_ids = {article['telegram_id'] for article in articles}
 
     success_count = 0
     error_count = 0
@@ -627,7 +630,32 @@ def upsert_articles(supabase: Client, articles: list[dict], batch_size: int = 50
 
         print(f"  Progress: {min(i + batch_size, len(articles))}/{len(articles)}")
 
-    print(f"\nDone! Success: {success_count}, Errors: {error_count}")
+    print(f"  Upserted: {success_count}, Errors: {error_count}")
+
+    # Clean up orphaned entries (old continuation posts that are now merged)
+    print(f"\n  Cleaning up orphaned entries for channel '{channel}'...")
+    try:
+        # Get all existing telegram_ids for this channel
+        existing = supabase.table('articles').select('telegram_id').eq('channel', channel).execute()
+        existing_ids = {row['telegram_id'] for row in existing.data}
+
+        # Find orphaned IDs (exist in DB but not in new articles)
+        orphaned_ids = existing_ids - valid_ids
+
+        if orphaned_ids:
+            print(f"  Found {len(orphaned_ids)} orphaned entries to remove")
+            for orphan_id in orphaned_ids:
+                try:
+                    supabase.table('articles').delete().eq('telegram_id', orphan_id).execute()
+                except Exception as e:
+                    print(f"    Error deleting {orphan_id}: {e}")
+            print(f"  Removed {len(orphaned_ids)} orphaned entries")
+        else:
+            print(f"  No orphaned entries found")
+    except Exception as e:
+        print(f"  Error during cleanup: {e}")
+
+    print(f"\nDone!")
 
 
 async def main():
@@ -664,18 +692,18 @@ async def main():
         await client.start(phone=PHONE)
     print("Connected to Telegram!")
 
-    all_articles = []
+    total_articles = 0
 
     for channel, username in CHANNELS.items():
         articles = await fetch_channel_messages(client, username, channel)
-        all_articles.extend(articles)
-
-    upsert_articles(supabase, all_articles)
+        if articles:
+            upsert_articles(supabase, articles, channel)
+            total_articles += len(articles)
 
     await client.disconnect()
 
     print("\n" + "=" * 60)
-    print(f"Total articles processed: {len(all_articles)}")
+    print(f"Total articles processed: {total_articles}")
     print("=" * 60)
 
 
