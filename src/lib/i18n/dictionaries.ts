@@ -34,6 +34,7 @@ const dictionaries = {
       loading: 'Loading...',
       noArticles: 'No articles found',
       search: 'Search',
+      skipToContent: 'Skip to main content',
     },
     // Home page
     home: {
@@ -285,6 +286,7 @@ const dictionaries = {
       loading: 'جاري التحميل...',
       noArticles: 'لا توجد مقالات',
       search: 'بحث',
+      skipToContent: 'انتقل إلى المحتوى الرئيسي',
     },
     // Home page
     home: {

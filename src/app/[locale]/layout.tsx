@@ -64,9 +64,18 @@ export default async function LocaleLayout({ children, params }: Props) {
         />
       </head>
       <body className={`min-h-screen bg-midnight-900 text-slate-light antialiased overflow-x-hidden ${direction === 'rtl' ? 'font-arabic' : ''}`}>
+        {/* Skip to main content link for accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-tactical-red focus:text-white focus:rounded-lg focus:font-heading focus:text-sm focus:font-bold focus:uppercase focus:tracking-wider focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-midnight-900"
+        >
+          {dict.common.skipToContent}
+        </a>
         <div className="flex min-h-screen flex-col overflow-x-hidden">
           <Header locale={validLocale} dict={dict} />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1" tabIndex={-1}>
+            {children}
+          </main>
           <Footer locale={validLocale} dict={dict} />
         </div>
       </body>
