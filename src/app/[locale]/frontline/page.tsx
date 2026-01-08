@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import CategoryPlaceholder from "@/components/ui/CategoryPlaceholder";
 import { useArticles } from "@/lib/hooks";
 import { getDictionary, getCountryName, type Locale } from "@/lib/i18n";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
@@ -177,34 +178,34 @@ export default function FrontlinePage() {
                 className="group rounded-xl border border-midnight-600 bg-midnight-800 overflow-hidden transition-all hover:border-tactical-red card-hover"
               >
                 {/* Article Media */}
-                {(article.imageUrl || article.videoUrl) && (
-                  <div className="relative aspect-video w-full bg-midnight-700">
-                    {article.videoUrl ? (
-                      <div className="relative h-full w-full">
-                        <video
-                          src={article.videoUrl}
-                          className="h-full w-full object-cover"
-                          muted
-                          playsInline
-                          preload="metadata"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tactical-red/90">
-                            <Play className="h-5 w-5 text-white" fill="white" />
-                          </div>
+                <div className="relative aspect-video w-full bg-midnight-700">
+                  {article.videoUrl ? (
+                    <div className="relative h-full w-full">
+                      <video
+                        src={article.videoUrl}
+                        className="h-full w-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tactical-red/90">
+                          <Play className="h-5 w-5 text-white" fill="white" />
                         </div>
                       </div>
-                    ) : article.imageUrl ? (
-                      <Image
-                        src={article.imageUrl}
-                        alt={article.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 1024px) 100vw, 50vw"
-                      />
-                    ) : null}
-                  </div>
-                )}
+                    </div>
+                  ) : article.imageUrl ? (
+                    <Image
+                      src={article.imageUrl}
+                      alt={article.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                    />
+                  ) : (
+                    <CategoryPlaceholder category={article.category} />
+                  )}
+                </div>
 
                 <div className="p-6">
                   {article.isBreaking && (

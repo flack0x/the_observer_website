@@ -6,6 +6,7 @@ import { Clock, ArrowRight, Radio, BookOpen, Play } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useArticles } from "@/lib/hooks";
+import CategoryPlaceholder from "@/components/ui/CategoryPlaceholder";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
 import { getRelativeTime } from "@/lib/time";
 import type { Locale, Dictionary } from "@/lib/i18n";
@@ -150,34 +151,34 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                 className="group relative bg-midnight-800 rounded-xl border border-midnight-700 hover:border-tactical-red/50 transition-all duration-300 overflow-hidden"
               >
                 {/* Article Media */}
-                {(article.imageUrl || article.videoUrl) && (
-                  <div className="relative aspect-video w-full bg-midnight-700">
-                    {article.videoUrl ? (
-                      <div className="relative h-full w-full">
-                        <video
-                          src={article.videoUrl}
-                          className="h-full w-full object-cover"
-                          muted
-                          playsInline
-                          preload="metadata"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tactical-red/90">
-                            <Play className="h-4 w-4 text-white" fill="white" />
-                          </div>
+                <div className="relative aspect-video w-full bg-midnight-700">
+                  {article.videoUrl ? (
+                    <div className="relative h-full w-full">
+                      <video
+                        src={article.videoUrl}
+                        className="h-full w-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tactical-red/90">
+                          <Play className="h-4 w-4 text-white" fill="white" />
                         </div>
                       </div>
-                    ) : article.imageUrl ? (
-                      <Image
-                        src={article.imageUrl}
-                        alt={article.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    ) : null}
-                  </div>
-                )}
+                    </div>
+                  ) : article.imageUrl ? (
+                    <Image
+                      src={article.imageUrl}
+                      alt={article.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <CategoryPlaceholder category={article.category} />
+                  )}
+                </div>
 
                 <div className="p-5 sm:p-6">
                   {/* Category & Time */}
