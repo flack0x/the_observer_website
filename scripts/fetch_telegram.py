@@ -685,32 +685,53 @@ async def fetch_channel_messages(
         message_groups = group_multipart_messages(raw_messages, time_threshold_seconds=180)
         print(f"  Grouped into {len(message_groups)} article groups")
 
+        # Get existing articles with their media URLs to avoid re-uploading
+        existing_media = {}
+        try:
+            existing = supabase.table('articles').select('telegram_id, image_url, video_url').eq('channel', channel).execute()
+            existing_media = {row['telegram_id']: (row.get('image_url'), row.get('video_url')) for row in existing.data}
+            print(f"  Found {len(existing_media)} existing articles in DB")
+        except Exception as e:
+            print(f"  Warning: Could not fetch existing media: {e}")
+
         # Process each group
         for group in message_groups:
             article = combine_message_group(group, channel, channel_username)
             if article:
-                # Find and upload media from the group
-                image_url = None
-                video_url = None
-                for msg in group:
-                    if msg.media and (image_url is None or video_url is None):
-                        img, vid = await upload_media_to_storage(
-                            client, supabase, msg, article['telegram_id']
-                        )
-                        if img and image_url is None:
-                            image_url = img
-                        if vid and video_url is None:
-                            video_url = vid
-                        # Stop if we found both
-                        if image_url and video_url:
-                            break
+                telegram_id = article['telegram_id']
+
+                # Check if article already has media in DB
+                existing_img, existing_vid = existing_media.get(telegram_id, (None, None))
+
+                if existing_img or existing_vid:
+                    # Use existing media URLs - skip download/upload
+                    image_url = existing_img
+                    video_url = existing_vid
+                    if existing_img or existing_vid:
+                        media_count += 1
+                else:
+                    # Find and upload media from the group (new article or missing media)
+                    image_url = None
+                    video_url = None
+                    for msg in group:
+                        if msg.media and (image_url is None or video_url is None):
+                            img, vid = await upload_media_to_storage(
+                                client, supabase, msg, telegram_id
+                            )
+                            if img and image_url is None:
+                                image_url = img
+                            if vid and video_url is None:
+                                video_url = vid
+                            # Stop if we found both
+                            if image_url and video_url:
+                                break
+
+                    if image_url or video_url:
+                        media_count += 1
 
                 # Add media URLs to article
                 article['image_url'] = image_url
                 article['video_url'] = video_url
-
-                if image_url or video_url:
-                    media_count += 1
 
                 articles.append(article)
                 if article.get('is_structured'):
