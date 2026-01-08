@@ -8,6 +8,11 @@ on:
   # Allow manual trigger
   workflow_dispatch:
 
+# Only allow one run at a time to prevent Telegram session conflicts
+concurrency:
+  group: telegram-fetch
+  cancel-in-progress: true
+
 jobs:
   fetch-and-analyze:
     runs-on: ubuntu-latest
