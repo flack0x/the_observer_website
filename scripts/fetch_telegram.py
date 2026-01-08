@@ -12,17 +12,19 @@ ORGS: IDF, Houthis, Hamas
 Article content...
 
 Falls back to auto-detection for older posts without headers.
+Also downloads and uploads images/videos to Supabase Storage.
 """
 
 import os
 import re
 import sys
 import asyncio
+import io
 from datetime import datetime
 from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.tl.types import Message
+from telethon.tl.types import Message, MessageMediaPhoto, MessageMediaDocument
 from supabase import create_client, Client
 
 # Fix Windows console encoding for Arabic/emoji
@@ -67,6 +69,13 @@ VALID_CATEGORIES = {
     'عاجل': 'Breaking',
     'تحليل': 'Analysis',
 }
+
+# Media size limits (in bytes)
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
+MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
+
+# Supabase Storage bucket name
+MEDIA_BUCKET = 'article-media'
 
 # Emoji patterns to remove
 EMOJI_PATTERN = re.compile(
@@ -420,6 +429,94 @@ def is_valid_article(text: str) -> bool:
     return True
 
 
+async def upload_media_to_storage(
+    client: TelegramClient,
+    supabase: Client,
+    message: Message,
+    article_id: str
+) -> tuple[str | None, str | None]:
+    """
+    Download media from Telegram message and upload to Supabase Storage.
+    Returns (image_url, video_url) tuple.
+    """
+    image_url = None
+    video_url = None
+
+    if not message.media:
+        return image_url, video_url
+
+    try:
+        # Handle photos
+        if isinstance(message.media, MessageMediaPhoto):
+            # Download photo to bytes
+            photo_bytes = await client.download_media(message.media, file=bytes)
+            if photo_bytes and len(photo_bytes) <= MAX_IMAGE_SIZE:
+                # Generate unique filename
+                filename = f"{article_id.replace('/', '_')}_photo.jpg"
+
+                # Upload to Supabase Storage
+                result = supabase.storage.from_(MEDIA_BUCKET).upload(
+                    path=filename,
+                    file=photo_bytes,
+                    file_options={"content-type": "image/jpeg", "upsert": "true"}
+                )
+
+                # Get public URL
+                image_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(filename)
+                print(f"    Uploaded image: {filename}")
+
+        # Handle videos/documents
+        elif isinstance(message.media, MessageMediaDocument):
+            doc = message.media.document
+            if doc and doc.mime_type:
+                # Check if it's a video
+                if doc.mime_type.startswith('video/'):
+                    if doc.size <= MAX_VIDEO_SIZE:
+                        # Download video to bytes
+                        video_bytes = await client.download_media(message.media, file=bytes)
+                        if video_bytes:
+                            # Determine extension from mime type
+                            ext = 'mp4' if 'mp4' in doc.mime_type else 'webm'
+                            filename = f"{article_id.replace('/', '_')}_video.{ext}"
+
+                            # Upload to Supabase Storage
+                            result = supabase.storage.from_(MEDIA_BUCKET).upload(
+                                path=filename,
+                                file=video_bytes,
+                                file_options={"content-type": doc.mime_type, "upsert": "true"}
+                            )
+
+                            # Get public URL
+                            video_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(filename)
+                            print(f"    Uploaded video: {filename}")
+                    else:
+                        print(f"    Skipped video (too large): {doc.size / 1024 / 1024:.1f}MB > {MAX_VIDEO_SIZE / 1024 / 1024}MB")
+
+                # Check if it's an image (sometimes sent as document)
+                elif doc.mime_type.startswith('image/'):
+                    if doc.size <= MAX_IMAGE_SIZE:
+                        photo_bytes = await client.download_media(message.media, file=bytes)
+                        if photo_bytes:
+                            ext = doc.mime_type.split('/')[-1]
+                            if ext == 'jpeg':
+                                ext = 'jpg'
+                            filename = f"{article_id.replace('/', '_')}_photo.{ext}"
+
+                            result = supabase.storage.from_(MEDIA_BUCKET).upload(
+                                path=filename,
+                                file=photo_bytes,
+                                file_options={"content-type": doc.mime_type, "upsert": "true"}
+                            )
+
+                            image_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(filename)
+                            print(f"    Uploaded image: {filename}")
+
+    except Exception as e:
+        print(f"    Error uploading media: {e}")
+
+    return image_url, video_url
+
+
 def parse_message(message: Message, channel: str, channel_username: str) -> dict | None:
     """Parse a Telegram message into an article."""
     text = message.text
@@ -555,22 +652,31 @@ def combine_message_group(messages: list[Message], channel: str, channel_usernam
     }
 
 
-async def fetch_channel_messages(client: TelegramClient, channel_username: str, channel: str, limit: int = 2000) -> list[dict]:
-    """Fetch messages from a Telegram channel and combine multi-part posts."""
+async def fetch_channel_messages(
+    client: TelegramClient,
+    supabase: Client,
+    channel_username: str,
+    channel: str,
+    limit: int = 2000
+) -> list[dict]:
+    """Fetch messages from a Telegram channel, combine multi-part posts, and upload media."""
     articles = []
     structured_count = 0
     multipart_count = 0
+    media_count = 0
 
     try:
         entity = await client.get_entity(channel_username)
         print(f"\nFetching messages from @{channel_username} ({channel})...")
 
-        # Collect all valid messages first
+        # Collect all valid messages first (including those with media)
         raw_messages = []
         async for message in client.iter_messages(entity, limit=limit):
-            if isinstance(message, Message) and message.text:
-                # Basic validation - must have some content
-                if len(message.text.strip()) >= 50:
+            if isinstance(message, Message):
+                # Accept if has enough text OR has media with some text
+                has_text = message.text and len(message.text.strip()) >= 50
+                has_media_with_caption = message.media and message.text and len(message.text.strip()) >= 20
+                if has_text or has_media_with_caption:
                     raw_messages.append(message)
 
         print(f"  Collected {len(raw_messages)} raw messages")
@@ -583,6 +689,29 @@ async def fetch_channel_messages(client: TelegramClient, channel_username: str, 
         for group in message_groups:
             article = combine_message_group(group, channel, channel_username)
             if article:
+                # Find and upload media from the group
+                image_url = None
+                video_url = None
+                for msg in group:
+                    if msg.media and (image_url is None or video_url is None):
+                        img, vid = await upload_media_to_storage(
+                            client, supabase, msg, article['telegram_id']
+                        )
+                        if img and image_url is None:
+                            image_url = img
+                        if vid and video_url is None:
+                            video_url = vid
+                        # Stop if we found both
+                        if image_url and video_url:
+                            break
+
+                # Add media URLs to article
+                article['image_url'] = image_url
+                article['video_url'] = video_url
+
+                if image_url or video_url:
+                    media_count += 1
+
                 articles.append(article)
                 if article.get('is_structured'):
                     structured_count += 1
@@ -590,7 +719,7 @@ async def fetch_channel_messages(client: TelegramClient, channel_username: str, 
                     multipart_count += 1
                     print(f"    Combined {article['_part_count']} parts: {article['title'][:50]}...")
 
-        print(f"  Total articles: {len(articles)} ({structured_count} structured, {multipart_count} multi-part)")
+        print(f"  Total articles: {len(articles)} ({structured_count} structured, {multipart_count} multi-part, {media_count} with media)")
     except Exception as e:
         print(f"Error fetching @{channel_username}: {e}")
         import traceback
@@ -662,7 +791,7 @@ async def main():
     """Main function to fetch and store articles."""
     print("=" * 60)
     print("The Observer - Telegram Article Fetcher")
-    print("Supports structured post format for better metadata!")
+    print("Supports structured posts, media uploads, and multi-part grouping!")
     print("=" * 60)
 
     if not API_ID or not API_HASH:
@@ -695,7 +824,7 @@ async def main():
     total_articles = 0
 
     for channel, username in CHANNELS.items():
-        articles = await fetch_channel_messages(client, username, channel)
+        articles = await fetch_channel_messages(client, supabase, username, channel)
         if articles:
             upsert_articles(supabase, articles, channel)
             total_articles += len(articles)

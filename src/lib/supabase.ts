@@ -20,6 +20,8 @@ export interface DBArticle {
   is_structured: boolean;
   telegram_link: string;
   telegram_date: string;
+  image_url: string | null;
+  video_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -60,6 +62,8 @@ export function dbArticleToFrontend(article: DBArticle) {
     organizations: article.organizations || [],
     isStructured: article.is_structured || false,
     isBreaking: article.category === 'Breaking',
+    imageUrl: article.image_url || null,
+    videoUrl: article.video_url || null,
   };
 }
 

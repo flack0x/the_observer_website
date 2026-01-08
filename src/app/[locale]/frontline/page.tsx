@@ -10,8 +10,10 @@ import {
   Filter,
   Search,
   Loader2,
+  Play,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useArticles } from "@/lib/hooks";
 import { getDictionary, getCountryName, type Locale } from "@/lib/i18n";
@@ -64,6 +66,8 @@ export default function FrontlinePage() {
     countries: article.countries || [],
     isBreaking: article.isBreaking,
     readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} ${isArabic ? 'دقيقة' : 'min'}`,
+    imageUrl: article.imageUrl,
+    videoUrl: article.videoUrl,
   }));
 
   // Show loading state
@@ -170,18 +174,49 @@ export default function FrontlinePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="group rounded-xl border border-midnight-600 bg-midnight-800 p-6 transition-all hover:border-tactical-red card-hover"
+                className="group rounded-xl border border-midnight-600 bg-midnight-800 overflow-hidden transition-all hover:border-tactical-red card-hover"
               >
-                {article.isBreaking && (
-                  <motion.div
-                    animate={{ opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    className="mb-4 inline-flex items-center gap-1 rounded-full bg-tactical-red px-3 py-1 text-xs font-bold uppercase text-white"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    {dict.frontline.breaking}
-                  </motion.div>
+                {/* Article Media */}
+                {(article.imageUrl || article.videoUrl) && (
+                  <div className="relative aspect-video w-full bg-midnight-700">
+                    {article.videoUrl ? (
+                      <div className="relative h-full w-full">
+                        <video
+                          src={article.videoUrl}
+                          className="h-full w-full object-cover"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tactical-red/90">
+                            <Play className="h-5 w-5 text-white" fill="white" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : article.imageUrl ? (
+                      <Image
+                        src={article.imageUrl}
+                        alt={article.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                      />
+                    ) : null}
+                  </div>
                 )}
+
+                <div className="p-6">
+                  {article.isBreaking && (
+                    <motion.div
+                      animate={{ opacity: [1, 0.5, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="mb-4 inline-flex items-center gap-1 rounded-full bg-tactical-red px-3 py-1 text-xs font-bold uppercase text-white"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      {dict.frontline.breaking}
+                    </motion.div>
+                  )}
 
                 <div className="mb-3 flex items-center gap-2 flex-wrap">
                   <span className="rounded bg-midnight-600 px-2 py-1 font-heading text-xs font-medium uppercase text-slate-medium">
@@ -228,6 +263,7 @@ export default function FrontlinePage() {
                     {dict.frontline.fullReport}
                     <ArrowRight className={`h-3 w-3 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
                   </Link>
+                </div>
                 </div>
               </motion.article>
             ))}

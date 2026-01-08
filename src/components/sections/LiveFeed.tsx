@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, ArrowRight, Radio, BookOpen } from "lucide-react";
+import { Clock, ArrowRight, Radio, BookOpen, Play } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useArticles } from "@/lib/hooks";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
 import { getRelativeTime } from "@/lib/time";
@@ -31,27 +32,31 @@ function calculateReadTime(content: string, locale: Locale): string {
 // Skeleton loading card component
 function SkeletonCard() {
   return (
-    <div className="bg-midnight-800 rounded-xl p-5 sm:p-6 border border-midnight-700 animate-pulse">
-      {/* Category & Time skeleton */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="h-5 w-20 bg-midnight-700 rounded-full" />
-        <div className="h-4 w-16 bg-midnight-700 rounded" />
-      </div>
-      {/* Title skeleton */}
-      <div className="space-y-2 mb-3">
-        <div className="h-5 w-full bg-midnight-700 rounded" />
-        <div className="h-5 w-3/4 bg-midnight-700 rounded" />
-      </div>
-      {/* Excerpt skeleton */}
-      <div className="space-y-2 mb-4">
-        <div className="h-4 w-full bg-midnight-700 rounded" />
-        <div className="h-4 w-full bg-midnight-700 rounded" />
-        <div className="h-4 w-2/3 bg-midnight-700 rounded" />
-      </div>
-      {/* Footer skeleton */}
-      <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
-        <div className="h-4 w-20 bg-midnight-700 rounded" />
-        <div className="h-4 w-24 bg-midnight-700 rounded" />
+    <div className="bg-midnight-800 rounded-xl border border-midnight-700 animate-pulse overflow-hidden">
+      {/* Image skeleton */}
+      <div className="aspect-video w-full bg-midnight-700" />
+      <div className="p-5 sm:p-6">
+        {/* Category & Time skeleton */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-5 w-20 bg-midnight-700 rounded-full" />
+          <div className="h-4 w-16 bg-midnight-700 rounded" />
+        </div>
+        {/* Title skeleton */}
+        <div className="space-y-2 mb-3">
+          <div className="h-5 w-full bg-midnight-700 rounded" />
+          <div className="h-5 w-3/4 bg-midnight-700 rounded" />
+        </div>
+        {/* Excerpt skeleton */}
+        <div className="space-y-2 mb-4">
+          <div className="h-4 w-full bg-midnight-700 rounded" />
+          <div className="h-4 w-full bg-midnight-700 rounded" />
+          <div className="h-4 w-2/3 bg-midnight-700 rounded" />
+        </div>
+        {/* Footer skeleton */}
+        <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
+          <div className="h-4 w-20 bg-midnight-700 rounded" />
+          <div className="h-4 w-24 bg-midnight-700 rounded" />
+        </div>
       </div>
     </div>
   );
@@ -142,47 +147,79 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                className="group relative bg-midnight-800 rounded-xl p-5 sm:p-6 border border-midnight-700 hover:border-tactical-red/50 transition-all duration-300"
+                className="group relative bg-midnight-800 rounded-xl border border-midnight-700 hover:border-tactical-red/50 transition-all duration-300 overflow-hidden"
               >
-                {/* Category & Time */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="px-2.5 py-1 rounded-full bg-tactical-red/10 text-tactical-red font-heading text-[10px] sm:text-xs font-medium uppercase">
-                    {getCategoryDisplay(article.category, locale)}
-                  </span>
-                  <span className="text-[10px] sm:text-xs text-slate-dark flex items-center gap-1">
-                    <Clock className="h-3 w-3" aria-hidden="true" />
-                    {getRelativeTime(article.date, locale)}
-                  </span>
-                </div>
+                {/* Article Media */}
+                {(article.imageUrl || article.videoUrl) && (
+                  <div className="relative aspect-video w-full bg-midnight-700">
+                    {article.videoUrl ? (
+                      <div className="relative h-full w-full">
+                        <video
+                          src={article.videoUrl}
+                          className="h-full w-full object-cover"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tactical-red/90">
+                            <Play className="h-4 w-4 text-white" fill="white" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : article.imageUrl ? (
+                      <Image
+                        src={article.imageUrl}
+                        alt={article.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    ) : null}
+                  </div>
+                )}
 
-                {/* Title */}
-                <h3 className="font-heading text-base sm:text-lg font-bold text-slate-light leading-tight mb-3 group-hover:text-tactical-red transition-colors line-clamp-2">
-                  {article.title}
-                </h3>
+                <div className="p-5 sm:p-6">
+                  {/* Category & Time */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2.5 py-1 rounded-full bg-tactical-red/10 text-tactical-red font-heading text-[10px] sm:text-xs font-medium uppercase">
+                      {getCategoryDisplay(article.category, locale)}
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-slate-dark flex items-center gap-1">
+                      <Clock className="h-3 w-3" aria-hidden="true" />
+                      {getRelativeTime(article.date, locale)}
+                    </span>
+                  </div>
 
-                {/* Excerpt */}
-                <p className="text-sm text-slate-medium leading-relaxed line-clamp-3 mb-4">
-                  {article.excerpt}
-                </p>
+                  {/* Title */}
+                  <h3 className="font-heading text-base sm:text-lg font-bold text-slate-light leading-tight mb-3 group-hover:text-tactical-red transition-colors line-clamp-2">
+                    {article.title}
+                  </h3>
 
-                {/* Read more */}
-                <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
-                  <span className="text-xs text-slate-dark flex items-center gap-1">
-                    <BookOpen className="h-3 w-3" aria-hidden="true" />
-                    {calculateReadTime(article.content, locale)}
-                  </span>
-                  <Link
-                    href={`/${locale}/frontline/${article.id}`}
-                    className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
-                  >
-                    {dict.common.readMore}
-                    <ArrowRight className={`h-3 w-3 transition-transform ${isArabic ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} aria-hidden="true" />
-                  </Link>
+                  {/* Excerpt */}
+                  <p className="text-sm text-slate-medium leading-relaxed line-clamp-3 mb-4">
+                    {article.excerpt}
+                  </p>
+
+                  {/* Read more */}
+                  <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
+                    <span className="text-xs text-slate-dark flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" aria-hidden="true" />
+                      {calculateReadTime(article.content, locale)}
+                    </span>
+                    <Link
+                      href={`/${locale}/frontline/${article.id}`}
+                      className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
+                    >
+                      {dict.common.readMore}
+                      <ArrowRight className={`h-3 w-3 transition-transform ${isArabic ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} aria-hidden="true" />
+                    </Link>
+                  </div>
                 </div>
 
                 {/* First article badge */}
                 {index === 0 && (
-                  <div className={`absolute -top-2 ${isArabic ? '-left-2' : '-right-2'}`}>
+                  <div className={`absolute top-2 ${isArabic ? 'left-2' : 'right-2'} z-10`}>
                     <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-tactical-red text-white text-[10px] font-heading font-bold uppercase">
                       <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                       {isArabic ? 'الأحدث' : 'Latest'}

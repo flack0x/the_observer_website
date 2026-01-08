@@ -17,6 +17,8 @@ export interface Article {
   organizations: string[];
   isStructured: boolean;
   isBreaking: boolean;
+  imageUrl: string | null;
+  videoUrl: string | null;
 }
 
 // Parse date strings from API response into Date objects

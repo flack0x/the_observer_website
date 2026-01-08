@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin } from "lucide-react";
+import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin, Play } from "lucide-react";
+import Image from "next/image";
 import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
@@ -17,6 +18,8 @@ interface ArticleContentProps {
     category: string;
     countries: string[];
     link: string;
+    imageUrl: string | null;
+    videoUrl: string | null;
   };
   locale: Locale;
   dict: Dictionary;
@@ -130,6 +133,41 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
             </button>
           </div>
         </motion.header>
+
+        {/* Hero Media */}
+        {(article.imageUrl || article.videoUrl) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-8 sm:mb-12"
+          >
+            {article.videoUrl ? (
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-midnight-800">
+                <video
+                  src={article.videoUrl}
+                  className="h-full w-full object-cover"
+                  controls
+                  playsInline
+                  preload="metadata"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            ) : article.imageUrl ? (
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-midnight-800">
+                <Image
+                  src={article.imageUrl}
+                  alt={article.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  priority
+                />
+              </div>
+            ) : null}
+          </motion.div>
+        )}
 
         {/* Article content */}
         <motion.div
