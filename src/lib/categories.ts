@@ -10,6 +10,7 @@ export const CATEGORIES = {
   INTELLIGENCE: 'Intelligence',
   DIPLOMATIC: 'Diplomatic',
   ANALYSIS: 'Analysis',
+  GEOPOLITICS: 'Geopolitics',
 } as const;
 
 export type Category = typeof CATEGORIES[keyof typeof CATEGORIES];
@@ -24,6 +25,7 @@ export const CATEGORY_LIST_EN: Category[] = [
   CATEGORIES.ECONOMIC,
   CATEGORIES.DIPLOMATIC,
   CATEGORIES.ANALYSIS,
+  CATEGORIES.GEOPOLITICS,
 ];
 
 // Category translations (Arabic)
@@ -36,6 +38,7 @@ export const CATEGORY_TRANSLATIONS: Record<Category, string> = {
   [CATEGORIES.INTELLIGENCE]: 'استخباراتي',
   [CATEGORIES.DIPLOMATIC]: 'دبلوماسي',
   [CATEGORIES.ANALYSIS]: 'تحليل',
+  [CATEGORIES.GEOPOLITICS]: 'جيوسياسي',
 };
 
 // Get localized category list

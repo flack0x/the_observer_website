@@ -60,6 +60,7 @@ VALID_CATEGORIES = {
     'diplomatic': 'Diplomatic',
     'breaking': 'Breaking',
     'analysis': 'Analysis',
+    'geopolitics': 'Geopolitics',
     # Arabic
     'عسكري': 'Military',
     'سياسي': 'Political',
@@ -68,6 +69,7 @@ VALID_CATEGORIES = {
     'دبلوماسي': 'Diplomatic',
     'عاجل': 'Breaking',
     'تحليل': 'Analysis',
+    'جيوسياسي': 'Geopolitics',
 }
 
 # Media size limits (in bytes)

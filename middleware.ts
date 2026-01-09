@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { locales, defaultLocale, type Locale } from '@/lib/i18n/config';
 
 // Paths that should not be localized
@@ -10,6 +11,7 @@ const publicPaths = [
   '/robots.txt',
   '/sitemap.xml',
   '/manifest.json',
+  '/admin', // Admin routes handle their own routing
 ];
 
 // Type guard to check if a string is a valid locale
@@ -23,10 +25,51 @@ function getLocaleFromPath(pathname: string): Locale | null {
   return isValidLocale(potentialLocale) ? potentialLocale : null;
 }
 
-export function middleware(request: NextRequest) {
+// Create Supabase client for middleware
+function createMiddlewareSupabaseClient(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  return { supabase, response };
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip public paths
+  // Handle admin routes separately
+  if (pathname.startsWith('/admin')) {
+    return handleAdminRoute(request);
+  }
+
+  // Skip other public paths
   if (publicPaths.some(path => pathname.startsWith(path))) {
     return NextResponse.next();
   }
@@ -60,6 +103,55 @@ export function middleware(request: NextRequest) {
   url.pathname = `/${detectedLocale}${pathname}`;
 
   return NextResponse.redirect(url);
+}
+
+// Handle admin route authentication
+async function handleAdminRoute(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Allow access to login and signup pages without auth
+  if (pathname === '/admin/login' || pathname === '/admin/signup') {
+    // If already logged in, redirect to dashboard
+    const { supabase, response } = createMiddlewareSupabaseClient(request);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin';
+      return NextResponse.redirect(url);
+    }
+
+    return response;
+  }
+
+  // For all other admin routes, check authentication
+  const { supabase, response } = createMiddlewareSupabaseClient(request);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    // Not authenticated, redirect to login
+    const url = request.nextUrl.clone();
+    url.pathname = '/admin/login';
+    return NextResponse.redirect(url);
+  }
+
+  // Check role for users page (admin only)
+  if (pathname.startsWith('/admin/users')) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      // Not admin, redirect to dashboard
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  return response;
 }
 
 export const config = {
