@@ -10,6 +10,7 @@ import {
   X,
   Globe,
   Send,
+  LogIn,
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
 import type { Locale, Dictionary } from "@/lib/i18n";
@@ -109,6 +110,15 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 {locale === "en" ? "AR" : "EN"}
               </button>
 
+              {/* Sign In - Desktop */}
+              <Link
+                href="/admin/login"
+                className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
+              >
+                <LogIn className="h-3 w-3" aria-hidden="true" />
+                {locale === "en" ? "Sign In" : "تسجيل"}
+              </Link>
+
               {/* Telegram CTA - Desktop only */}
               <a
                 href={telegramChannel}
@@ -185,6 +195,22 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                     {locale === "en" ? "العربية" : "English"}
                   </span>
                 </button>
+              </div>
+
+              {/* Sign In - Mobile */}
+              <div className="mt-4 pt-4 border-t border-midnight-700">
+                <Link
+                  href="/admin/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
+                >
+                  <span className="font-heading text-sm font-medium uppercase tracking-wider">
+                    {locale === "en" ? "Admin Sign In" : "تسجيل الدخول"}
+                  </span>
+                  <span className="flex items-center gap-2 text-tactical-red">
+                    <LogIn className="h-4 w-4" />
+                  </span>
+                </Link>
               </div>
 
               {/* Telegram CTA */}
