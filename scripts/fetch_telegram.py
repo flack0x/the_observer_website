@@ -2,6 +2,12 @@
 Telegram Article Fetcher for The Observer
 Fetches articles from Telegram channels and stores them in Supabase.
 
+OPTIMIZED VERSION:
+- Incremental sync: Only fetches new messages since last sync
+- Smart upsert: Only updates articles that have actually changed
+- Tracks sync state per channel
+- Use --full flag to force complete re-sync
+
 Supports structured post format:
 ---
 TITLE: Headline here
@@ -18,9 +24,12 @@ Also downloads and uploads images/videos to Supabase Storage.
 import os
 import re
 import sys
+import json
 import asyncio
-import io
-from datetime import datetime
+import hashlib
+import argparse
+from datetime import datetime, timezone
+from pathlib import Path
 from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -49,6 +58,9 @@ CHANNELS = {
     'en': 'observer_5',
     'ar': 'almuraqb',
 }
+
+# Sync state file (tracks last synced message ID per channel)
+SYNC_STATE_FILE = Path(__file__).parent / '.sync_state.json'
 
 # Valid categories (English and Arabic)
 VALID_CATEGORIES = {
@@ -95,6 +107,67 @@ EMOJI_PATTERN = re.compile(
     flags=re.UNICODE
 )
 
+
+# =============================================================================
+# SYNC STATE MANAGEMENT
+# =============================================================================
+
+def load_sync_state() -> dict:
+    """Load sync state from file."""
+    if SYNC_STATE_FILE.exists():
+        try:
+            with open(SYNC_STATE_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"  Warning: Could not load sync state: {e}")
+    return {}
+
+
+def save_sync_state(state: dict):
+    """Save sync state to file."""
+    try:
+        with open(SYNC_STATE_FILE, 'w') as f:
+            json.dump(state, f, indent=2)
+    except Exception as e:
+        print(f"  Warning: Could not save sync state: {e}")
+
+
+def get_last_synced_id(state: dict, channel: str) -> int:
+    """Get the last synced message ID for a channel."""
+    return state.get(channel, {}).get('last_message_id', 0)
+
+
+def update_sync_state(state: dict, channel: str, last_id: int, article_count: int):
+    """Update sync state for a channel."""
+    state[channel] = {
+        'last_message_id': last_id,
+        'last_sync': datetime.now(timezone.utc).isoformat(),
+        'articles_synced': article_count,
+    }
+
+
+# =============================================================================
+# CONTENT HASHING (for change detection)
+# =============================================================================
+
+def hash_article_content(article: dict) -> str:
+    """Create a hash of article content for change detection."""
+    # Include fields that matter for content comparison
+    content_str = '|'.join([
+        str(article.get('title', '')),
+        str(article.get('content', '')),
+        str(article.get('category', '')),
+        ','.join(sorted(article.get('countries', []))),
+        ','.join(sorted(article.get('organizations', []))),
+        str(article.get('image_url', '')),
+        str(article.get('video_url', '')),
+    ])
+    return hashlib.md5(content_str.encode()).hexdigest()
+
+
+# =============================================================================
+# TEXT PROCESSING
+# =============================================================================
 
 def clean_text(text: str) -> str:
     """Remove emojis and clean up text."""
@@ -431,6 +504,10 @@ def is_valid_article(text: str) -> bool:
     return True
 
 
+# =============================================================================
+# MEDIA HANDLING
+# =============================================================================
+
 async def upload_media_to_storage(
     client: TelegramClient,
     supabase: Client,
@@ -465,7 +542,7 @@ async def upload_media_to_storage(
 
                 # Get public URL
                 image_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(filename)
-                print(f"    Uploaded image: {filename}")
+                print(f"      Uploaded image: {filename}")
 
         # Handle videos/documents
         elif isinstance(message.media, MessageMediaDocument):
@@ -490,9 +567,9 @@ async def upload_media_to_storage(
 
                             # Get public URL
                             video_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(filename)
-                            print(f"    Uploaded video: {filename}")
+                            print(f"      Uploaded video: {filename}")
                     else:
-                        print(f"    Skipped video (too large): {doc.size / 1024 / 1024:.1f}MB > {MAX_VIDEO_SIZE / 1024 / 1024}MB")
+                        print(f"      Skipped video (too large): {doc.size / 1024 / 1024:.1f}MB > {MAX_VIDEO_SIZE / 1024 / 1024}MB")
 
                 # Check if it's an image (sometimes sent as document)
                 elif doc.mime_type.startswith('image/'):
@@ -511,13 +588,17 @@ async def upload_media_to_storage(
                             )
 
                             image_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(filename)
-                            print(f"    Uploaded image: {filename}")
+                            print(f"      Uploaded image: {filename}")
 
     except Exception as e:
-        print(f"    Error uploading media: {e}")
+        print(f"      Error uploading media: {e}")
 
     return image_url, video_url
 
+
+# =============================================================================
+# MESSAGE PARSING
+# =============================================================================
 
 def parse_message(message: Message, channel: str, channel_username: str) -> dict | None:
     """Parse a Telegram message into an article."""
@@ -651,59 +732,100 @@ def combine_message_group(messages: list[Message], channel: str, channel_usernam
         'telegram_link': f"https://t.me/{channel_username}/{first_message.id}",
         'telegram_date': first_message.date.isoformat(),
         '_part_count': len(sorted_messages),  # For logging
+        '_message_id': first_message.id,  # For tracking
     }
 
+
+# =============================================================================
+# MAIN FETCH LOGIC
+# =============================================================================
 
 async def fetch_channel_messages(
     client: TelegramClient,
     supabase: Client,
     channel_username: str,
     channel: str,
-    limit: int = 2000
-) -> list[dict]:
-    """Fetch messages from a Telegram channel, combine multi-part posts, and upload media."""
+    min_id: int = 0,
+    limit: int = 2000,
+    full_sync: bool = False
+) -> tuple[list[dict], int]:
+    """
+    Fetch messages from a Telegram channel.
+
+    Args:
+        min_id: Only fetch messages with ID > min_id (for incremental sync)
+        full_sync: If True, ignore min_id and fetch all messages
+
+    Returns:
+        (articles, max_message_id)
+    """
     articles = []
     structured_count = 0
     multipart_count = 0
     media_count = 0
+    max_id = min_id
 
     try:
         entity = await client.get_entity(channel_username)
-        print(f"\nFetching messages from @{channel_username} ({channel})...")
 
-        # Collect all valid messages first (including those with media)
+        if full_sync:
+            print(f"\n[FULL SYNC] Fetching ALL messages from @{channel_username} ({channel})...")
+        else:
+            print(f"\n[INCREMENTAL] Fetching messages from @{channel_username} ({channel}) since ID {min_id}...")
+
+        # Collect all valid messages first
         raw_messages = []
-        async for message in client.iter_messages(entity, limit=limit):
+        fetch_count = 0
+
+        async for message in client.iter_messages(entity, limit=limit, min_id=min_id if not full_sync else 0):
+            fetch_count += 1
             if isinstance(message, Message):
+                # Track max ID
+                if message.id > max_id:
+                    max_id = message.id
+
                 # Accept if has enough text OR has media with some text
                 has_text = message.text and len(message.text.strip()) >= 50
                 has_media_with_caption = message.media and message.text and len(message.text.strip()) >= 20
                 if has_text or has_media_with_caption:
                     raw_messages.append(message)
 
-        print(f"  Collected {len(raw_messages)} raw messages")
+        print(f"  Fetched {fetch_count} messages, {len(raw_messages)} valid articles")
+
+        if not raw_messages:
+            print(f"  No new messages to process")
+            return [], max_id
 
         # Group multi-part messages (within 3 minutes of each other)
         message_groups = group_multipart_messages(raw_messages, time_threshold_seconds=180)
         print(f"  Grouped into {len(message_groups)} article groups")
 
         # Get existing articles with their media URLs to avoid re-uploading
-        existing_media = {}
+        existing_data = {}
         try:
-            existing = supabase.table('articles').select('telegram_id, image_url, video_url').eq('channel', channel).execute()
-            existing_media = {row['telegram_id']: (row.get('image_url'), row.get('video_url')) for row in existing.data}
-            print(f"  Found {len(existing_media)} existing articles in DB")
+            existing = supabase.table('articles').select('telegram_id, image_url, video_url, content').eq('channel', channel).execute()
+            existing_data = {
+                row['telegram_id']: {
+                    'image_url': row.get('image_url'),
+                    'video_url': row.get('video_url'),
+                    'content_hash': hashlib.md5(str(row.get('content', '')).encode()).hexdigest()
+                }
+                for row in existing.data
+            }
+            print(f"  Found {len(existing_data)} existing articles in DB")
         except Exception as e:
-            print(f"  Warning: Could not fetch existing media: {e}")
+            print(f"  Warning: Could not fetch existing data: {e}")
 
         # Process each group
         for group in message_groups:
             article = combine_message_group(group, channel, channel_username)
             if article:
                 telegram_id = article['telegram_id']
+                existing_article = existing_data.get(telegram_id, {})
 
                 # Check if article already has media in DB
-                existing_img, existing_vid = existing_media.get(telegram_id, (None, None))
+                existing_img = existing_article.get('image_url')
+                existing_vid = existing_article.get('video_url')
 
                 if existing_img or existing_vid:
                     # Use existing media URLs - skip download/upload
@@ -740,82 +862,134 @@ async def fetch_channel_messages(
                     structured_count += 1
                 if article.get('_part_count', 1) > 1:
                     multipart_count += 1
-                    print(f"    Combined {article['_part_count']} parts: {article['title'][:50]}...")
 
-        print(f"  Total articles: {len(articles)} ({structured_count} structured, {multipart_count} multi-part, {media_count} with media)")
+        print(f"  Processed: {len(articles)} articles ({structured_count} structured, {multipart_count} multi-part, {media_count} with media)")
+
     except Exception as e:
         print(f"Error fetching @{channel_username}: {e}")
         import traceback
         traceback.print_exc()
 
-    return articles
+    return articles, max_id
 
 
-def upsert_articles(supabase: Client, articles: list[dict], channel: str, batch_size: int = 50):
-    """Insert or update articles in Supabase with batching, and clean up orphaned entries."""
+def smart_upsert_articles(
+    supabase: Client,
+    articles: list[dict],
+    channel: str,
+    existing_data: dict = None,
+    full_sync: bool = False
+) -> dict:
+    """
+    Smart upsert that only updates articles that have actually changed.
+
+    Returns stats dict with counts.
+    """
+    stats = {
+        'total': len(articles),
+        'inserted': 0,
+        'updated': 0,
+        'skipped': 0,
+        'errors': 0,
+    }
+
     if not articles:
-        return
+        return stats
 
-    print(f"\nUpserting {len(articles)} articles to Supabase for channel '{channel}'...")
+    print(f"\n  Processing {len(articles)} articles...")
 
-    # Get list of valid telegram_ids from the new articles
-    valid_ids = {article['telegram_id'] for article in articles}
+    # Fetch existing data if not provided
+    if existing_data is None:
+        try:
+            existing = supabase.table('articles').select('telegram_id, content, title, category, image_url, video_url').eq('channel', channel).execute()
+            existing_data = {row['telegram_id']: row for row in existing.data}
+        except Exception as e:
+            print(f"  Warning: Could not fetch existing data: {e}")
+            existing_data = {}
 
-    success_count = 0
-    error_count = 0
+    for article in articles:
+        try:
+            telegram_id = article['telegram_id']
+            existing = existing_data.get(telegram_id)
 
-    for i in range(0, len(articles), batch_size):
-        batch = articles[i:i + batch_size]
+            # Remove internal fields before saving
+            article_data = {k: v for k, v in article.items() if not k.startswith('_')}
 
-        for article in batch:
-            try:
-                # Remove internal fields before saving
-                article_data = {k: v for k, v in article.items() if not k.startswith('_')}
+            if existing:
+                # Check if content has actually changed
+                new_hash = hash_article_content(article_data)
+                old_hash = hash_article_content(existing)
+
+                if new_hash == old_hash:
+                    stats['skipped'] += 1
+                    continue
+                else:
+                    # Content changed, update
+                    supabase.table('articles').upsert(
+                        article_data,
+                        on_conflict='telegram_id'
+                    ).execute()
+                    stats['updated'] += 1
+            else:
+                # New article, insert
                 supabase.table('articles').upsert(
                     article_data,
                     on_conflict='telegram_id'
                 ).execute()
-                success_count += 1
-            except Exception as e:
-                error_count += 1
-                print(f"  Error saving {article['telegram_id']}: {e}")
+                stats['inserted'] += 1
 
-        print(f"  Progress: {min(i + batch_size, len(articles))}/{len(articles)}")
+        except Exception as e:
+            stats['errors'] += 1
+            print(f"    Error saving {article.get('telegram_id', 'unknown')}: {e}")
 
-    print(f"  Upserted: {success_count}, Errors: {error_count}")
+    print(f"  Results: {stats['inserted']} new, {stats['updated']} updated, {stats['skipped']} unchanged, {stats['errors']} errors")
 
-    # Clean up orphaned entries (old continuation posts that are now merged)
-    print(f"\n  Cleaning up orphaned entries for channel '{channel}'...")
-    try:
-        # Get all existing telegram_ids for this channel
-        existing = supabase.table('articles').select('telegram_id').eq('channel', channel).execute()
-        existing_ids = {row['telegram_id'] for row in existing.data}
+    # Clean up orphaned entries only on full sync
+    if full_sync:
+        print(f"\n  Cleaning up orphaned entries...")
+        try:
+            valid_ids = {article['telegram_id'] for article in articles}
+            existing_ids = set(existing_data.keys())
+            orphaned_ids = existing_ids - valid_ids
 
-        # Find orphaned IDs (exist in DB but not in new articles)
-        orphaned_ids = existing_ids - valid_ids
+            if orphaned_ids:
+                print(f"  Found {len(orphaned_ids)} orphaned entries to remove")
+                for orphan_id in orphaned_ids:
+                    try:
+                        supabase.table('articles').delete().eq('telegram_id', orphan_id).execute()
+                    except Exception as e:
+                        print(f"    Error deleting {orphan_id}: {e}")
+                print(f"  Removed {len(orphaned_ids)} orphaned entries")
+            else:
+                print(f"  No orphaned entries found")
+        except Exception as e:
+            print(f"  Error during cleanup: {e}")
 
-        if orphaned_ids:
-            print(f"  Found {len(orphaned_ids)} orphaned entries to remove")
-            for orphan_id in orphaned_ids:
-                try:
-                    supabase.table('articles').delete().eq('telegram_id', orphan_id).execute()
-                except Exception as e:
-                    print(f"    Error deleting {orphan_id}: {e}")
-            print(f"  Removed {len(orphaned_ids)} orphaned entries")
-        else:
-            print(f"  No orphaned entries found")
-    except Exception as e:
-        print(f"  Error during cleanup: {e}")
+    return stats
 
-    print(f"\nDone!")
 
+# =============================================================================
+# MAIN
+# =============================================================================
 
 async def main():
     """Main function to fetch and store articles."""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Fetch Telegram articles for The Observer')
+    parser.add_argument('--full', action='store_true', help='Force full sync (ignore last sync state)')
+    parser.add_argument('--channel', choices=['en', 'ar'], help='Sync only one channel')
+    parser.add_argument('--limit', type=int, default=2000, help='Maximum messages to fetch per channel')
+    args = parser.parse_args()
+
     print("=" * 60)
     print("The Observer - Telegram Article Fetcher")
-    print("Supports structured posts, media uploads, and multi-part grouping!")
+    print("OPTIMIZED: Incremental sync with change detection")
     print("=" * 60)
+
+    if args.full:
+        print("\n*** FULL SYNC MODE - Will fetch ALL messages ***\n")
+    else:
+        print("\n*** INCREMENTAL MODE - Only fetching new messages ***\n")
 
     if not API_ID or not API_HASH:
         print("\nError: Missing Telegram API credentials.")
@@ -824,6 +998,13 @@ async def main():
     if not SUPABASE_KEY:
         print("\nError: Missing Supabase service key.")
         return
+
+    # Load sync state
+    sync_state = load_sync_state()
+    if sync_state and not args.full:
+        print("Loaded sync state:")
+        for ch, state in sync_state.items():
+            print(f"  {ch}: last_id={state.get('last_message_id', 0)}, last_sync={state.get('last_sync', 'never')}")
 
     print("\nConnecting to Supabase...")
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -844,18 +1025,59 @@ async def main():
         await client.start(phone=PHONE)
     print("Connected to Telegram!")
 
-    total_articles = 0
+    total_stats = {
+        'total': 0,
+        'inserted': 0,
+        'updated': 0,
+        'skipped': 0,
+        'errors': 0,
+    }
 
-    for channel, username in CHANNELS.items():
-        articles = await fetch_channel_messages(client, supabase, username, channel)
+    # Determine which channels to sync
+    channels_to_sync = CHANNELS.items()
+    if args.channel:
+        channels_to_sync = [(args.channel, CHANNELS[args.channel])]
+
+    for channel, username in channels_to_sync:
+        # Get last synced ID for this channel
+        last_id = 0 if args.full else get_last_synced_id(sync_state, channel)
+
+        # Fetch messages
+        articles, max_id = await fetch_channel_messages(
+            client, supabase, username, channel,
+            min_id=last_id,
+            limit=args.limit,
+            full_sync=args.full
+        )
+
         if articles:
-            upsert_articles(supabase, articles, channel)
-            total_articles += len(articles)
+            # Smart upsert with change detection
+            stats = smart_upsert_articles(supabase, articles, channel, full_sync=args.full)
+
+            # Update totals
+            for key in total_stats:
+                total_stats[key] += stats[key]
+
+            # Update sync state with new max ID
+            update_sync_state(sync_state, channel, max_id, len(articles))
+        else:
+            # Even if no articles, update the max_id if we got one
+            if max_id > last_id:
+                update_sync_state(sync_state, channel, max_id, 0)
+
+    # Save sync state
+    save_sync_state(sync_state)
 
     await client.disconnect()
 
     print("\n" + "=" * 60)
-    print(f"Total articles processed: {total_articles}")
+    print("SYNC COMPLETE")
+    print("=" * 60)
+    print(f"Total processed: {total_stats['total']}")
+    print(f"  New articles:  {total_stats['inserted']}")
+    print(f"  Updated:       {total_stats['updated']}")
+    print(f"  Unchanged:     {total_stats['skipped']}")
+    print(f"  Errors:        {total_stats['errors']}")
     print("=" * 60)
 
 
