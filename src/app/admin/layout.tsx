@@ -1,77 +1,30 @@
-'use client';
+import { Metadata } from 'next';
+import '../globals.css';
+import AdminLayoutClient from './AdminLayoutClient';
 
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { AuthProvider, RequireAuth } from '@/lib/auth';
-import { AdminSidebar, AdminHeader } from '@/components/admin/layout';
+export const metadata: Metadata = {
+  title: 'Admin | The Observer',
+  description: 'Content Management System for The Observer',
+};
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Don't show layout chrome on login page
-  const isLoginPage = pathname === '/admin/login';
-
-  if (isLoginPage) {
-    return (
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    );
-  }
-
   return (
-    <AuthProvider>
-      <RequireAuth>
-        <div className="min-h-screen bg-midnight-900">
-          {/* Sidebar - Desktop */}
-          <div className="hidden lg:block">
-            <AdminSidebar
-              collapsed={sidebarCollapsed}
-              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-            />
-          </div>
-
-          {/* Mobile sidebar overlay */}
-          {mobileMenuOpen && (
-            <div
-              className="lg:hidden fixed inset-0 bg-black/50 z-30"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-          )}
-
-          {/* Sidebar - Mobile */}
-          <div
-            className={`
-              lg:hidden fixed inset-y-0 left-0 z-40 transform transition-transform duration-300
-              ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-            `}
-          >
-            <AdminSidebar collapsed={false} />
-          </div>
-
-          {/* Main content area */}
-          <div
-            className={`
-              transition-all duration-300
-              ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}
-            `}
-          >
-            {/* Header */}
-            <AdminHeader onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
-
-            {/* Page content */}
-            <main className="p-4 lg:p-6">
-              {children}
-            </main>
-          </div>
-        </div>
-      </RequireAuth>
-    </AuthProvider>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-midnight-900 text-slate-light antialiased">
+        <AdminLayoutClient>{children}</AdminLayoutClient>
+      </body>
+    </html>
   );
 }
