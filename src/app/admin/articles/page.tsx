@@ -283,7 +283,7 @@ export default function AdminArticlesPage() {
                   >
                     <td className="px-4 py-3">
                       <Link
-                        href={`/admin/articles/${encodeURIComponent(article.telegram_id)}`}
+                        href={`/admin/articles/${article.telegram_id}`}
                         className="text-slate-light hover:text-tactical-red transition-colors font-medium line-clamp-1"
                       >
                         {article.title}
@@ -319,7 +319,7 @@ export default function AdminArticlesPage() {
                         {activeMenu === article.telegram_id && (
                           <div className="absolute right-0 top-full mt-1 w-40 bg-midnight-800 border border-midnight-700 rounded-lg shadow-lg py-1 z-10">
                             <Link
-                              href={`/admin/articles/${encodeURIComponent(article.telegram_id)}`}
+                              href={`/admin/articles/${article.telegram_id}`}
                               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-medium hover:text-slate-light hover:bg-midnight-700 transition-colors"
                             >
                               <Edit2 className="h-4 w-4" />

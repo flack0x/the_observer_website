@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 interface RouteParams {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string[] }>;
 }
 
-// GET /api/admin/articles/[id] - Get single article
+// GET /api/admin/articles/[...id] - Get single article
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Decode the ID (it may contain slashes)
-    const decodedId = decodeURIComponent(id);
+    // Join array segments back into a single ID (handles slashes in telegram_id)
+    const decodedId = id.join('/');
 
     // Fetch article
     const { data: article, error } = await supabase
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// PUT /api/admin/articles/[id] - Update article
+// PUT /api/admin/articles/[...id] - Update article
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
@@ -93,7 +93,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
-    const decodedId = decodeURIComponent(id);
+    // Join array segments back into a single ID (handles slashes in telegram_id)
+    const decodedId = id.join('/');
 
     // Fetch existing article
     const { data: existingArticle, error: fetchError } = await supabase
@@ -161,7 +162,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// DELETE /api/admin/articles/[id] - Delete article
+// DELETE /api/admin/articles/[...id] - Delete article
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
@@ -184,7 +185,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Forbidden - Admin only' }, { status: 403 });
     }
 
-    const decodedId = decodeURIComponent(id);
+    // Join array segments back into a single ID (handles slashes in telegram_id)
+    const decodedId = id.join('/');
 
     // Delete article
     const { error: deleteError } = await supabase

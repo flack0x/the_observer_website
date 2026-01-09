@@ -30,13 +30,14 @@ const COMMON_ORGANIZATIONS = [
 ];
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string[] }>;
 }
 
 export default function EditArticlePage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
-  const decodedId = decodeURIComponent(id);
+  // Join array segments back into a single ID (handles slashes in telegram_id)
+  const decodedId = id.join('/');
 
   // Form state
   const [titleEn, setTitleEn] = useState('');
