@@ -1022,7 +1022,14 @@ async def main():
         print("Using file session (local mode)")
         session_path = os.path.join(os.path.dirname(__file__), 'observer_session')
         client = TelegramClient(session_path, int(API_ID), API_HASH)
-        await client.start(phone=PHONE)
+        await client.connect()
+
+        if not await client.is_user_authorized():
+            print("Session not authorized. Please run login_telegram.py first to authenticate.")
+            print("Or set TELEGRAM_SESSION_STRING in .env for non-interactive mode.")
+            await client.disconnect()
+            return
+
     print("Connected to Telegram!")
 
     total_stats = {
