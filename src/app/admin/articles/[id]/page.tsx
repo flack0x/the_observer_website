@@ -12,8 +12,10 @@ import {
   Video,
   Trash2,
   ExternalLink,
+  Monitor,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
+import { ArticlePreviewModal } from '@/components/admin/articles';
 import { CATEGORIES } from '@/lib/categories';
 import { ShowForAdmin } from '@/lib/auth';
 
@@ -58,6 +60,7 @@ export default function EditArticlePage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Determine if this is a website article (bilingual) or Telegram article (single)
   const isWebsiteArticle = decodedId.startsWith('website/');
@@ -291,6 +294,16 @@ export default function EditArticlePage({ params }: PageProps) {
               Delete
             </button>
           </ShowForAdmin>
+
+          <button
+            onClick={() => setShowPreview(true)}
+            className="flex items-center gap-2 bg-midnight-700 border border-midnight-500 text-slate-light
+                     px-4 py-2 rounded-lg hover:border-tactical-amber hover:text-tactical-amber
+                     transition-colors text-sm font-medium"
+          >
+            <Monitor className="h-4 w-4" />
+            Preview
+          </button>
 
           <button
             onClick={() => handleSave()}
@@ -550,6 +563,24 @@ export default function EditArticlePage({ params }: PageProps) {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <ArticlePreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        article={{
+          titleEn,
+          titleAr,
+          excerptEn,
+          excerptAr,
+          contentEn,
+          contentAr,
+          category,
+          countries,
+          imageUrl,
+          videoUrl,
+        }}
+      />
     </div>
   );
 }

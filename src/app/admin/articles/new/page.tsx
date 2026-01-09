@@ -11,8 +11,10 @@ import {
   Image as ImageIcon,
   Video,
   X,
+  Monitor,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
+import { ArticlePreviewModal } from '@/components/admin/articles';
 import { CATEGORIES } from '@/lib/categories';
 
 // Common countries and organizations for quick selection
@@ -46,6 +48,7 @@ export default function NewArticlePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'en' | 'ar'>('en');
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     setError(null);
@@ -118,6 +121,15 @@ export default function NewArticlePage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowPreview(true)}
+            className="flex items-center gap-2 bg-midnight-700 border border-midnight-500 text-slate-light
+                     px-4 py-2 rounded-lg hover:border-tactical-amber hover:text-tactical-amber
+                     transition-colors text-sm font-medium"
+          >
+            <Monitor className="h-4 w-4" />
+            Preview
+          </button>
           <button
             onClick={() => handleSubmit('draft')}
             disabled={isSubmitting || !titleEn}
@@ -363,6 +375,24 @@ export default function NewArticlePage() {
           )}
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <ArticlePreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        article={{
+          titleEn,
+          titleAr,
+          excerptEn,
+          excerptAr,
+          contentEn,
+          contentAr,
+          category,
+          countries,
+          imageUrl,
+          videoUrl,
+        }}
+      />
     </div>
   );
 }
