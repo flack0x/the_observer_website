@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import useSWR from 'swr';
 import {
   Plus,
   Search,
@@ -39,19 +40,24 @@ interface ArticlesResponse {
   hasMore: boolean;
 }
 
+// Fetcher for SWR
+const fetchArticles = async (url: string): Promise<ArticlesResponse> => {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch articles');
+  return response.json();
+};
+
 export default function AdminArticlesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile } = useAuth();
 
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
 
   // Filters
   const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
   const [channelFilter, setChannelFilter] = useState(searchParams.get('channel') || 'all');
   const [categoryFilter, setCategoryFilter] = useState(searchParams.get('category') || '');
@@ -59,44 +65,47 @@ export default function AdminArticlesPage() {
   // Action menu
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
-  const fetchArticles = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString(),
-      });
-
-      if (search) params.set('search', search);
-      if (statusFilter) params.set('status', statusFilter);
-      if (channelFilter && channelFilter !== 'all') params.set('channel', channelFilter);
-      if (categoryFilter) params.set('category', categoryFilter);
-
-      const response = await fetch(`/api/admin/articles?${params}`);
-      const data: ArticlesResponse = await response.json();
-
-      if (response.ok) {
-        setArticles(data.data);
-        setTotal(data.total);
-      }
-    } catch (error) {
-      console.error('Error fetching articles:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, pageSize, search, statusFilter, channelFilter, categoryFilter]);
-
-  useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
-
-  // Handle search with debounce
-  useEffect(() => {
+  // Debounce search
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    // Debounce the actual search
     const timeout = setTimeout(() => {
+      setDebouncedSearch(value);
       setPage(1);
     }, 300);
     return () => clearTimeout(timeout);
-  }, [search]);
+  };
+
+  // Build URL for SWR cache key
+  const buildUrl = useCallback(() => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+
+    if (debouncedSearch) params.set('search', debouncedSearch);
+    if (statusFilter) params.set('status', statusFilter);
+    if (channelFilter && channelFilter !== 'all') params.set('channel', channelFilter);
+    if (categoryFilter) params.set('category', categoryFilter);
+
+    return `/api/admin/articles?${params}`;
+  }, [page, pageSize, debouncedSearch, statusFilter, channelFilter, categoryFilter]);
+
+  // SWR with caching
+  const { data, isLoading, mutate } = useSWR<ArticlesResponse>(
+    buildUrl(),
+    fetchArticles,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 30000,      // Cache for 30 seconds
+      keepPreviousData: true,       // Show previous data while loading new
+    }
+  );
+
+  const articles = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / pageSize);
 
   const handleDelete = async (telegramId: string) => {
     if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
@@ -109,7 +118,8 @@ export default function AdminArticlesPage() {
       });
 
       if (response.ok) {
-        fetchArticles();
+        // Revalidate the cache
+        mutate();
       } else {
         alert('Failed to delete article');
       }
@@ -120,8 +130,6 @@ export default function AdminArticlesPage() {
 
     setActiveMenu(null);
   };
-
-  const totalPages = Math.ceil(total / pageSize);
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -169,7 +177,7 @@ export default function AdminArticlesPage() {
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search articles..."
                 className="w-full bg-midnight-700 border border-midnight-500 rounded-lg pl-10 pr-4 py-2.5
                          text-slate-light placeholder:text-slate-dark text-sm
@@ -232,7 +240,7 @@ export default function AdminArticlesPage() {
 
       {/* Articles table */}
       <div className="bg-midnight-800 rounded-xl border border-midnight-700 overflow-hidden">
-        {isLoading ? (
+        {isLoading && articles.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-tactical-red" />
           </div>

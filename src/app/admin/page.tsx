@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import useSWR from 'swr';
 import {
   FileText,
   Image,
@@ -23,87 +23,107 @@ interface DashboardStats {
   totalMedia: number;
 }
 
+interface RecentArticle {
+  id: number;
+  telegram_id: string;
+  title: string;
+  category: string;
+  status: string;
+  telegram_date: string;
+  channel: string;
+}
+
+// Fetcher function for SWR
+const fetchDashboardStats = async (): Promise<DashboardStats> => {
+  const supabase = getClient();
+
+  const [totalResult, publishedResult, draftResult, mediaResult] = await Promise.all([
+    supabase.from('articles').select('*', { count: 'exact', head: true }),
+    supabase.from('articles').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+    supabase.from('articles').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
+    supabase.storage.from('article-media').list('', { limit: 1000 }),
+  ]);
+
+  return {
+    totalArticles: totalResult.count || 0,
+    publishedArticles: publishedResult.count || 0,
+    draftArticles: draftResult.count || 0,
+    totalMedia: mediaResult.data?.filter((f: { name: string }) => !f.name.startsWith('.')).length || 0,
+  };
+};
+
+const fetchRecentArticles = async (): Promise<RecentArticle[]> => {
+  const supabase = getClient();
+
+  const { data } = await supabase
+    .from('articles')
+    .select('id, telegram_id, title, category, status, telegram_date, channel')
+    .order('telegram_date', { ascending: false })
+    .limit(5);
+
+  return data || [];
+};
+
 export default function AdminDashboardPage() {
   const { profile } = useAuth();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalArticles: 0,
-    publishedArticles: 0,
-    draftArticles: 0,
-    totalMedia: 0,
-  });
-  const [recentArticles, setRecentArticles] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      const supabase = getClient();
+  // SWR with caching - data persists across page navigations
+  const { data: stats, isLoading: statsLoading } = useSWR<DashboardStats>(
+    'dashboard-stats',
+    fetchDashboardStats,
+    {
+      revalidateOnFocus: false,      // Don't refetch on window focus
+      revalidateOnReconnect: false,  // Don't refetch on reconnect
+      dedupingInterval: 60000,       // Dedupe requests within 60 seconds
+      refreshInterval: 300000,       // Auto refresh every 5 minutes
+      fallbackData: {                // Show zeros while loading first time
+        totalArticles: 0,
+        publishedArticles: 0,
+        draftArticles: 0,
+        totalMedia: 0,
+      },
+    }
+  );
 
-      try {
-        // Fetch article counts
-        const { count: totalCount } = await supabase
-          .from('articles')
-          .select('*', { count: 'exact', head: true });
+  const { data: recentArticles, isLoading: articlesLoading } = useSWR<RecentArticle[]>(
+    'dashboard-recent-articles',
+    fetchRecentArticles,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000,
+      refreshInterval: 300000,
+      fallbackData: [],
+    }
+  );
 
-        const { count: publishedCount } = await supabase
-          .from('articles')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'published');
-
-        const { count: draftCount } = await supabase
-          .from('articles')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'draft');
-
-        // Fetch recent articles
-        const { data: articles } = await supabase
-          .from('articles')
-          .select('id, telegram_id, title, category, status, telegram_date, channel')
-          .order('telegram_date', { ascending: false })
-          .limit(5);
-
-        setStats({
-          totalArticles: totalCount || 0,
-          publishedArticles: publishedCount || 0,
-          draftArticles: draftCount || 0,
-          totalMedia: 0, // Would need to query storage
-        });
-
-        setRecentArticles(articles || []);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+  const isLoading = statsLoading && !stats?.totalArticles;
 
   const statCards = [
     {
       label: 'Total Articles',
-      value: stats.totalArticles,
+      value: stats?.totalArticles || 0,
       icon: FileText,
       color: 'tactical-red',
       href: '/admin/articles',
     },
     {
       label: 'Published',
-      value: stats.publishedArticles,
+      value: stats?.publishedArticles || 0,
       icon: Eye,
       color: 'earth-olive',
       href: '/admin/articles?status=published',
     },
     {
       label: 'Drafts',
-      value: stats.draftArticles,
+      value: stats?.draftArticles || 0,
       icon: Clock,
       color: 'tactical-amber',
       href: '/admin/articles?status=draft',
     },
     {
       label: 'Media Files',
-      value: stats.totalMedia,
+      value: stats?.totalMedia || 0,
       icon: Image,
       color: 'slate-medium',
       href: '/admin/media',
@@ -181,7 +201,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="divide-y divide-midnight-700">
-          {isLoading ? (
+          {articlesLoading && (!recentArticles || recentArticles.length === 0) ? (
             // Skeleton loading
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="p-4 animate-pulse">
@@ -189,7 +209,7 @@ export default function AdminDashboardPage() {
                 <div className="h-3 bg-midnight-700 rounded w-1/4" />
               </div>
             ))
-          ) : recentArticles.length > 0 ? (
+          ) : recentArticles && recentArticles.length > 0 ? (
             recentArticles.map((article) => (
               <Link
                 key={article.id}
