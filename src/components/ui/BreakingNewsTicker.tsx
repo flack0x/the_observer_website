@@ -71,7 +71,7 @@ export default function BreakingNewsTicker({ dict, initialNews }: BreakingNewsTi
   }
 
   return (
-    <div className="relative h-7 bg-midnight-900 border-b border-midnight-700/50">
+    <div className="ticker-wrapper relative h-7 bg-midnight-900 border-b border-midnight-700/50">
       <div className="flex h-full items-center">
         {/* Live Indicator - Compact */}
         <div className="relative z-10 flex h-full shrink-0 items-center bg-tactical-red px-2.5 sm:px-3 gap-1.5">

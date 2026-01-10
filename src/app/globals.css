@@ -160,19 +160,28 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Light theme ticker adjustments */
+/* Light theme ticker - dark background for contrast */
+[data-theme="light"] .ticker-wrapper {
+  background-color: #2a2a35 !important;
+  border-color: #3a3a45 !important;
+}
+
 [data-theme="light"] .ticker-category {
-  background: rgba(196, 30, 30, 0.12);
-  color: #c41e1e;
-  border-color: rgba(196, 30, 30, 0.35);
+  background: rgba(220, 38, 38, 0.2);
+  color: #f87171;
+  border-color: rgba(220, 38, 38, 0.4);
 }
 
 [data-theme="light"] .ticker-title {
-  color: #2d2d3a;
+  color: #e5e7eb;
 }
 
 [data-theme="light"] .ticker-separator-line {
-  background: linear-gradient(90deg, transparent, #A8A69C, transparent);
+  background: linear-gradient(90deg, transparent, #4a4a55, transparent);
+}
+
+[data-theme="light"] .ticker-separator-dot {
+  background-color: #dc2626;
 }
 
 /* Light theme specific element styling */
