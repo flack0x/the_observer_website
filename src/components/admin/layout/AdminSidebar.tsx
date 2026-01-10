@@ -11,6 +11,7 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { useState } from 'react';
@@ -33,9 +34,11 @@ const navItems: NavItem[] = [
 interface AdminSidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
+  onClose?: () => void; // For mobile - closes the sidebar
+  isMobile?: boolean;
 }
 
-export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps) {
+export function AdminSidebar({ collapsed = false, onToggle, onClose, isMobile = false }: AdminSidebarProps) {
   const pathname = usePathname();
   const { profile } = useAuth();
 
@@ -57,7 +60,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-midnight-700">
         {!collapsed && (
-          <Link href="/admin" className="flex items-center gap-2">
+          <Link href="/admin" className="flex items-center gap-2" onClick={isMobile ? onClose : undefined}>
             <Shield className="h-6 w-6 text-tactical-red" />
             <span className="font-heading font-bold uppercase tracking-wider text-slate-light">
               Admin
@@ -69,7 +72,17 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
             <Shield className="h-6 w-6 text-tactical-red" />
           </Link>
         )}
-        {onToggle && !collapsed && (
+        {/* Mobile close button */}
+        {isMobile && onClose && (
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-midnight-700 text-slate-dark hover:text-slate-medium transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+        {/* Desktop collapse button */}
+        {!isMobile && onToggle && !collapsed && (
           <button
             onClick={onToggle}
             className="p-1.5 rounded-lg hover:bg-midnight-700 text-slate-dark hover:text-slate-medium transition-colors"
@@ -91,6 +104,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
                     item={item}
                     isActive={isActive(item.href)}
                     collapsed={collapsed}
+                    onClose={isMobile ? onClose : undefined}
                   />
                 </ShowForAdmin>
               );
@@ -102,6 +116,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
                 item={item}
                 isActive={isActive(item.href)}
                 collapsed={collapsed}
+                onClose={isMobile ? onClose : undefined}
               />
             );
           })}
@@ -155,10 +170,12 @@ function NavItemComponent({
   item,
   isActive,
   collapsed,
+  onClose,
 }: {
   item: NavItem;
   isActive: boolean;
   collapsed: boolean;
+  onClose?: () => void;
 }) {
   const Icon = item.icon;
 
@@ -166,6 +183,7 @@ function NavItemComponent({
     <li>
       <Link
         href={item.href}
+        onClick={onClose}
         className={`
           flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
           ${collapsed ? 'justify-center' : ''}

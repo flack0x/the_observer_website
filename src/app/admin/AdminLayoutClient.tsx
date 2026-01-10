@@ -52,7 +52,11 @@ export default function AdminLayoutClient({
               ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
             `}
           >
-            <AdminSidebar collapsed={false} />
+            <AdminSidebar
+              collapsed={false}
+              isMobile={true}
+              onClose={() => setMobileMenuOpen(false)}
+            />
           </div>
 
           {/* Main content area */}
