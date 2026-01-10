@@ -75,10 +75,15 @@ export function AdminSidebar({ collapsed = false, onToggle, onClose, isMobile = 
         {/* Mobile close button */}
         {isMobile && onClose && (
           <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-midnight-700 text-slate-dark hover:text-slate-medium transition-colors"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            className="p-2 rounded-lg bg-midnight-700 hover:bg-midnight-600 text-slate-light transition-colors z-50"
           >
-            <X className="h-5 w-5" />
+            <X className="h-6 w-6" />
           </button>
         )}
         {/* Desktop collapse button */}
@@ -179,11 +184,17 @@ function NavItemComponent({
 }) {
   const Icon = item.icon;
 
+  const handleClick = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
     <li>
       <Link
         href={item.href}
-        onClick={onClose}
+        onClick={handleClick}
         className={`
           flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
           ${collapsed ? 'justify-center' : ''}
