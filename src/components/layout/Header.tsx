@@ -11,10 +11,13 @@ import {
   Globe,
   Send,
   LogIn,
+  Sun,
+  Moon,
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
 import type { Locale, Dictionary } from "@/lib/i18n";
 import { getTelegramChannel } from "@/lib/config";
+import { useTheme } from "@/lib/theme";
 
 interface HeaderProps {
   locale: Locale;
@@ -27,6 +30,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isRTL = locale === 'ar';
+  const { resolvedTheme, toggleTheme } = useTheme();
 
   const navigation = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
@@ -100,6 +104,19 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                aria-label={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full border border-midnight-500 text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
+              >
+                {resolvedTheme === 'dark' ? (
+                  <Sun className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Moon className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
+
               {/* Language Toggle - Hidden on mobile, shown in mobile menu */}
               <button
                 onClick={switchLanguage}
@@ -178,8 +195,28 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 })}
               </div>
 
-              {/* Language Toggle */}
-              <div className="mt-4 pt-4 border-t border-midnight-700">
+              {/* Theme & Language Toggles */}
+              <div className="mt-4 pt-4 border-t border-midnight-700 space-y-1">
+                {/* Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
+                >
+                  <span className="font-heading text-sm font-medium uppercase tracking-wider">
+                    {resolvedTheme === 'dark'
+                      ? (locale === "en" ? "Light Mode" : "الوضع الفاتح")
+                      : (locale === "en" ? "Dark Mode" : "الوضع الداكن")}
+                  </span>
+                  <span className="flex items-center gap-2 text-tactical-red">
+                    {resolvedTheme === 'dark' ? (
+                      <Sun className="h-4 w-4" />
+                    ) : (
+                      <Moon className="h-4 w-4" />
+                    )}
+                  </span>
+                </button>
+
+                {/* Language Toggle */}
                 <button
                   onClick={() => {
                     switchLanguage();

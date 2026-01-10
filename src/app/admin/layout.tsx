@@ -1,6 +1,21 @@
 import { Metadata } from 'next';
 import '../globals.css';
 import AdminLayoutClient from './AdminLayoutClient';
+import { ThemeProvider } from '@/lib/theme';
+
+// Inline script to prevent flash of wrong theme
+const themeScript = `
+  (function() {
+    try {
+      const theme = localStorage.getItem('theme');
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = theme === 'dark' || (!theme && systemDark) || (theme === 'system' && systemDark);
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+`;
 
 export const metadata: Metadata = {
   title: 'Admin | The Observer',
@@ -13,8 +28,9 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -23,7 +39,9 @@ export default function AdminLayout({
         />
       </head>
       <body className="min-h-screen bg-midnight-900 text-slate-light antialiased">
-        <AdminLayoutClient>{children}</AdminLayoutClient>
+        <ThemeProvider>
+          <AdminLayoutClient>{children}</AdminLayoutClient>
+        </ThemeProvider>
       </body>
     </html>
   );

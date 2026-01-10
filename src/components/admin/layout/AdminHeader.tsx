@@ -10,8 +10,11 @@ import {
   ExternalLink,
   ChevronRight,
   Bell,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { useTheme } from '@/lib/theme';
 
 interface AdminHeaderProps {
   onMenuClick?: () => void;
@@ -31,6 +34,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { profile, signOut } = useAuth();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -107,6 +111,19 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           <ExternalLink className="h-4 w-4" />
           <span>View Site</span>
         </Link>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          aria-label={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          className="p-2 rounded-lg hover:bg-midnight-700 text-slate-medium hover:text-slate-light transition-colors"
+        >
+          {resolvedTheme === 'dark' ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
+        </button>
 
         {/* Notifications (placeholder) */}
         <button className="p-2 rounded-lg hover:bg-midnight-700 text-slate-medium hover:text-slate-light transition-colors relative">
