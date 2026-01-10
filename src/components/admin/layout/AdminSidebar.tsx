@@ -97,6 +97,35 @@ export function AdminSidebar({ collapsed = false, onToggle, onClose, isMobile = 
         )}
       </div>
 
+      {/* User info - at top */}
+      {profile && (
+        <div className="p-4 border-b border-midnight-700">
+          {!collapsed ? (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-tactical-red/20 flex items-center justify-center">
+                <span className="text-sm font-bold text-tactical-red">
+                  {profile.email[0].toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-light truncate">
+                  {profile.full_name || profile.email}
+                </p>
+                <p className="text-xs text-slate-dark capitalize">{profile.role}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="w-8 h-8 rounded-full bg-tactical-red/20 flex items-center justify-center">
+                <span className="text-sm font-bold text-tactical-red">
+                  {profile.email[0].toUpperCase()}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="flex-1 py-4 overflow-y-auto">
         <ul className="space-y-1 px-2">
@@ -127,35 +156,6 @@ export function AdminSidebar({ collapsed = false, onToggle, onClose, isMobile = 
           })}
         </ul>
       </nav>
-
-      {/* User info */}
-      {profile && (
-        <div className="p-4 border-t border-midnight-700">
-          {!collapsed ? (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-tactical-red/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-tactical-red">
-                  {profile.email[0].toUpperCase()}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-light truncate">
-                  {profile.full_name || profile.email}
-                </p>
-                <p className="text-xs text-slate-dark capitalize">{profile.role}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <div className="w-8 h-8 rounded-full bg-tactical-red/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-tactical-red">
-                  {profile.email[0].toUpperCase()}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Expand button when collapsed */}
       {collapsed && onToggle && (
