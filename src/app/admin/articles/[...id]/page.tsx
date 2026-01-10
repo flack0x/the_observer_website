@@ -13,6 +13,12 @@ import {
   Trash2,
   ExternalLink,
   Monitor,
+  Plus,
+  X,
+  MapPin,
+  Building2,
+  Tag,
+  FileText,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
 import { ArticlePreviewModal } from '@/components/admin/articles';
@@ -62,6 +68,10 @@ export default function EditArticlePage({ params }: PageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Custom input state
+  const [customCountry, setCustomCountry] = useState('');
+  const [customOrganization, setCustomOrganization] = useState('');
 
   // Determine if this is a website article (bilingual) or Telegram article (single)
   const isWebsiteArticle = decodedId.startsWith('website/');
@@ -230,12 +240,36 @@ export default function EditArticlePage({ params }: PageProps) {
     );
   };
 
+  const addCustomCountry = () => {
+    const trimmed = customCountry.trim();
+    if (trimmed && !countries.includes(trimmed)) {
+      setCountries(prev => [...prev, trimmed]);
+      setCustomCountry('');
+    }
+  };
+
+  const removeCountry = (country: string) => {
+    setCountries(prev => prev.filter(c => c !== country));
+  };
+
   const toggleOrganization = (org: string) => {
     setOrganizations(prev =>
       prev.includes(org)
         ? prev.filter(o => o !== org)
         : [...prev, org]
     );
+  };
+
+  const addCustomOrganization = () => {
+    const trimmed = customOrganization.trim();
+    if (trimmed && !organizations.includes(trimmed)) {
+      setOrganizations(prev => [...prev, trimmed]);
+      setCustomOrganization('');
+    }
+  };
+
+  const removeOrganization = (org: string) => {
+    setOrganizations(prev => prev.filter(o => o !== org));
   };
 
   if (isLoading) {
@@ -449,118 +483,259 @@ export default function EditArticlePage({ params }: PageProps) {
       </div>
 
       {/* Metadata section */}
-      <div className="bg-midnight-800 rounded-xl border border-midnight-700 p-6 space-y-6">
-        <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light">
-          Article Metadata
-        </h2>
+      <div className="bg-midnight-800 rounded-xl border border-midnight-700 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 bg-midnight-700/30 border-b border-midnight-700">
+          <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
+            <FileText className="h-4 w-4 text-tactical-red" />
+            Article Metadata
+          </h2>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Category */}
-          <div>
-            <label className="block text-sm text-slate-medium mb-2">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-3
-                       text-slate-light
-                       focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
-            >
-              {Object.values(CATEGORIES).filter(c => c !== 'All').map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+        <div className="p-6 space-y-6">
+          {/* Basic Info Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Category */}
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium mb-2 uppercase tracking-wider">
+                <Tag className="h-3.5 w-3.5" />
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2.5
+                         text-slate-light text-sm
+                         focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none
+                         transition-colors"
+              >
+                {Object.values(CATEGORIES).filter(c => c !== 'All').map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium mb-2 uppercase tracking-wider">
+                <Eye className="h-3.5 w-3.5" />
+                Status
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="w-full bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2.5
+                         text-slate-light text-sm
+                         focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none
+                         transition-colors"
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+
+            {/* Featured Image */}
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium mb-2 uppercase tracking-wider">
+                <ImageIcon className="h-3.5 w-3.5" />
+                Image URL
+              </label>
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2.5
+                         text-slate-light placeholder:text-slate-dark text-sm
+                         focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none
+                         transition-colors"
+              />
+            </div>
+
+            {/* Video URL */}
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium mb-2 uppercase tracking-wider">
+                <Video className="h-3.5 w-3.5" />
+                Video URL
+              </label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2.5
+                         text-slate-light placeholder:text-slate-dark text-sm
+                         focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none
+                         transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-midnight-700" />
+
+          {/* Countries Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium uppercase tracking-wider">
+                <MapPin className="h-3.5 w-3.5 text-tactical-red" />
+                Countries
+                {countries.length > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded bg-tactical-red/20 text-tactical-red text-xs">
+                    {countries.length}
+                  </span>
+                )}
+              </label>
+            </div>
+
+            {/* Selected Countries */}
+            {countries.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 bg-midnight-700/30 rounded-lg border border-midnight-600">
+                {countries.map((country) => (
+                  <span
+                    key={country}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tactical-red text-white text-xs font-medium"
+                  >
+                    {country}
+                    <button
+                      type="button"
+                      onClick={() => removeCountry(country)}
+                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Quick Select */}
+            <div className="flex flex-wrap gap-1.5">
+              {COMMON_COUNTRIES.map((country) => (
+                <button
+                  key={country}
+                  type="button"
+                  onClick={() => toggleCountry(country)}
+                  className={`px-2.5 py-1 rounded-md text-xs transition-all ${
+                    countries.includes(country)
+                      ? 'bg-tactical-red/20 text-tactical-red border border-tactical-red/30'
+                      : 'bg-midnight-700 text-slate-medium hover:bg-midnight-600 hover:text-slate-light border border-transparent'
+                  }`}
+                >
+                  {country}
+                </button>
               ))}
-            </select>
-          </div>
+            </div>
 
-          {/* Status */}
-          <div>
-            <label className="block text-sm text-slate-medium mb-2">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
-              className="w-full bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-3
-                       text-slate-light
-                       focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-
-          {/* Featured Image */}
-          <div>
-            <label className="block text-sm text-slate-medium mb-2">
-              <ImageIcon className="h-4 w-4 inline mr-1" />
-              Image URL
-            </label>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-3
-                       text-slate-light placeholder:text-slate-dark
-                       focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
-            />
-          </div>
-
-          {/* Video URL */}
-          <div>
-            <label className="block text-sm text-slate-medium mb-2">
-              <Video className="h-4 w-4 inline mr-1" />
-              Video URL
-            </label>
-            <input
-              type="url"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-3
-                       text-slate-light placeholder:text-slate-dark
-                       focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Countries */}
-        <div>
-          <label className="block text-sm text-slate-medium mb-3">Countries</label>
-          <div className="flex flex-wrap gap-2">
-            {COMMON_COUNTRIES.map((country) => (
+            {/* Add Custom Country */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customCountry}
+                onChange={(e) => setCustomCountry(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomCountry())}
+                placeholder="Add custom country..."
+                className="flex-1 bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2
+                         text-slate-light placeholder:text-slate-dark text-sm
+                         focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none
+                         transition-colors"
+              />
               <button
-                key={country}
                 type="button"
-                onClick={() => toggleCountry(country)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  countries.includes(country)
-                    ? 'bg-tactical-red text-white'
-                    : 'bg-midnight-700 text-slate-medium hover:bg-midnight-600'
-                }`}
+                onClick={addCustomCountry}
+                disabled={!customCountry.trim()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-midnight-700 border border-midnight-600
+                         text-slate-medium hover:text-slate-light hover:border-tactical-red
+                         disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm"
               >
-                {country}
+                <Plus className="h-4 w-4" />
+                Add
               </button>
-            ))}
+            </div>
           </div>
-        </div>
 
-        {/* Organizations */}
-        <div>
-          <label className="block text-sm text-slate-medium mb-3">Organizations</label>
-          <div className="flex flex-wrap gap-2">
-            {COMMON_ORGANIZATIONS.map((org) => (
+          {/* Divider */}
+          <div className="border-t border-midnight-700" />
+
+          {/* Organizations Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium uppercase tracking-wider">
+                <Building2 className="h-3.5 w-3.5 text-tactical-amber" />
+                Organizations
+                {organizations.length > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded bg-tactical-amber/20 text-tactical-amber text-xs">
+                    {organizations.length}
+                  </span>
+                )}
+              </label>
+            </div>
+
+            {/* Selected Organizations */}
+            {organizations.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 bg-midnight-700/30 rounded-lg border border-midnight-600">
+                {organizations.map((org) => (
+                  <span
+                    key={org}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tactical-amber text-white text-xs font-medium"
+                  >
+                    {org}
+                    <button
+                      type="button"
+                      onClick={() => removeOrganization(org)}
+                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Quick Select */}
+            <div className="flex flex-wrap gap-1.5">
+              {COMMON_ORGANIZATIONS.map((org) => (
+                <button
+                  key={org}
+                  type="button"
+                  onClick={() => toggleOrganization(org)}
+                  className={`px-2.5 py-1 rounded-md text-xs transition-all ${
+                    organizations.includes(org)
+                      ? 'bg-tactical-amber/20 text-tactical-amber border border-tactical-amber/30'
+                      : 'bg-midnight-700 text-slate-medium hover:bg-midnight-600 hover:text-slate-light border border-transparent'
+                  }`}
+                >
+                  {org}
+                </button>
+              ))}
+            </div>
+
+            {/* Add Custom Organization */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customOrganization}
+                onChange={(e) => setCustomOrganization(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomOrganization())}
+                placeholder="Add custom organization..."
+                className="flex-1 bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2
+                         text-slate-light placeholder:text-slate-dark text-sm
+                         focus:border-tactical-amber focus:ring-1 focus:ring-tactical-amber focus:outline-none
+                         transition-colors"
+              />
               <button
-                key={org}
                 type="button"
-                onClick={() => toggleOrganization(org)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  organizations.includes(org)
-                    ? 'bg-tactical-amber text-white'
-                    : 'bg-midnight-700 text-slate-medium hover:bg-midnight-600'
-                }`}
+                onClick={addCustomOrganization}
+                disabled={!customOrganization.trim()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-midnight-700 border border-midnight-600
+                         text-slate-medium hover:text-slate-light hover:border-tactical-amber
+                         disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm"
               >
-                {org}
+                <Plus className="h-4 w-4" />
+                Add
               </button>
-            ))}
+            </div>
           </div>
         </div>
       </div>
