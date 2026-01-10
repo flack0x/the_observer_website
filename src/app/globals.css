@@ -88,37 +88,37 @@
 [data-theme="light"] {
   /* Midnight scale becomes Ivory scale in light mode */
   --color-midnight-900: #FFFFF0;  /* Main background - Ivory */
-  --color-midnight-800: #FAFAF5;  /* Cards/elevated surfaces */
-  --color-midnight-700: #F0F0E5;  /* Borders/hover states */
-  --color-midnight-600: #E5E5D8;  /* Subtle borders */
-  --color-midnight-500: #D4D4C4;  /* Interactive borders */
-  --color-midnight-400: #B8B8A8;  /* Scrollbar/accents */
+  --color-midnight-800: #E8E6DC;  /* Nav/Cards - warm taupe */
+  --color-midnight-700: #D4D2C8;  /* Borders/hover - darker taupe */
+  --color-midnight-600: #C4C2B8;  /* Subtle borders */
+  --color-midnight-500: #A8A69C;  /* Interactive borders */
+  --color-midnight-400: #8C8A80;  /* Scrollbar/accents */
 
   /* Slate scale inverts for dark text on light bg */
   --color-slate-light: #1a1a2e;   /* Primary text - dark */
-  --color-slate-medium: #4a5568;  /* Secondary text */
-  --color-slate-dark: #64748b;    /* Muted text */
+  --color-slate-medium: #3d3d4a;  /* Secondary text - darker for contrast */
+  --color-slate-dark: #5c5c6a;    /* Muted text */
 
   /* Tactical colors - slightly adjusted for light bg contrast */
-  --color-tactical-red: #dc2626;
-  --color-tactical-red-hover: #b91c1c;
-  --color-tactical-red-glow: rgba(220, 38, 38, 0.15);
+  --color-tactical-red: #c41e1e;  /* Slightly darker red for better contrast */
+  --color-tactical-red-hover: #a31818;
+  --color-tactical-red-glow: rgba(196, 30, 30, 0.2);
 
   /* Earth tones - slightly darker for better contrast */
-  --color-earth-olive: #65a30d;
-  --color-earth-sand: #d97706;
+  --color-earth-olive: #4d7c0f;
+  --color-earth-sand: #b45309;
 
   /* Ivory adjustments for light theme */
   --color-ivory: #FFFFF0;
-  --color-ivory-dark: #F5F5E5;
+  --color-ivory-dark: #F0EEE4;
 
   /* Card colors for light theme */
-  --color-card: #FFFFFF;
-  --color-card-dark: #FAFAF5;
-  --color-card-border: #E5E5D8;
+  --color-card: #FAFAF5;
+  --color-card-dark: #F0EEE4;
+  --color-card-border: #C4C2B8;
   --color-card-text: #1a1a1a;
-  --color-card-text-muted: #4a4a4a;
-  --color-card-text-subtle: #6b6b6b;
+  --color-card-text-muted: #3d3d4a;
+  --color-card-text-subtle: #5c5c6a;
 }
 
 /* Light theme specific adjustments */
@@ -151,24 +151,46 @@
   color: white;
 }
 
-/* Light theme card hover shadows */
+/* Light theme card shadows - more prominent */
+[data-theme="light"] .card-hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 [data-theme="light"] .card-hover:hover {
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* Light theme ticker adjustments */
 [data-theme="light"] .ticker-category {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
-  border-color: rgba(220, 38, 38, 0.3);
+  background: rgba(196, 30, 30, 0.12);
+  color: #c41e1e;
+  border-color: rgba(196, 30, 30, 0.35);
 }
 
 [data-theme="light"] .ticker-title {
-  color: #374151;
+  color: #2d2d3a;
 }
 
 [data-theme="light"] .ticker-separator-line {
-  background: linear-gradient(90deg, transparent, #D4D4C4, transparent);
+  background: linear-gradient(90deg, transparent, #A8A69C, transparent);
+}
+
+/* Light theme specific element styling */
+[data-theme="light"] .bg-midnight-800 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Better button contrast in light mode */
+[data-theme="light"] .border-midnight-500 {
+  border-color: #A8A69C;
+}
+
+[data-theme="light"] .border-midnight-600 {
+  border-color: #B8B6AC;
+}
+
+[data-theme="light"] .border-midnight-700 {
+  border-color: #C8C6BC;
 }
 
 /* ============================================
