@@ -35,7 +35,7 @@ interface BookReview {
 export default function EditBookReviewPage() {
   const router = useRouter();
   const params = useParams();
-  const reviewId = Array.isArray(params.id) ? params.id.join('/') : params.id;
+  const reviewId = Array.isArray(params.id) ? params.id.join('/') : params.id || '';
 
   // Form state
   const [bookTitle, setBookTitle] = useState('');
