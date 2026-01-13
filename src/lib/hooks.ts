@@ -121,3 +121,65 @@ export function useMetrics() {
 
   return { metrics, loading, error };
 }
+
+// ============================================
+// Book Reviews
+// ============================================
+
+// Book Review type (matches what API returns)
+export interface BookReview {
+  id: string;
+  bookTitle: string;
+  author: string;
+  coverImageUrl: string | null;
+  excerpt: string | null;
+  description: string;
+  keyPoints: string[];
+  rating: number | null;
+  recommendationLevel: 'essential' | 'recommended' | 'optional' | null;
+  telegramLink: string | null;
+  channel: 'en' | 'ar';
+  createdAt: Date;
+}
+
+// Parse date strings from API response into Date objects
+function parseBookReviewDates(reviews: unknown[]): BookReview[] {
+  return reviews.map((review) => {
+    const r = review as Record<string, unknown>;
+    return {
+      ...r,
+      createdAt: new Date(r.createdAt as string),
+    } as BookReview;
+  });
+}
+
+// Hook to fetch book reviews on the client side
+export function useBookReviews(channel: 'en' | 'ar' = 'en') {
+  const [bookReviews, setBookReviews] = useState<BookReview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchBookReviews() {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/books?channel=${channel}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch book reviews');
+        }
+
+        const data = await response.json();
+        setBookReviews(parseBookReviewDates(data));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBookReviews();
+  }, [channel]);
+
+  return { bookReviews, loading, error };
+}

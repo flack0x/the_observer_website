@@ -82,3 +82,84 @@ export async function fetchArticleById(telegramId: string): Promise<DBArticle | 
 
   return data;
 }
+
+// ============================================
+// Book Reviews
+// ============================================
+
+export interface DBBookReview {
+  id: number;
+  review_id: string;
+  channel: 'en' | 'ar';
+  book_title: string;
+  author: string;
+  cover_image_url: string | null;
+  excerpt: string | null;
+  description: string;
+  key_points: string[] | null;
+  rating: number | null;
+  recommendation_level: 'essential' | 'recommended' | 'optional' | null;
+  telegram_link: string | null;
+  status: 'draft' | 'published' | 'archived';
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  author_id: string | null;
+  last_edited_by: string | null;
+}
+
+// Fetch book reviews from Supabase
+export async function fetchBookReviews(
+  channel: 'en' | 'ar' = 'en',
+  limit: number = 20
+): Promise<DBBookReview[]> {
+  const { data, error } = await supabase
+    .from('book_reviews')
+    .select('*')
+    .eq('channel', channel)
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching book reviews from Supabase:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+// Convert DB book review to the format used by the frontend
+export function dbBookReviewToFrontend(review: DBBookReview) {
+  return {
+    id: review.review_id,
+    bookTitle: review.book_title,
+    author: review.author,
+    coverImageUrl: review.cover_image_url,
+    excerpt: review.excerpt,
+    description: review.description,
+    keyPoints: review.key_points || [],
+    rating: review.rating,
+    recommendationLevel: review.recommendation_level,
+    telegramLink: review.telegram_link,
+    channel: review.channel,
+    createdAt: new Date(review.created_at),
+    status: review.status,
+  };
+}
+
+// Fetch a single book review by review_id
+export async function fetchBookReviewById(reviewId: string): Promise<DBBookReview | null> {
+  const { data, error } = await supabase
+    .from('book_reviews')
+    .select('*')
+    .eq('review_id', reviewId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching book review:', error);
+    return null;
+  }
+
+  return data;
+}

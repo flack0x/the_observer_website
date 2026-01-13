@@ -35,6 +35,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
   const navigation = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
     { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
+    { name: dict.nav.books, href: `/${locale}/books` },
     { name: dict.nav.dossier, href: `/${locale}/dossier` },
     { name: dict.nav.chronicles, href: `/${locale}/chronicles` },
     { name: dict.nav.about, href: `/${locale}/about` },

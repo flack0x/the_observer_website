@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
+  BookOpen,
   Image,
   Users,
   Settings,
@@ -26,6 +27,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { label: 'Articles', href: '/admin/articles', icon: FileText },
+  { label: 'Books', href: '/admin/books', icon: BookOpen },
   { label: 'Media', href: '/admin/media', icon: Image },
   { label: 'Users', href: '/admin/users', icon: Users, adminOnly: true },
   { label: 'Settings', href: '/admin/settings', icon: Settings, adminOnly: true },
