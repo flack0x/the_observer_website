@@ -198,11 +198,10 @@ export default function BookReviewContent({ review, locale, dict }: BookReviewCo
                   <BookOpen className="h-5 w-5 text-tactical-red" />
                   {dict.books.aboutBook}
                 </h2>
-                <div className="prose prose-invert max-w-none">
-                  <p className="text-slate-medium leading-relaxed whitespace-pre-line">
-                    {review.description}
-                  </p>
-                </div>
+                <div
+                  className="prose prose-invert max-w-none text-slate-medium leading-relaxed [&>p]:mb-4 [&>h3]:text-slate-light [&>h3]:font-heading [&>h3]:text-base [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-light"
+                  dangerouslySetInnerHTML={{ __html: review.description }}
+                />
               </motion.div>
 
               {/* Key Points */}
