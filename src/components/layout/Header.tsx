@@ -80,14 +80,14 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex lg:items-center lg:gap-1">
+            <div className="hidden lg:flex lg:items-center">
               {navigation.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative inline-flex items-center h-9 px-3 font-heading text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                    className={`relative inline-flex items-center h-9 px-2.5 font-heading text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors ${
                       isActive
                         ? 'text-tactical-red'
                         : 'text-slate-medium hover:text-tactical-red'
@@ -96,7 +96,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                   >
                     {item.name}
                     {isActive && (
-                      <span className="absolute bottom-1 left-3 right-3 h-0.5 bg-tactical-red rounded-full" />
+                      <span className="absolute bottom-1 left-2.5 right-2.5 h-0.5 bg-tactical-red rounded-full" />
                     )}
                   </Link>
                 );

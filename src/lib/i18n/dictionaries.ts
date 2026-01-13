@@ -4,10 +4,10 @@ const dictionaries = {
   en: {
     // Navigation
     nav: {
-      frontline: 'The Frontline',
+      frontline: 'Frontline',
       situationRoom: 'Situation Room',
-      books: 'Book Reviews',
-      dossier: 'The Dossier',
+      books: 'Books',
+      dossier: 'Dossier',
       chronicles: 'Chronicles',
       joinIntel: 'Join Intel',
       about: 'About',
@@ -276,7 +276,7 @@ const dictionaries = {
     nav: {
       frontline: 'الجبهة',
       situationRoom: 'غرفة العمليات',
-      books: 'مراجعات الكتب',
+      books: 'الكتب',
       dossier: 'الملفات',
       chronicles: 'السجلات',
       joinIntel: 'انضم إلينا',
