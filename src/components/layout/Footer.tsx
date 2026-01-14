@@ -215,19 +215,11 @@ export default function Footer({ locale, dict }: FooterProps) {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-midnight-700">
-        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-dark">
-            <p>{dict.footer.copyright}</p>
-            <div className="flex items-center gap-4 sm:gap-6">
-              <Link href={`/${locale}/privacy`} className="hover:text-tactical-red transition-colors">
-                {dict.footer.privacy}
-              </Link>
-              <Link href={`/${locale}/terms`} className="hover:text-tactical-red transition-colors">
-                {dict.footer.terms}
-              </Link>
-            </div>
-          </div>
+      <div className="border-t border-midnight-700 bg-midnight-900">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <p className="text-center text-xs text-slate-dark">
+            {dict.footer.copyright}
+          </p>
         </div>
       </div>
     </footer>
