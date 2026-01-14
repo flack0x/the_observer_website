@@ -693,6 +693,21 @@ python login_telegram.py      # Re-authenticate
 python generate_session_string.py
 ```
 
+### Article content showing raw markdown
+**Symptoms**: `**text**` or `__text__` visible instead of bold/italic
+
+**Location**: `src/app/[locale]/frontline/[...slug]/ArticleContent.tsx`
+
+**Fix**: The `processContent()` function converts Telegram markdown to HTML. If new formats appear:
+1. Check the raw content in database
+2. Update regex patterns in `processContent()`
+3. Rebuild and deploy
+
+### Excerpts showing metadata or markdown
+**Location**: `src/lib/supabase.ts` → `sanitizeExcerpt()`
+
+**Fix**: Update the sanitization patterns to handle new formats
+
 ## Footer Structure
 
 4-column layout (Brand | Navigate | Legal | Connect):
@@ -702,8 +717,25 @@ python generate_session_string.py
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
+## Database Stats (Jan 15, 2026)
+
+| Table | Count | Notes |
+|-------|-------|-------|
+| Articles (EN) | 206 | 3 structured, 142 with images, 50 with videos |
+| Articles (AR) | 233 | 4 structured, 154 with images, 59 with videos |
+| Book Reviews | 14 | 7 EN, 7 AR published |
+| User Profiles | 1 | Admin configured |
+| Subscribers | 0 | Table ready |
+
 ## Recent Changes (Jan 2026)
 
+- **Content Formatting Fix** (Jan 15): Telegram markdown to HTML conversion
+  - `processContent()` in ArticleContent.tsx converts `**bold**` → `<strong>`
+  - Converts `__italic__` → `<em>`
+  - Strips header section (title/category/countries) from content body
+  - Removes emoji markers (🔴🔵 etc.) from content
+  - `sanitizeExcerpt()` cleans excerpts on article cards
+  - Uses DOMPurify for XSS protection
 - **Title Extraction Fix** (Jan 15): Comprehensive title parsing overhaul
   - Recognizes `**Title**` with value on next line
   - Handles `**Title : Value**` and `**Title: Value` inline formats
