@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Send, Mail, Shield, CheckCircle, Loader2, ExternalLink } from "lucide-react";
+import { Send, Mail, Shield, CheckCircle, Loader2 } from "lucide-react";
 import type { Locale, Dictionary } from "@/lib/i18n";
 import { TELEGRAM_CHANNELS } from "@/lib/config";
 
@@ -46,18 +46,14 @@ export default function Footer({ locale, dict }: FooterProps) {
     }
   };
 
-  // Navigation links - synced with Header
-  const navigationLinks = [
+  // All navigation links - synced with Header
+  const allLinks = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
     { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
     { name: dict.nav.books, href: `/${locale}/books` },
     { name: dict.nav.dossier, href: `/${locale}/dossier` },
     { name: dict.nav.chronicles, href: `/${locale}/chronicles` },
     { name: dict.nav.about, href: `/${locale}/about` },
-  ];
-
-  // Legal links
-  const legalLinks = [
     { name: dict.footer.privacy, href: `/${locale}/privacy` },
     { name: dict.footer.terms, href: `/${locale}/terms` },
   ];
@@ -65,7 +61,7 @@ export default function Footer({ locale, dict }: FooterProps) {
   return (
     <footer className="border-t border-midnight-600 bg-midnight-900" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Newsletter Section */}
-      <div className="border-b border-midnight-700 bg-gradient-to-b from-midnight-800 to-midnight-900">
+      <div className="border-b border-midnight-700 bg-midnight-800">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center gap-6 lg:flex-row lg:justify-between">
             <div className="text-center lg:text-start">
@@ -101,7 +97,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                   type="submit"
                   disabled={status === "loading"}
                   aria-busy={status === "loading"}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover hover:shadow-lg hover:shadow-tactical-red/20 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-tactical-red"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-6 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {status === "loading" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -121,11 +117,11 @@ export default function Footer({ locale, dict }: FooterProps) {
 
       {/* Main Footer Content */}
       <div className="mx-auto max-w-7xl px-4 py-10 sm:py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-12">
-          {/* Brand Section */}
-          <div className="lg:col-span-5">
+        <div className="flex flex-col lg:flex-row lg:justify-between gap-10 lg:gap-16">
+          {/* Brand Section - Left/Larger */}
+          <div className="lg:max-w-md">
             <Link href={`/${locale}`} className="inline-flex items-center gap-3 group">
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
                 <Image
                   src="/images/observer-silhouette.png"
                   alt="The Observer"
@@ -137,7 +133,7 @@ export default function Footer({ locale, dict }: FooterProps) {
                 {dict.header.title}
               </span>
             </Link>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-dark">
+            <p className="mt-4 text-sm leading-relaxed text-slate-dark">
               {dict.footer.description}
             </p>
 
@@ -147,33 +143,37 @@ export default function Footer({ locale, dict }: FooterProps) {
                 href={TELEGRAM_CHANNELS.en}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-midnight-800 border border-midnight-600 px-4 py-2.5 text-sm text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red hover:bg-midnight-700"
+                className="inline-flex items-center gap-2 rounded-full bg-midnight-800 border border-midnight-600 px-4 py-2 text-sm text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
               >
                 <Send className="h-4 w-4" aria-hidden="true" />
                 English
-                <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
               </a>
               <a
                 href={TELEGRAM_CHANNELS.ar}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-midnight-800 border border-midnight-600 px-4 py-2.5 text-sm text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red hover:bg-midnight-700"
+                className="inline-flex items-center gap-2 rounded-full bg-midnight-800 border border-midnight-600 px-4 py-2 text-sm text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
               >
                 <Send className="h-4 w-4" aria-hidden="true" />
                 العربية
-                <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
               </a>
+            </div>
+
+            {/* Security Badge - Desktop only */}
+            <div className="hidden lg:flex items-center gap-2 mt-6 text-sm text-slate-dark">
+              <Shield className="h-4 w-4 text-earth-olive" aria-hidden="true" />
+              <span>{dict.footer.secureIndependent}</span>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <div className="lg:col-span-4">
+          {/* Navigation - Right/Stacked */}
+          <div className="lg:text-end">
             <h4 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light mb-4">
               {dict.footer.navigate}
             </h4>
             <nav>
-              <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                {navigationLinks.map((link) => (
+              <ul className="space-y-2.5">
+                {allLinks.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
@@ -185,28 +185,9 @@ export default function Footer({ locale, dict }: FooterProps) {
                 ))}
               </ul>
             </nav>
-          </div>
 
-          {/* Legal & Security */}
-          <div className="lg:col-span-3">
-            <h4 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light mb-4">
-              {locale === 'en' ? 'Legal' : 'قانوني'}
-            </h4>
-            <ul className="space-y-2.5">
-              {legalLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="inline-block text-sm text-slate-dark transition-colors hover:text-tactical-red"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {/* Security Badge */}
-            <div className="mt-6 flex items-center gap-2 text-sm text-slate-dark">
+            {/* Security Badge - Mobile only */}
+            <div className="flex lg:hidden items-center gap-2 mt-6 text-sm text-slate-dark">
               <Shield className="h-4 w-4 text-earth-olive" aria-hidden="true" />
               <span>{dict.footer.secureIndependent}</span>
             </div>
@@ -215,7 +196,7 @@ export default function Footer({ locale, dict }: FooterProps) {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-midnight-700 bg-midnight-900/80">
+      <div className="border-t border-midnight-700">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-dark">
             <p>{dict.footer.copyright}</p>
