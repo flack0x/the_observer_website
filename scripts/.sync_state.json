@@ -1,12 +1,12 @@
 {
   "en": {
-    "last_message_id": 340,
-    "last_sync": "2026-01-09T23:43:17.415174+00:00",
-    "articles_synced": 198
+    "last_message_id": 356,
+    "last_sync": "2026-01-14T22:08:30.109744+00:00",
+    "articles_synced": 206
   },
   "ar": {
-    "last_message_id": 352,
-    "last_sync": "2026-01-09T23:44:12.306374+00:00",
-    "articles_synced": 226
+    "last_message_id": 366,
+    "last_sync": "2026-01-14T22:12:47.467720+00:00",
+    "articles_synced": 233
   }
 }

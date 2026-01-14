@@ -1,13 +1,97 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin, Play } from "lucide-react";
+import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin } from "lucide-react";
 import Image from "next/image";
+import DOMPurify from "dompurify";
 import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
+
+/**
+ * Convert Telegram markdown to HTML and clean up the content
+ */
+function processContent(rawContent: string, title: string): string {
+  let content = rawContent;
+
+  // Remove the header section (title, category, countries, orgs) from the beginning
+  // These patterns match the structured header formats
+  const headerPatterns = [
+    /^🔴\*\*Category\*\*[\s\S]*?(?=\n\n[^*\n])/i,
+    /^🔴\*\*Title[:\s].*?\*\*\n/i,
+    /^\*\*Category\*\*:?\s*[^\n]*\n/gi,
+    /^\*\*Title\*\*\n\n\*\*[^*]+\*\*\n/i,
+    /^\*\*Countries?\s*(?:Involved)?\*\*:?\s*[^\n]*\n/gi,
+    /^\*\*(?:Orgs?|Organizations?)\s*(?:&\s*Actors?)?\*\*:?\s*[^\n]*\n/gi,
+    /^\*\*(?:Brief|Introduction|Overview)\s*:?\*\*\s*/gi,
+  ];
+
+  // Try to find where the actual content starts (after headers)
+  const lines = content.split('\n');
+  let contentStartIndex = 0;
+
+  // Skip header lines at the beginning
+  for (let i = 0; i < Math.min(20, lines.length); i++) {
+    const line = lines[i].trim();
+    // Skip if it's a header-like line
+    if (
+      line.match(/^\*\*(?:Category|Title|Countries?|Orgs?|Organizations?|Brief)/i) ||
+      line.match(/^🔴/) ||
+      line.match(/^[🔵🟢🟡⚫⚪💳👍🤔🚨💰📺⚠️🔽]/) ||
+      line.match(/^\*\*[^*]+\*\*$/) && i < 10 || // Standalone bold line in header
+      line === '' ||
+      line.match(/^(?:Geopolitics|Military|Political|Economic)\s*\|/i) // Category line
+    ) {
+      // Check if this bold line might be the title (skip it)
+      if (line.includes(title.substring(0, 30))) {
+        contentStartIndex = i + 1;
+        continue;
+      }
+      // Skip empty lines and header markers at the start
+      if (i === contentStartIndex || line === '') {
+        contentStartIndex = i + 1;
+      }
+      continue;
+    }
+    // Found actual content
+    break;
+  }
+
+  // Take content from after headers
+  content = lines.slice(contentStartIndex).join('\n').trim();
+
+  // Remove leading emoji markers
+  content = content.replace(/^[🔴🔵🟢🟡⚫⚪⚠️🚨📢💳👍🤔📺💰🔽\s]+/, '');
+
+  // Convert Telegram markdown to HTML
+  // Bold: **text** → <strong>text</strong>
+  content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+  // Italic: __text__ → <em>text</em>
+  content = content.replace(/__([^_]+)__/g, '<em>$1</em>');
+
+  // Also handle single underscore italic (less common)
+  content = content.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>');
+
+  // Convert bullet points
+  content = content.replace(/^[•]\s*/gm, '• ');
+
+  // Remove remaining standalone emoji markers that are decorative
+  content = content.replace(/^[🔴🔵🟢🟡💳👍🤔📺💰🚨⚠️🔽]\s*/gm, '');
+
+  // Clean up multiple newlines
+  content = content.replace(/\n{3,}/g, '\n\n');
+
+  // Remove footer/channel references
+  content = content.replace(/\n*@observer_?\d*\s*$/gi, '');
+  content = content.replace(/\n*@almuraqb\s*$/gi, '');
+  content = content.replace(/\n*Link to.*$/gi, '');
+  content = content.replace(/\n*🔵.*$/gi, '');
+
+  return content.trim();
+}
 
 interface ArticleContentProps {
   article: {
@@ -35,8 +119,17 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
     setTimeout(() => setShowCopied(false), 2000);
   };
 
+  // Process and sanitize content
+  const processedContent = useMemo(() => {
+    const processed = processContent(article.content, article.title);
+    // Sanitize HTML to prevent XSS
+    return typeof window !== 'undefined'
+      ? DOMPurify.sanitize(processed, { ALLOWED_TAGS: ['strong', 'em', 'br'] })
+      : processed;
+  }, [article.content, article.title]);
+
   // Format content into paragraphs
-  const paragraphs = article.content
+  const paragraphs = processedContent
     .split("\n\n")
     .filter((p) => p.trim().length > 0)
     .map((p) => p.trim());
@@ -177,17 +270,22 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
           className="prose prose-invert max-w-none"
         >
           {paragraphs.map((paragraph, index) => {
-            // Check if it's a section header (Roman numerals or short uppercase)
-            const isHeader =
-              /^[IVX]+\.\s/.test(paragraph) ||
-              (paragraph.length < 100 && paragraph === paragraph.toUpperCase());
+            // Strip HTML tags for text analysis
+            const plainText = paragraph.replace(/<[^>]+>/g, '');
 
-            // Skip footer content
+            // Check if it's a section header (Roman numerals, numbered, or short bold text)
+            const isHeader =
+              /^[IVX]+\.\s/.test(plainText) ||
+              /^\d+\.\s/.test(plainText) ||
+              (plainText.length < 80 && paragraph.startsWith('<strong>') && paragraph.endsWith('</strong>'));
+
+            // Skip footer content and empty paragraphs
             if (
-              paragraph.includes("@observer") ||
-              paragraph.includes("@almuraqb") ||
-              paragraph.startsWith("Link to") ||
-              paragraph.startsWith("🔵")
+              plainText.includes("@observer") ||
+              plainText.includes("@almuraqb") ||
+              plainText.startsWith("Link to") ||
+              plainText.startsWith("🔵") ||
+              plainText.length < 3
             ) {
               return null;
             }
@@ -196,20 +294,18 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               return (
                 <h2
                   key={index}
-                  className="font-heading text-xl font-bold text-slate-light mt-8 mb-4 uppercase tracking-wider"
-                >
-                  {paragraph}
-                </h2>
+                  className="font-heading text-xl font-bold text-slate-light mt-8 mb-4"
+                  dangerouslySetInnerHTML={{ __html: paragraph }}
+                />
               );
             }
 
             return (
               <p
                 key={index}
-                className="text-slate-medium leading-relaxed mb-4 text-base sm:text-lg"
-              >
-                {paragraph}
-              </p>
+                className="text-slate-medium leading-relaxed mb-4 text-base sm:text-lg [&>strong]:text-slate-light [&>strong]:font-semibold [&>em]:italic"
+                dangerouslySetInnerHTML={{ __html: paragraph }}
+              />
             );
           })}
         </motion.div>

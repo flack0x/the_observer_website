@@ -66,13 +66,46 @@ function sanitizeTitle(title: string): string {
   return clean.trim() || 'Untitled';
 }
 
+// Clean excerpt by removing markdown formatting and metadata
+function sanitizeExcerpt(excerpt: string): string {
+  let clean = excerpt;
+
+  // Remove Telegram markdown formatting
+  clean = clean.replace(/\*\*([^*]+)\*\*/g, '$1'); // **bold** → bold
+  clean = clean.replace(/__([^_]+)__/g, '$1');     // __italic__ → italic
+  clean = clean.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '$1'); // _italic_ → italic
+
+  // Remove bullet point markers
+  clean = clean.replace(/^[•]\s*/gm, '');
+
+  // Remove emoji markers commonly used in Telegram posts
+  clean = clean.replace(/[🔴🔵🟢🟡⚫⚪⚠️🚨📢💳👍🤔📺💰🔽🇮🇷🇺🇸🇮🇱🇨🇳🇷🇺🇹🇼]/g, '');
+
+  // Remove metadata prefixes that might appear
+  clean = clean.replace(/^(?:Category|Countries?|Title|Brief)\s*:?\s*/gi, '');
+
+  // Remove pipe separators and their surrounding content if it looks like metadata
+  if (clean.match(/^[^|]+\|[^|]+\|/)) {
+    // Skip the first pipe-separated section if it looks like categories
+    const parts = clean.split(/\n/);
+    if (parts[0] && parts[0].includes('|')) {
+      clean = parts.slice(1).join('\n');
+    }
+  }
+
+  // Clean up whitespace
+  clean = clean.replace(/\s+/g, ' ').trim();
+
+  return clean || excerpt;
+}
+
 // Convert DB article to the format used by the frontend
 // Note: `date` is a Date object - use getRelativeTime(date, locale) from time.ts for display
 export function dbArticleToFrontend(article: DBArticle) {
   return {
     id: article.telegram_id,
     title: sanitizeTitle(article.title),
-    excerpt: article.excerpt,
+    excerpt: sanitizeExcerpt(article.excerpt),
     content: article.content,
     date: new Date(article.telegram_date),
     link: article.telegram_link,
