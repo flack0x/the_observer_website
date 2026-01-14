@@ -1,19 +1,49 @@
 # The Observer - Codebase Context
 
 ## Overview
-Bilingual (EN/AR) geopolitical intelligence news platform. Aggregates content from Telegram channels via automated pipeline, displays with analytics dashboard.
+Bilingual (EN/AR) geopolitical intelligence news platform. Aggregates content from Telegram channels via automated pipeline, displays with analytics dashboard. Includes admin dashboard for content management and book reviews section.
 
 **Live Site**: https://al-muraqeb.com
+
+## Deployment & Infrastructure
+
+### Vercel
+- **Project**: `the-observer-website`
+- **Team**: `lineati-consultancy`
+- **Plan**: Pro
+- **Project ID**: `prj_vvFQWbJG5LkNE9Naswunx0X3JrK7`
+- **CLI Version**: 50.1.3
+
+### Supabase
+- **Project**: `TheObserver`
+- **Reference ID**: `gbqvivmfivsuvvdkoiuc`
+- **Region**: South Asia (Mumbai)
+- **Database**: PostgreSQL 17
+- **CLI Version**: 2.72.7
+- **Storage Bucket**: `article-media` (50MB limit, images/videos)
+
+### Environment Variables (Vercel Production)
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+CRON_SECRET
+```
 
 ## Tech Stack
 - **Framework**: Next.js 16.1.1 (App Router, Turbopack)
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS v4 (`@theme` directive in `globals.css`)
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Supabase (PostgreSQL 17)
 - **Animations**: Framer Motion
 - **Charts**: Recharts
 - **Icons**: Lucide React
+- **Rich Text Editor**: TipTap (admin)
 - **Telegram API**: Telethon (Python)
+- **Auth**: Supabase Auth
+- **Form Handling**: React Hook Form + Zod
+- **Data Fetching**: SWR
+- **Sanitization**: DOMPurify
 
 ## Data Pipeline
 
@@ -28,122 +58,214 @@ Telegram Channels → fetch_telegram.py → AI Analysis → Supabase → Next.js
                                          - organizations[]
 ```
 
+### Telegram Channels
+- **English**: `@observer_5` → `channel = 'en'`
+- **Arabic**: `@almuraqb` → `channel = 'ar'`
+
+### Structured Post Formats
+
+The fetcher recognizes multiple post formats:
+
+**Format 1: Bold headers with values on next line**
+```
+🔴**Category**
+
+Geopolitics | Cyber Warfare | Hybrid War
+
+**Title**
+
+**The Fall of the Starlink Myth: How Iran...**
+
+**Countries Involved**
+
+Iran 🇮🇷 | United States 🇺🇸
+```
+
+**Format 2: Inline title with colon**
+```
+🔴**Title : From Absurd to Armed: Trump's 2026 Plot...**
+
+**Category**: Geopolitical
+```
+
+**Format 3: Legacy plain text (fallback)**
+```
+TITLE: Headline here
+CATEGORY: Military | Political | Economic | Intelligence | Diplomatic | Breaking | Analysis
+COUNTRIES: Israel, Yemen, Iran
+ORGS: IDF, Houthis, Hamas
+---
+Article content...
+```
+
+**Valid Categories** (EN/AR):
+- Military / عسكري
+- Political / سياسي
+- Economic / اقتصادي
+- Intelligence / استخباراتي
+- Diplomatic / دبلوماسي
+- Breaking / عاجل
+- Analysis / تحليل
+- Geopolitics / جيوسياسي
+
 ### GitHub Actions
-- **Workflow**: `.github/workflows/fetch_telegram.yml`
-- **Schedule**: Hourly cron + manual dispatch
-- **Script**: `scripts/fetch_telegram.py`
-  - Groups consecutive messages within 180 seconds
-  - Combines multi-part posts into single articles
-  - Cleans up orphaned continuation posts
-  - Uses OpenAI for content analysis
+- **Workflow**: `.github/workflows/fetch-articles.yml`
+- **Schedule**: Hourly cron (`0 * * * *`) + manual dispatch
+- **Concurrency**: `telegram-fetch` group (prevents parallel runs)
+- **Jobs**:
+  1. `fetch_telegram.py` - Fetches new messages from Telegram
+  2. `analyze_articles.py` - Computes metrics
 
-## Critical Patterns
+**fetch_telegram.py Features**:
+- Incremental sync (tracks last synced message ID per channel)
+- Groups consecutive messages within 180 seconds (multi-part articles)
+- Combines multi-part posts into single articles
+- Multi-format header parsing:
+  - `**Title**` with value on next line (bold)
+  - `**Title : Value**` inline format
+  - Legacy `TITLE: Value` format
+- Extracts categories, countries, organizations
+- Auto-detection fallback for unstructured posts
+- Downloads and uploads images/videos to Supabase Storage
+- Minimum message length: 20 chars (allows short headers in multi-part posts)
+- Use `--full` flag to force complete re-sync
 
-### i18n Architecture
-```
-src/lib/i18n/
-├── config.ts       # Locale types, locales array, directions
-├── dictionaries.ts # All EN/AR translations + country names
-└── index.ts        # Exports (getDictionary, getCountryName, etc.)
-```
-- **Locale route**: `[locale]` dynamic segment (`/en/...`, `/ar/...`)
-- **Dictionary access**: `getDictionary(locale)` - synchronous
-- **Country names**: `getCountryName(country, locale)` - translates country names
-- **RTL**: `dir={isArabic ? 'rtl' : 'ltr'}` on section containers
-- **Arabic font**: Noto Sans Arabic (configured in `layout.tsx`)
-- **Type guard**: `isValidLocale()` in middleware for safe locale validation
+**Frontend Title Sanitization** (`src/lib/supabase.ts`):
+- `sanitizeTitle()` strips `TITLE:` / `العنوان:` prefixes
+- Handles pipe-separated fallback titles by extracting meaningful part
 
-### File Structure
+## File Structure
+
 ```
 src/
 ├── app/
-│   ├── [locale]/
-│   │   ├── page.tsx           # Home (Hero, LiveFeed, SituationPreview, Intel, Community)
-│   │   ├── frontline/         # News listing + [...slug] article detail
-│   │   ├── situation-room/    # Full analytics dashboard
-│   │   ├── about/             # Mission, Principles, Editorial Standards, Coverage
-│   │   ├── dossier/           # Key figures (placeholder)
-│   │   ├── chronicles/        # Timeline (placeholder)
+│   ├── [locale]/                    # Public pages (EN/AR)
+│   │   ├── page.tsx                 # Home (Hero, LiveFeed, SituationPreview, Intel, Community)
+│   │   ├── frontline/               # News listing
+│   │   │   ├── page.tsx
+│   │   │   └── [...slug]/           # Article detail
+│   │   │       ├── page.tsx
+│   │   │       └── ArticleContent.tsx
+│   │   ├── books/                   # Library (Book Reviews)
+│   │   │   ├── page.tsx             # Book listing grid
+│   │   │   └── [...slug]/           # Book detail
+│   │   │       ├── page.tsx
+│   │   │       └── BookReviewContent.tsx
+│   │   ├── situation-room/          # Analytics dashboard
+│   │   ├── dossier/                 # Key figures (placeholder)
+│   │   ├── chronicles/              # Timeline (placeholder)
+│   │   ├── about/                   # Mission, Editorial Standards
 │   │   ├── privacy/
 │   │   ├── terms/
-│   │   └── layout.tsx         # Locale layout with Header/Footer + skip-to-content
+│   │   └── layout.tsx               # Locale layout + Header/Footer
+│   │
+│   ├── admin/                       # Admin Dashboard
+│   │   ├── page.tsx                 # Dashboard home
+│   │   ├── layout.tsx               # Admin layout with sidebar
+│   │   ├── AdminLayoutClient.tsx    # Client-side admin wrapper
+│   │   ├── login/page.tsx           # Admin login
+│   │   ├── signup/page.tsx          # Admin signup
+│   │   ├── articles/                # Article management
+│   │   │   ├── page.tsx             # List articles
+│   │   │   ├── new/page.tsx         # Create article
+│   │   │   └── [...id]/page.tsx     # Edit article
+│   │   ├── books/                   # Book review management
+│   │   │   ├── page.tsx             # List books
+│   │   │   ├── new/page.tsx         # Create book review
+│   │   │   └── [...id]/page.tsx     # Edit book review
+│   │   ├── media/page.tsx           # Media library
+│   │   ├── users/page.tsx           # User management
+│   │   └── settings/page.tsx        # Site settings
+│   │
 │   ├── api/
-│   │   ├── articles/route.ts  # GET articles (with rate limiting)
-│   │   ├── metrics/route.ts   # GET aggregated metrics
-│   │   ├── subscribe/route.ts # POST newsletter signup
-│   │   └── og/route.tsx       # Dynamic OG images (Edge)
-│   └── globals.css            # Tailwind theme + custom utilities + focus styles
+│   │   ├── articles/route.ts        # GET public articles
+│   │   ├── books/route.ts           # GET public book reviews
+│   │   ├── metrics/route.ts         # GET aggregated metrics
+│   │   ├── subscribe/route.ts       # POST newsletter signup
+│   │   ├── og/route.tsx             # Dynamic OG images (Edge)
+│   │   └── admin/
+│   │       ├── articles/
+│   │       │   ├── route.ts         # GET/POST admin articles
+│   │       │   └── [...id]/route.ts # GET/PUT/DELETE single article
+│   │       ├── books/
+│   │       │   ├── route.ts         # GET/POST admin books
+│   │       │   └── [...id]/route.ts # GET/PUT/DELETE single book
+│   │       ├── media/route.ts       # Media upload
+│   │       └── users/route.ts       # User management
+│   │
+│   └── globals.css                  # Tailwind theme + utilities
+│
 ├── components/
 │   ├── layout/
-│   │   ├── Header.tsx         # Nav + language toggle + mobile menu
-│   │   └── Footer.tsx         # Newsletter form + links
+│   │   ├── Header.tsx               # Nav + language/theme toggle + mobile menu
+│   │   └── Footer.tsx               # Newsletter form + links
 │   ├── sections/
-│   │   ├── HeroSection.tsx    # Dynamic stats from useMetrics()
-│   │   ├── LiveFeed.tsx       # Real-time article cards with skeleton loading
-│   │   ├── SituationRoomPreview.tsx # Dynamic preview with real metrics
-│   │   ├── IntelDashboard.tsx # Charts + metrics (imports Metrics type)
-│   │   └── Community.tsx      # Telegram CTAs
+│   │   ├── HeroSection.tsx          # Dynamic stats
+│   │   ├── LiveFeed.tsx             # Article cards
+│   │   ├── SituationRoomPreview.tsx # Metrics preview
+│   │   ├── IntelDashboard.tsx       # Charts
+│   │   └── Community.tsx            # Telegram CTAs
+│   ├── admin/
+│   │   ├── layout/
+│   │   │   ├── AdminSidebar.tsx     # Admin navigation
+│   │   │   └── AdminHeader.tsx      # Admin top bar
+│   │   ├── editor/
+│   │   │   ├── TipTapEditor.tsx     # Rich text editor
+│   │   │   └── EditorToolbar.tsx    # Editor toolbar
+│   │   └── articles/
+│   │       └── ArticlePreviewModal.tsx
 │   └── ui/
-│       └── BreakingNewsTicker.tsx # Uses useBreakingNews() hook
+│       ├── BreakingNewsTicker.tsx
+│       └── ThemeToggle.tsx
+│
 ├── lib/
-│   ├── supabase.ts            # Supabase client + dbArticleToFrontend()
-│   ├── config.ts              # TELEGRAM_CHANNELS, CONTACT_EMAIL
-│   ├── categories.ts          # Category display names per locale
-│   ├── time.ts                # getRelativeTime(), formatDate() (imports Locale)
-│   ├── hooks.ts               # useArticles(), useMetrics(), useBreakingNews(), Metrics type
-│   └── rate-limit.ts          # In-memory rate limiting
-├── middleware.ts              # Locale detection with isValidLocale() type guard
-└── scripts/
-    └── fetch_telegram.py      # Telegram fetcher + multi-part post grouping
-```
-
-### Component Props Pattern
-All locale-aware components receive:
-```typescript
-interface ComponentProps {
-  locale: Locale;
-  dict: Dictionary;
-}
-```
-
-### Hooks
-```typescript
-// src/lib/hooks.ts
-export function useArticles(channel: 'en' | 'ar' | 'all'): { articles, loading, error }
-export function useMetrics(): { metrics: Metrics | null, loading, error }
-export function useBreakingNews(locale): { breakingNews: string[], loading }
-export interface Metrics { ... }  // Single source of truth for metrics type
-```
-
-### Centralized Config
-```typescript
-// src/lib/config.ts
-export const TELEGRAM_CHANNELS = {
-  en: 'https://t.me/observer_5',
-  ar: 'https://t.me/almuraqb',
-};
-export function getTelegramChannel(locale: Locale): string;
-```
-
-## Tailwind v4 Constraints
-- **No dynamic classes**: `bg-${color}` won't work - use conditional: `isArabic ? 'text-right' : 'text-left'`
-- **Theme in CSS**: Colors defined in `globals.css` under `@theme`
-- **Custom utilities**: `scrollbar-hide`, focus-visible styles in globals.css
-
-### Color Tokens (WCAG Compliant)
-```css
---color-tactical-red: #dc2626      /* Primary accent, CTAs */
---color-tactical-amber: #d97706    /* Secondary accent */
---color-earth-olive: #84cc16       /* Success/positive */
---color-midnight-900: #0a0f14      /* Darkest background */
---color-midnight-800: #111920      /* Card backgrounds */
---color-midnight-700: #1a2332      /* Borders */
---color-slate-light: #f1f5f9       /* Primary text (~15:1 contrast) */
---color-slate-medium: #94a3b8      /* Secondary text (~7:1 contrast) */
---color-slate-dark: #64748b        /* Muted text (~5:1 contrast) */
+│   ├── supabase.ts                  # Supabase client + converters
+│   ├── supabase/
+│   │   └── server.ts                # Server-side Supabase client
+│   ├── config.ts                    # Telegram channels, contact email
+│   ├── categories.ts                # Category display names
+│   ├── time.ts                      # Date formatting utilities
+│   ├── hooks.ts                     # useArticles, useMetrics, useBreakingNews, useBookReviews
+│   ├── rate-limit.ts                # Rate limiting
+│   ├── theme/                       # Theme system
+│   │   ├── index.ts                 # Exports useTheme
+│   │   └── ThemeContext.tsx         # Theme provider
+│   └── i18n/
+│       ├── config.ts                # Locale types
+│       ├── dictionaries.ts          # EN/AR translations
+│       └── index.ts                 # Exports
+│
+├── middleware.ts                    # Locale detection
+│
+└── public/
+    └── images/
+        ├── observer-silhouette.png  # Logo
+        └── books/                   # Book cover images
+            ├── TenMythsAboutIsrael.png
+            ├── DeepDive.jpg
+            ├── TheHolocaustIndustry.jpg
+            ├── IransMinistryofIntelligence.jpg
+            ├── TheHundredYearsWaronPalestine.jpg
+            ├── GrandDelusion.jpg
+            └── PoliticalHistoryofModernIran.jpg
 ```
 
 ## Database Schema (Supabase)
+
+### Migrations (`supabase/migrations/`)
+| Migration | Description |
+|-----------|-------------|
+| `20260102111902_create_articles_table.sql` | Initial articles table + RLS |
+| `20260102190000_create_metrics_table.sql` | Metrics table for analytics |
+| `20260103100000_add_structured_fields.sql` | countries[], organizations[], is_structured |
+| `20260103110000_add_subscribers_table.sql` | Newsletter subscribers |
+| `20260108050207_add_media_fields.sql` | image_url, video_url fields |
+| `20260108050320_create_article_media_bucket.sql` | Storage bucket for media |
+| `20260109120000_admin_system.sql` | user_profiles, roles |
+| `20260109130000_fix_rls_recursion.sql` | RLS policy fixes |
+| `20260109140000_fix_security_issues.sql` | Security hardening |
+| `20260110120000_fix_rls_performance.sql` | RLS performance optimization |
+| `20260113120000_create_book_reviews_table.sql` | Book reviews table |
 
 ### articles
 | Column | Type | Notes |
@@ -158,8 +280,36 @@ export function getTelegramChannel(locale: Locale): string;
 | countries | text[] | Extracted country names |
 | organizations | text[] | Extracted org names |
 | is_structured | boolean | Has clear structure |
+| image_url | text | Article image |
+| video_url | text | Article video |
 | telegram_link | text | Original Telegram URL |
 | telegram_date | timestamptz | Original post date |
+| status | text | 'draft', 'published', 'archived' |
+| published_at | timestamptz | Publication date |
+| author_id | uuid | FK to auth.users |
+| last_edited_by | uuid | FK to auth.users |
+| created_at | timestamptz | DB insert time |
+| updated_at | timestamptz | Last update time |
+
+### book_reviews
+| Column | Type | Notes |
+|--------|------|-------|
+| id | serial | Auto-increment PK |
+| review_id | text | Unique (e.g., "book/123-title-en") |
+| channel | text | 'en' or 'ar' |
+| book_title | text | Book title |
+| author | text | Book author |
+| cover_image_url | text | Cover image path |
+| excerpt | text | Short summary |
+| description | text | Full review (HTML) |
+| key_points | text[] | Array of key points |
+| rating | integer | 1-5 stars |
+| recommendation_level | text | 'essential', 'recommended', 'optional' |
+| telegram_link | text | Link to Telegram post |
+| status | text | 'draft', 'published', 'archived' |
+| published_at | timestamptz | Publication date |
+| author_id | uuid | FK to auth.users |
+| last_edited_by | uuid | FK to auth.users |
 | created_at | timestamptz | DB insert time |
 | updated_at | timestamptz | Last update time |
 
@@ -171,47 +321,266 @@ export function getTelegramChannel(locale: Locale): string;
 | is_active | boolean |
 | subscribed_at | timestamptz |
 
-## API Routes
+### user_profiles
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK, FK to auth.users |
+| email | text | User email |
+| full_name | text | Display name |
+| avatar_url | text | Profile image |
+| role | text | 'admin', 'editor', 'viewer' |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-### GET /api/articles
-Query params: `channel` ('en' | 'ar' | 'all'), `limit`
-Returns: `Article[]` or `{ en: Article[], ar: Article[] }`
-- Uses `dbArticleToFrontend()` for transformation
-- `isBreaking` based on category === 'Breaking'
+### metrics
+| Column | Type | Notes |
+|--------|------|-------|
+| id | serial | PK |
+| metric_type | varchar(50) | 'daily_snapshot', 'country_mentions', etc. |
+| data | jsonb | Computed metrics |
+| computed_at | timestamptz | When metrics were computed |
 
-### GET /api/metrics
-Returns aggregated stats:
-```typescript
-{
-  total_articles: number,
-  countries: Record<string, number>,
-  organizations: Record<string, number>,
-  categories: Record<string, number>,
-  temporal: { articles_today, articles_this_week, daily_trend[] },
-  sentiment: { percentages: Record<string, number> },
-  trending: { topic, mentions }[]
-}
+## Middleware (`middleware.ts`)
+
+**Features**:
+- Locale detection from URL path
+- Accept-Language header detection for auto-redirect
+- Admin route authentication via Supabase Auth
+- Role-based access control (admin-only for `/admin/users`)
+
+**Public Paths** (no locale prefix):
+- `/api/*`, `/_next/*`, `/images/*`, `/admin/*`
+- `/favicon.ico`, `/robots.txt`, `/sitemap.xml`, `/manifest.json`
+
+**Auth Flow**:
+1. `/admin/login`, `/admin/signup` - accessible without auth
+2. All other `/admin/*` routes require authenticated user
+3. `/admin/users` requires `role = 'admin'` in user_profiles
+
+## i18n Architecture
+
+```
+src/lib/i18n/
+├── config.ts       # Locale types, locales array, directions
+├── dictionaries.ts # All EN/AR translations + country names
+└── index.ts        # Exports (getDictionary, getCountryName, etc.)
 ```
 
-### POST /api/subscribe
-Body: `{ email: string, locale?: Locale }`
-Rate limited: 5 req/min per IP
+- **Locale route**: `[locale]` dynamic segment (`/en/...`, `/ar/...`)
+- **Dictionary access**: `getDictionary(locale)` - synchronous
+- **Country names**: `getCountryName(country, locale)` - translates country names
+- **RTL**: `dir={isArabic ? 'rtl' : 'ltr'}` on section containers
+- **Arabic font**: Noto Sans Arabic (configured in `layout.tsx`)
 
-## Accessibility Features
-- **Skip-to-content**: Hidden link appears on Tab, jumps to `#main-content`
-- **Focus-visible**: Red outline (2px) for keyboard navigation
-- **Decorative icons**: `aria-hidden="true"`
-- **Form inputs**: Associated `<label>` with `sr-only` class
-- **Interactive elements**: `aria-label` for icon-only buttons
-- **Reduced motion**: `@media (prefers-reduced-motion)` stops ticker animation
+### Key Dictionary Sections
+```typescript
+dict.nav       // Navigation items
+dict.header    // Header title/subtitle
+dict.hero      // Hero section
+dict.liveFeed  // Live feed section
+dict.article   // Article page
+dict.books     // Library/Book reviews
+dict.about     // About page
+dict.footer    // Footer
+dict.countries // Country name translations
+```
 
-## Type Safety
-- **Locale validation**: `isValidLocale()` type guard in middleware
-- **Single Metrics type**: Defined in `hooks.ts`, imported elsewhere
-- **Single Locale type**: Defined in `i18n/config.ts`, imported elsewhere
-- **No `as any`**: Use proper type guards or type assertions
+## Theme System
+
+Located in `src/lib/theme/`:
+- **ThemeContext.tsx**: React context provider
+- **index.ts**: Exports `useTheme()` hook
+
+```typescript
+const { theme, resolvedTheme, toggleTheme } = useTheme();
+// theme: 'light' | 'dark' | 'system'
+// resolvedTheme: 'light' | 'dark' (actual applied theme)
+```
+
+Theme toggle in Header (desktop + mobile).
+
+## Tailwind v4 Constraints
+
+- **No dynamic classes**: `bg-${color}` won't work
+- **Theme in CSS**: Colors defined in `globals.css` under `@theme`
+- **Custom utilities**: `scrollbar-hide`, focus-visible styles
+
+### Color Tokens (WCAG Compliant)
+```css
+--color-tactical-red: #dc2626      /* Primary accent, CTAs */
+--color-tactical-amber: #d97706    /* Secondary accent */
+--color-earth-olive: #84cc16       /* Success/positive */
+--color-midnight-900: #0a0f14      /* Darkest background */
+--color-midnight-800: #111920      /* Card backgrounds */
+--color-midnight-700: #1a2332      /* Borders */
+--color-slate-light: #f1f5f9       /* Primary text */
+--color-slate-medium: #94a3b8      /* Secondary text */
+--color-slate-dark: #64748b        /* Muted text */
+```
+
+## API Routes
+
+### Public APIs
+
+**GET /api/articles**
+- Query: `channel` ('en' | 'ar' | 'all'), `limit`
+- Returns: `Article[]`
+
+**GET /api/books**
+- Query: `channel` ('en' | 'ar'), `limit`
+- Returns: `BookReview[]`
+
+**GET /api/metrics**
+- Returns: Aggregated stats (counts, trends, etc.)
+
+**POST /api/subscribe**
+- Body: `{ email, locale? }`
+- Rate limited: 5 req/min
+
+### Admin APIs (Auth Required)
+
+**GET/POST /api/admin/articles**
+**GET/PUT/DELETE /api/admin/articles/[...id]**
+
+**GET/POST /api/admin/books**
+**GET/PUT/DELETE /api/admin/books/[...id]**
+
+## Hooks
+
+```typescript
+// src/lib/hooks.ts
+useArticles(channel: 'en' | 'ar' | 'all')
+useMetrics()
+useBreakingNews(locale)
+useBookReviews(channel: 'en' | 'ar')
+```
+
+## Navigation Items
+
+Desktop nav (in order):
+1. Frontline (`/[locale]/frontline`)
+2. Situation Room (`/[locale]/situation-room`)
+3. Library (`/[locale]/books`)
+4. Dossier (`/[locale]/dossier`)
+5. Chronicles (`/[locale]/chronicles`)
+6. About (`/[locale]/about`)
+
+Admin sidebar:
+1. Dashboard (`/admin`)
+2. Articles (`/admin/articles`)
+3. Books (`/admin/books`)
+4. Media (`/admin/media`)
+5. Users (`/admin/users`)
+6. Settings (`/admin/settings`)
+
+## Image Configuration
+
+External domains in `next.config.ts`:
+- images.unsplash.com
+- gbqvivmfivsuvvdkoiuc.supabase.co (Supabase storage)
+- images-na.ssl-images-amazon.com
+- m.media-amazon.com
+- media.wiley.com
+
+Local images: `public/images/books/`
+
+## Common Tasks
+
+### Add new i18n string
+1. Add to `dictionaries.ts` under both `en` and `ar` objects
+2. Access via `dict.section.key`
+
+### Add new page
+1. Create `src/app/[locale]/pagename/page.tsx`
+2. Use `generateStaticParams()` for static generation
+3. Get dict: `const dict = getDictionary(locale as Locale)`
+
+### Add new admin page
+1. Create `src/app/admin/pagename/page.tsx`
+2. Add nav item to `AdminSidebar.tsx`
+3. Create API route if needed in `src/app/api/admin/`
+
+### Add book review
+1. Go to admin dashboard (`/admin/books/new`)
+2. Create EN version, then AR version
+3. Both use same `review_id` pattern
+
+### Trigger article refresh
+```bash
+gh workflow run "Fetch Telegram Articles & Analyze"
+```
+
+## CLI Commands
+
+### Supabase
+```bash
+npx supabase projects list          # List linked projects
+npx supabase db push                # Push migrations to remote
+npx supabase db diff                # Generate migration from changes
+npx supabase migration list         # List migrations
+npx supabase gen types typescript   # Generate TypeScript types
+npx supabase start                  # Start local Supabase
+npx supabase stop                   # Stop local Supabase
+```
+
+### Vercel
+```bash
+npx vercel                          # Deploy preview
+npx vercel --prod                   # Deploy to production
+npx vercel env ls                   # List environment variables
+npx vercel logs                     # View deployment logs
+npx vercel inspect <deployment>     # Inspect deployment
+```
+
+### GitHub Actions
+```bash
+gh workflow list                    # List workflows
+gh workflow run <workflow>          # Trigger workflow
+gh run list                         # List recent runs
+gh run view <run-id>                # View run details
+```
+
+## Environment Variables
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=   # For admin operations
+OPENAI_API_KEY=              # For fetch_telegram.py
+TELEGRAM_API_ID=             # For fetch_telegram.py
+TELEGRAM_API_HASH=           # For fetch_telegram.py
+```
+
+## NPM Scripts
+
+```bash
+npm run dev      # Development server (Turbopack)
+npm run build    # Production build
+npm run start    # Start production server
+npm run lint     # ESLint
+```
+
+## Python Scripts (`scripts/`)
+
+| Script | Purpose |
+|--------|---------|
+| `fetch_telegram.py` | Main article fetcher (Telegram → Supabase) |
+| `analyze_articles.py` | Compute metrics from articles |
+| `create_admin_user.js` | Create admin user in Supabase |
+| `check_articles.py` | Validate articles in database |
+| `upload_image.py` | Upload image to Supabase Storage |
+| `publish_article.py` | Publish draft articles |
+| `generate_session_string.py` | Generate Telegram session string |
+
+**Python Dependencies** (`scripts/requirements.txt`):
+```
+telethon
+python-dotenv
+supabase
+```
 
 ## Git Conventions
+
 Commit format:
 ```
 Short description
@@ -223,55 +592,46 @@ Short description
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```
 
-## Common Tasks
+## Key Dependencies (package.json)
 
-### Add new i18n string
-1. Add to `dictionaries.ts` under both `en` and `ar` objects
-2. Access via `dict.section.key`
-
-### Add new country translation
-1. Add to `dictionaries.ts` under `countries` in both `en` and `ar`
-2. Use `getCountryName(country, locale)` to translate
-
-### Add new page
-1. Create `src/app/[locale]/pagename/page.tsx`
-2. Use `generateStaticParams()` for static generation
-3. Get dict: `const dict = getDictionary(locale as Locale)`
-
-### Add new API route
-1. Create `src/app/api/routename/route.ts`
-2. Use rate limiting for public POST endpoints
-3. Return `NextResponse.json()`
-
-### Trigger article refresh
-```bash
-gh workflow run "Fetch Telegram Articles & Analyze"
-```
-
-## Environment Variables
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-OPENAI_API_KEY=           # For fetch_telegram.py
-TELEGRAM_API_ID=          # For fetch_telegram.py
-TELEGRAM_API_HASH=        # For fetch_telegram.py
-```
-
-## Scripts
-```bash
-npm run dev      # Development server (Turbopack)
-npm run build    # Production build
-npm run start    # Start production server
-```
-
-## Known Warnings (Ignorable)
-- "Next.js inferred workspace root" - multiple lockfiles, not an issue
-- "metadataBase not set" - defaults to localhost in dev, set via environment
+| Package | Version | Purpose |
+|---------|---------|---------|
+| next | 16.1.1 | React framework |
+| react | 19.2.3 | UI library |
+| tailwindcss | 4.1.18 | CSS framework |
+| @supabase/supabase-js | 2.89.0 | Database client |
+| @supabase/ssr | 0.8.0 | Server-side auth |
+| framer-motion | 12.23.26 | Animations |
+| recharts | 3.6.0 | Charts |
+| @tiptap/react | 3.15.3 | Rich text editor |
+| swr | 2.3.8 | Data fetching |
+| zod | 4.3.5 | Schema validation |
+| dompurify | 3.3.1 | HTML sanitization |
 
 ## Recent Changes (Jan 2026)
-- Multi-part Telegram post combining (180s grouping window)
-- Dynamic metrics on Hero and SituationRoomPreview
-- Country tags with AR translations on Frontline page
-- About page: Editorial Standards, Coverage Focus, Join Network sections
-- Accessibility: skip-to-content link, focus-visible styles
-- Type safety: isValidLocale() guard, consolidated type definitions
+
+- **Title Extraction Fix**: Improved article title parsing
+  - Now recognizes `**Title**` format with value on next line
+  - Handles `**Title : Value**` inline format
+  - Skips metadata lines (Category, Countries, etc.) in legacy extraction
+  - Frontend sanitization strips `TITLE:` prefixes
+  - Lower char threshold (20) for multi-part message grouping
+- **Library (Book Reviews)**: Full bilingual book review system
+  - Public listing + detail pages
+  - Admin CRUD with TipTap editor
+  - Rating system (1-5 stars)
+  - Recommendation levels (essential/recommended/optional)
+  - Local book cover images
+- **Admin Dashboard**: Complete content management system
+  - Article management (create, edit, delete)
+  - Book review management
+  - Media library
+  - User management
+- **Theme System**: Light/dark mode toggle
+- **Navigation**: Shortened names (Frontline, Library, Dossier)
+- **Mobile Optimization**: Improved book detail page mobile layout
+- **Multi-part Telegram post combining** (180s grouping window)
+- **Country tags** with AR translations on Frontline
+- **Accessibility**: skip-to-content, focus-visible styles
+- **Database**: 11 migrations, PostgreSQL 17
+- **RLS Policies**: Optimized for performance, role-based access

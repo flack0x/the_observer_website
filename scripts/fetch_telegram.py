@@ -179,21 +179,14 @@ def clean_text(text: str) -> str:
 
 def parse_structured_header(text: str) -> dict | None:
     """
-    Parse structured headers from post.
+    Parse structured headers from post - supports multiple formats.
 
     Supports formats:
-    TITLE: ...
-    CATEGORY: ...
-    COUNTRIES: ...
-    ORGS: ...
-    ---
+    1. **Title** on one line, value on next line in **...**
+    2. **Title : Value** or **Title: Value** all on one line
+    3. Standard TITLE: Value format (legacy)
 
-    Or Arabic:
-    العنوان: ...
-    التصنيف: ...
-    الدول: ...
-    المنظمات: ...
-    ---
+    Also parses Category, Countries, and Organizations.
     """
     result = {
         'title': None,
@@ -204,58 +197,117 @@ def parse_structured_header(text: str) -> dict | None:
     }
 
     lines = text.split('\n')
-    header_end = -1
 
-    # Look for header fields in first 10 lines
-    for i, line in enumerate(lines[:10]):
+    for i, line in enumerate(lines[:15]):
         line_clean = line.strip()
-        line_lower = line_clean.lower()
 
-        # Check for separator (end of header)
-        if line_clean == '---' or line_clean == '—--' or line_clean == '———':
-            header_end = i
-            break
-
-        # Parse TITLE / العنوان
-        title_match = re.match(r'^(?:TITLE|العنوان)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
-        if title_match:
-            result['title'] = clean_text(title_match.group(1))[:150]
+        # Check for **Title** followed by value on next line
+        if re.match(r'^\*\*(?:Title|العنوان)\*\*$', line_clean, re.IGNORECASE):
+            # Look for value in next 2 lines (skip empty)
+            for j in range(i+1, min(i+3, len(lines))):
+                next_line = lines[j].strip()
+                if next_line and not next_line.startswith('**Category'):
+                    # Extract from **value** if present
+                    title_match = re.match(r'^\*\*(.+?)\*\*$', next_line)
+                    if title_match:
+                        result['title'] = clean_text(title_match.group(1))[:150]
+                    else:
+                        result['title'] = clean_text(next_line)[:150]
+                    break
             continue
 
-        # Parse CATEGORY / التصنيف
-        cat_match = re.match(r'^(?:CATEGORY|CAT|التصنيف)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
-        if cat_match:
-            cat_value = cat_match.group(1).strip().lower()
+        # Check for **Title : Value** or **Title: Value** on same line
+        title_inline = re.match(
+            r'^\*\*(?:Title|العنوان)\s*[:\-–—]\s*(.+?)\*\*$',
+            line_clean, re.IGNORECASE
+        )
+        if title_inline:
+            result['title'] = clean_text(title_inline.group(1))[:150]
+            continue
+
+        # Check for standard TITLE: Value (original format)
+        title_standard = re.match(
+            r'^(?:TITLE|العنوان)\s*[:\-–—]\s*(.+)$',
+            line_clean, re.IGNORECASE
+        )
+        if title_standard:
+            result['title'] = clean_text(title_standard.group(1))[:150]
+            continue
+
+        # Parse Category (multiple formats)
+        # **Category** followed by value, or **Category**: Value, or Category: Value
+        if re.match(r'^\*\*(?:Category|CAT|التصنيف)\*\*$', line_clean, re.IGNORECASE):
+            for j in range(i+1, min(i+3, len(lines))):
+                next_line = lines[j].strip()
+                if next_line:
+                    cat_value = clean_text(next_line).lower()
+                    # Only use first part before pipe
+                    cat_value = cat_value.split('|')[0].strip()
+                    if cat_value in VALID_CATEGORIES:
+                        result['category'] = VALID_CATEGORIES[cat_value]
+                    break
+            continue
+
+        cat_inline = re.match(
+            r'^\*\*(?:Category|CAT|التصنيف)\*\*\s*[:\-]?\s*(.+)$',
+            line_clean, re.IGNORECASE
+        )
+        if cat_inline:
+            cat_value = cat_inline.group(1).strip().lower().split('|')[0].strip()
             if cat_value in VALID_CATEGORIES:
                 result['category'] = VALID_CATEGORIES[cat_value]
             continue
 
-        # Parse COUNTRIES / الدول
+        # Standard Category: Value format
+        cat_standard = re.match(
+            r'^(?:CATEGORY|CAT|التصنيف)\s*[:\-]\s*(.+)$',
+            line_clean, re.IGNORECASE
+        )
+        if cat_standard:
+            cat_value = cat_standard.group(1).strip().lower().split('|')[0].strip()
+            if cat_value in VALID_CATEGORIES:
+                result['category'] = VALID_CATEGORIES[cat_value]
+            continue
+
+        # Countries - **Countries Involved** or **Countries**
+        if re.match(r'^\*\*(?:Countries?|الدول)(?:\s+Involved)?\*\*', line_clean, re.IGNORECASE):
+            for j in range(i+1, min(i+3, len(lines))):
+                next_line = lines[j].strip()
+                if next_line and not next_line.startswith('**'):
+                    # Split by | or comma, remove flags
+                    countries = re.split(r'[|,،]', next_line)
+                    result['countries'] = [
+                        clean_text(re.sub(r'[\U0001F1E0-\U0001F1FF]+', '', c)).strip()
+                        for c in countries if clean_text(c).strip()
+                    ][:5]
+                    break
+            continue
+
+        # Standard COUNTRIES: format
         countries_match = re.match(r'^(?:COUNTRIES|COUNTRY|الدول)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
         if countries_match:
             countries_str = countries_match.group(1)
             result['countries'] = [c.strip() for c in re.split(r'[,،]', countries_str) if c.strip()]
             continue
 
-        # Parse ORGS / المنظمات
+        # Organizations - **Orgs** or standard format
+        if re.match(r'^\*\*(?:Orgs?|Organizations?|المنظمات)\*\*', line_clean, re.IGNORECASE):
+            for j in range(i+1, min(i+3, len(lines))):
+                next_line = lines[j].strip()
+                if next_line and not next_line.startswith('**'):
+                    orgs = re.split(r'[|,،]', next_line)
+                    result['organizations'] = [clean_text(o).strip() for o in orgs if clean_text(o).strip()][:5]
+                    break
+            continue
+
         orgs_match = re.match(r'^(?:ORGS?|ORGANIZATIONS?|المنظمات)\s*[:\-]\s*(.+)$', line_clean, re.IGNORECASE)
         if orgs_match:
             orgs_str = orgs_match.group(1)
             result['organizations'] = [o.strip() for o in re.split(r'[,،]', orgs_str) if o.strip()]
             continue
 
-    # If we found a header separator and at least a title, return the result
-    if header_end > 0 and result['title']:
-        result['content_start'] = header_end + 1
-        return result
-
-    # Also check if we found title without separator (simpler format)
-    if result['title'] and (result['category'] or result['countries']):
-        # Find where content starts (after last header field)
-        for i, line in enumerate(lines[:10]):
-            if any(line.strip().lower().startswith(prefix) for prefix in
-                   ['title:', 'category:', 'countries:', 'orgs:', 'العنوان:', 'التصنيف:', 'الدول:', 'المنظمات:']):
-                result['content_start'] = i + 1
+    # Return if we found at least a title
+    if result['title']:
         return result
 
     return None
@@ -282,27 +334,36 @@ def truncate_title(text: str, max_length: int = 100) -> str:
 def extract_title_legacy(text: str) -> str:
     """Legacy title extraction for posts without structured headers."""
     lines = [line.strip() for line in text.split('\n') if line.strip()]
-    first_lines = '\n'.join(lines[:3])
 
-    # Pattern 1: Bold text **title**
-    bold_matches = re.findall(r'\*\*([^*]+)\*\*', first_lines)
-    if bold_matches:
-        for bold_text in bold_matches:
-            cleaned = clean_text(bold_text)
-            if len(cleaned) >= 10:
-                return truncate_title(cleaned, 100)
+    # Skip patterns that indicate metadata, not titles
+    skip_patterns = [
+        r'^(?:Category|CATEGORY|التصنيف)',
+        r'^(?:Countries?|الدول)',
+        r'^(?:Orgs?|Organizations?|المنظمات)',
+        r'^(?:Geopolitics?|Geographical)',
+        r'^\d+\.',  # Numbered items
+        r'^[IVX]+\.',  # Roman numerals
+        r'^\*\*(?:Category|Countries|Orgs)',
+    ]
 
-    # Pattern 2: Bullet point articles
-    bullet_pattern = r'^[•\-\*]\s*\*?\*?([^,•\n]{10,60})'
-    for line in lines[:3]:
-        match = re.match(bullet_pattern, line)
-        if match:
-            topic = clean_text(match.group(1))
-            if len(topic) >= 10:
-                return truncate_title(topic, 100)
+    for line in lines[:8]:
+        # Skip if matches metadata pattern
+        if any(re.match(pat, line, re.IGNORECASE) for pat in skip_patterns):
+            continue
 
-    # Pattern 3: First substantial line
-    for line in lines[:5]:
+        # Look for bold title: **Title Text Here**
+        bold_match = re.match(r'^\*\*(.+?)\*\*$', line)
+        if bold_match:
+            title = clean_text(bold_match.group(1))
+            # Skip if it's just a label like "Title" or has too many pipes
+            if len(title) >= 15 and title.count('|') < 2:
+                return truncate_title(title, 100)
+
+        # Skip lines with too many pipes (category/tag lines)
+        if line.count('|') >= 2:
+            continue
+
+        # Skip links and metadata
         if line.startswith('http') or line.startswith('@') or 'Link to' in line:
             continue
         if 't.me/' in line and len(line) < 50:
@@ -310,18 +371,21 @@ def extract_title_legacy(text: str) -> str:
         if line.startswith('[') and '](' in line:
             continue
 
-        cleaned = re.sub(r'^[•\-\*\d\.]+\s*', '', line)
-        cleaned = clean_text(cleaned)
+        # Use cleaned line if substantial
+        cleaned = clean_text(line)
+        cleaned = re.sub(r'^[🔴⚠️📢\s]+', '', cleaned)  # Remove emoji prefixes
+        cleaned = re.sub(r'^[•\-\*\d\.]+\s*', '', cleaned)  # Remove bullet points
 
         has_letters = bool(re.search(r'[a-zA-Z\u0600-\u06FF]', cleaned))
-        is_section_header = bool(re.match(r'^[IVX]+\.?\s|^\d+\.?\s', cleaned))
         is_conclusion = cleaned.lower() in ['conclusion', 'الخاتمة', 'خاتمة', 'introduction', 'مقدمة']
 
-        if has_letters and len(cleaned) >= 15 and not is_section_header and not is_conclusion:
+        if has_letters and len(cleaned) >= 20 and cleaned.count('|') < 2 and not is_conclusion:
             return truncate_title(cleaned, 100)
 
+    # Fallback: use first line if nothing else works
     if lines:
         cleaned = clean_text(lines[0])
+        cleaned = re.sub(r'^[🔴⚠️📢\s]+', '', cleaned)
         cleaned = re.sub(r'^[•\-\*\d\.]+\s*', '', cleaned)
         return truncate_title(cleaned, 100) if cleaned else 'Untitled'
 
@@ -785,8 +849,9 @@ async def fetch_channel_messages(
                     max_id = message.id
 
                 # Accept if has enough text OR has media with some text
-                has_text = message.text and len(message.text.strip()) >= 50
-                has_media_with_caption = message.media and message.text and len(message.text.strip()) >= 20
+                # Lower threshold (20 chars) to include short header messages for multi-part articles
+                has_text = message.text and len(message.text.strip()) >= 20
+                has_media_with_caption = message.media and message.text and len(message.text.strip()) >= 10
                 if has_text or has_media_with_caption:
                     raw_messages.append(message)
 

@@ -46,12 +46,32 @@ export async function fetchArticlesFromDB(
   return data || [];
 }
 
+// Sanitize title to remove prefixes and handle malformed titles
+function sanitizeTitle(title: string): string {
+  // Remove TITLE: prefix (English and Arabic)
+  let clean = title.replace(/^(?:TITLE|العنوان)\s*[:\-–—]\s*/i, '');
+
+  // If it's just pipe-separated keywords, take first meaningful part
+  if ((clean.match(/\|/g) || []).length >= 2) {
+    const parts = clean.split('|');
+    // Find first part that looks like a title (not a category keyword)
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (trimmed.length >= 15 && !/^(Geopolitics|Military|Political|Economic|Intelligence|Diplomatic|Analysis|Breaking)/i.test(trimmed)) {
+        return trimmed;
+      }
+    }
+  }
+
+  return clean.trim() || 'Untitled';
+}
+
 // Convert DB article to the format used by the frontend
 // Note: `date` is a Date object - use getRelativeTime(date, locale) from time.ts for display
 export function dbArticleToFrontend(article: DBArticle) {
   return {
     id: article.telegram_id,
-    title: article.title,
+    title: sanitizeTitle(article.title),
     excerpt: article.excerpt,
     content: article.content,
     date: new Date(article.telegram_date),
