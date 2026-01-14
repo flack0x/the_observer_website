@@ -46,14 +46,18 @@ export default function Footer({ locale, dict }: FooterProps) {
     }
   };
 
-  // All navigation links - synced with Header
-  const allLinks = [
+  // Main navigation links - synced with Header
+  const navLinks = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
     { name: dict.nav.situationRoom, href: `/${locale}/situation-room` },
     { name: dict.nav.books, href: `/${locale}/books` },
     { name: dict.nav.dossier, href: `/${locale}/dossier` },
     { name: dict.nav.chronicles, href: `/${locale}/chronicles` },
     { name: dict.nav.about, href: `/${locale}/about` },
+  ];
+
+  // Legal/Resources links
+  const legalLinks = [
     { name: dict.footer.privacy, href: `/${locale}/privacy` },
     { name: dict.footer.terms, href: `/${locale}/terms` },
   ];
@@ -115,13 +119,14 @@ export default function Footer({ locale, dict }: FooterProps) {
         </div>
       </div>
 
-      {/* Main Footer Content */}
+      {/* Main Footer Content - 4 Column Layout */}
       <div className="mx-auto max-w-7xl px-4 py-10 sm:py-12 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row lg:justify-between gap-10 lg:gap-16">
-          {/* Brand Section - Left/Larger */}
-          <div className="lg:max-w-md">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+
+          {/* Column 1: Brand */}
+          <div className="sm:col-span-2 lg:col-span-1">
             <Link href={`/${locale}`} className="inline-flex items-center gap-3 group">
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
+              <div className="relative w-12 h-12 flex-shrink-0">
                 <Image
                   src="/images/observer-silhouette.png"
                   alt="The Observer"
@@ -129,67 +134,81 @@ export default function Footer({ locale, dict }: FooterProps) {
                   className="object-contain logo-gold transition-opacity group-hover:opacity-100"
                 />
               </div>
-              <span className="font-heading text-xl sm:text-2xl font-bold tracking-wider text-slate-light">
+              <span className="font-heading text-lg font-bold tracking-wider text-slate-light">
                 {dict.header.title}
               </span>
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-slate-dark">
               {dict.footer.description}
             </p>
-
-            {/* Telegram Channels */}
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href={TELEGRAM_CHANNELS.en}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-midnight-800 border border-midnight-600 px-4 py-2 text-sm text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
-              >
-                <Send className="h-4 w-4" aria-hidden="true" />
-                English
-              </a>
-              <a
-                href={TELEGRAM_CHANNELS.ar}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-midnight-800 border border-midnight-600 px-4 py-2 text-sm text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
-              >
-                <Send className="h-4 w-4" aria-hidden="true" />
-                العربية
-              </a>
-            </div>
-
-            {/* Security Badge - Desktop only */}
-            <div className="hidden lg:flex items-center gap-2 mt-6 text-sm text-slate-dark">
+            <div className="mt-4 flex items-center gap-2 text-sm text-slate-dark">
               <Shield className="h-4 w-4 text-earth-olive" aria-hidden="true" />
               <span>{dict.footer.secureIndependent}</span>
             </div>
           </div>
 
-          {/* Navigation - Right/Stacked */}
-          <div className="lg:text-end">
+          {/* Column 2: Navigation */}
+          <div>
             <h4 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light mb-4">
               {dict.footer.navigate}
             </h4>
-            <nav>
-              <ul className="space-y-2.5">
-                {allLinks.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="inline-block text-sm text-slate-dark transition-colors hover:text-tactical-red"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            <ul className="space-y-2.5">
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-slate-dark transition-colors hover:text-tactical-red"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            {/* Security Badge - Mobile only */}
-            <div className="flex lg:hidden items-center gap-2 mt-6 text-sm text-slate-dark">
-              <Shield className="h-4 w-4 text-earth-olive" aria-hidden="true" />
-              <span>{dict.footer.secureIndependent}</span>
+          {/* Column 3: Legal */}
+          <div>
+            <h4 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light mb-4">
+              {locale === 'en' ? 'Legal' : 'قانوني'}
+            </h4>
+            <ul className="space-y-2.5">
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-slate-dark transition-colors hover:text-tactical-red"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 4: Connect */}
+          <div>
+            <h4 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light mb-4">
+              {locale === 'en' ? 'Connect' : 'تواصل'}
+            </h4>
+            <div className="space-y-3">
+              <a
+                href={TELEGRAM_CHANNELS.en}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-slate-dark transition-colors hover:text-tactical-red"
+              >
+                <Send className="h-4 w-4" aria-hidden="true" />
+                Telegram (EN)
+              </a>
+              <a
+                href={TELEGRAM_CHANNELS.ar}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-slate-dark transition-colors hover:text-tactical-red"
+              >
+                <Send className="h-4 w-4" aria-hidden="true" />
+                Telegram (AR)
+              </a>
             </div>
           </div>
         </div>
