@@ -200,6 +200,8 @@ def parse_structured_header(text: str) -> dict | None:
 
     for i, line in enumerate(lines[:15]):
         line_clean = line.strip()
+        # Strip common emoji prefixes that appear before headers
+        line_clean = re.sub(r'^[🔴🔵🟢🟡⚫⚪⚠️🚨📢\s]+', '', line_clean)
 
         # Check for **Title** followed by value on next line
         if re.match(r'^\*\*(?:Title|العنوان)\*\*$', line_clean, re.IGNORECASE):
@@ -216,13 +218,22 @@ def parse_structured_header(text: str) -> dict | None:
                     break
             continue
 
-        # Check for **Title : Value** or **Title: Value** on same line
+        # Check for **Title : Value** or **Title: Value** on same line (with or without closing **)
         title_inline = re.match(
             r'^\*\*(?:Title|العنوان)\s*[:\-–—]\s*(.+?)\*\*$',
             line_clean, re.IGNORECASE
         )
         if title_inline:
             result['title'] = clean_text(title_inline.group(1))[:150]
+            continue
+
+        # Check for **Title: Value without closing ** (some posts have this format)
+        title_inline_noclose = re.match(
+            r'^\*\*(?:Title|العنوان)\s*[:\-–—]\s*(.+)$',
+            line_clean, re.IGNORECASE
+        )
+        if title_inline_noclose and not line_clean.endswith('**'):
+            result['title'] = clean_text(title_inline_noclose.group(1))[:150]
             continue
 
         # Check for standard TITLE: Value (original format)
