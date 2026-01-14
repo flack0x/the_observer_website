@@ -122,13 +122,24 @@ Article content...
 - Combines multi-part posts into single articles
 - Multi-format header parsing:
   - `**Title**` with value on next line (bold)
-  - `**Title : Value**` inline format
+  - `**Title : Value**` or `**Title: Value` inline format (with/without closing `**`)
+  - Strips emoji prefixes (🔴🔵🟢 etc.) before parsing
   - Legacy `TITLE: Value` format
 - Extracts categories, countries, organizations
 - Auto-detection fallback for unstructured posts
 - Downloads and uploads images/videos to Supabase Storage
 - Minimum message length: 20 chars (allows short headers in multi-part posts)
 - Use `--full` flag to force complete re-sync
+
+**Sync State** (`scripts/.sync_state.json`):
+- Tracks `last_message_id` per channel
+- Tracks `last_sync` timestamp
+- Used for incremental syncs
+
+**Telegram Session** (`scripts/observer_session.session`):
+- Local file-based session for development
+- For CI/CD: use `TELEGRAM_SESSION_STRING` env var
+- Generate with `scripts/generate_session_string.py`
 
 **Frontend Title Sanitization** (`src/lib/supabase.ts`):
 - `sanitizeTitle()` strips `TITLE:` / `العنوان:` prefixes
@@ -608,14 +619,99 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 | zod | 4.3.5 | Schema validation |
 | dompurify | 3.3.1 | HTML sanitization |
 
+## Local Development
+
+### Running the site
+```bash
+npm run dev                    # Start Next.js dev server (port 3000)
+```
+
+### Running Telegram sync manually
+```bash
+cd scripts
+python fetch_telegram.py              # Incremental sync (new messages only)
+python fetch_telegram.py --full       # Full sync (re-process all)
+python fetch_telegram.py --channel en # Sync only English channel
+python fetch_telegram.py --channel ar # Sync only Arabic channel
+```
+
+### Viewing raw data (debugging)
+```python
+# Quick inline query to check articles
+python -c "
+from pathlib import Path
+from dotenv import load_dotenv
+from supabase import create_client
+import os
+
+load_dotenv(Path('.env.local'))
+supabase = create_client(os.getenv('NEXT_PUBLIC_SUPABASE_URL'), os.getenv('SUPABASE_SERVICE_ROLE_KEY'))
+result = supabase.table('articles').select('telegram_id, title').eq('channel', 'en').order('telegram_date', desc=True).limit(5).execute()
+for r in result.data:
+    print(f\"{r['telegram_id']}: {r['title'][:50]}\")
+"
+```
+
+## Troubleshooting
+
+### Article titles showing wrong content
+**Symptoms**: Titles like "Geopolitics | Cyber Warfare | HYBRID WAR..." or "TITLE: Something"
+
+**Causes**:
+1. New post format not recognized by parser
+2. Emoji prefix blocking regex match
+3. Missing closing `**` in title format
+
+**Fix**:
+1. Check raw content format in Telegram or database
+2. Update `parse_structured_header()` in `scripts/fetch_telegram.py`
+3. Run full sync: `python scripts/fetch_telegram.py --full`
+
+### Multi-part articles not grouped
+**Symptoms**: Article starts with "2." or "3." (missing first part)
+
+**Causes**:
+1. First message too short (< 20 chars) → filtered out
+2. Time gap > 180 seconds between parts
+
+**Fix**:
+1. Lower `MIN_MESSAGE_LENGTH` if needed
+2. Check message timestamps in Telegram
+
+### Changes not showing on website
+**Causes**:
+1. Browser cache → Hard refresh (Ctrl+F5)
+2. Vercel edge cache → Redeploy or wait
+3. Database not updated → Run sync again
+
+### Telegram session expired
+**Fix**:
+```bash
+cd scripts
+python login_telegram.py      # Re-authenticate
+# Or generate new session string for CI/CD:
+python generate_session_string.py
+```
+
+## Footer Structure
+
+4-column layout (Brand | Navigate | Legal | Connect):
+- **Brand**: Logo, description, "Secure & Independent" badge
+- **Navigate**: Links synced with Header (Frontline, Situation Room, Library, Dossier, Chronicles, About)
+- **Legal**: Privacy, Terms
+- **Connect**: Telegram EN/AR links
+- **Newsletter**: Email subscription form in top section
+
 ## Recent Changes (Jan 2026)
 
-- **Title Extraction Fix**: Improved article title parsing
-  - Now recognizes `**Title**` format with value on next line
-  - Handles `**Title : Value**` inline format
-  - Skips metadata lines (Category, Countries, etc.) in legacy extraction
-  - Frontend sanitization strips `TITLE:` prefixes
-  - Lower char threshold (20) for multi-part message grouping
+- **Title Extraction Fix** (Jan 15): Comprehensive title parsing overhaul
+  - Recognizes `**Title**` with value on next line
+  - Handles `**Title : Value**` and `**Title: Value` inline formats
+  - Strips emoji prefixes (🔴🔵 etc.) before parsing headers
+  - Handles unclosed `**` in title lines
+  - Skips metadata lines in legacy extraction
+  - Frontend `sanitizeTitle()` as safety net
+  - Lower char threshold (20) for multi-part grouping
 - **Library (Book Reviews)**: Full bilingual book review system
   - Public listing + detail pages
   - Admin CRUD with TipTap editor
