@@ -27,42 +27,47 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 # News sources with their RSS feeds
 # Format: (name, country, rss_url, language, category)
 NEWS_SOURCES = [
+    # Iran
+    ("Press TV", "Iran", "https://www.presstv.ir/rss.xml", "en", "Middle East"),
+
+    # Lebanon
+    ("Al Mayadeen", "Lebanon", "https://www.almayadeen.net/rss", "en", "Middle East"),
+
     # Russia
-    ("TASS", "Russia", "https://tass.com/rss/v2.xml", "en", "World"),
-
-    # China
-    ("Global Times", "China", "https://www.globaltimes.cn/rss/outbrain.xml", "en", "Asia"),
-
-    # UK / International
-    ("BBC World", "UK", "https://feeds.bbci.co.uk/news/world/rss.xml", "en", "World"),
-    ("BBC Middle East", "UK", "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml", "en", "Middle East"),
-    ("Al Jazeera", "Qatar", "https://www.aljazeera.com/xml/rss/all.xml", "en", "World"),
-    ("The Guardian World", "UK", "https://www.theguardian.com/world/rss", "en", "World"),
-
-    # France
-    ("France 24", "France", "https://www.france24.com/en/rss", "en", "Europe"),
-
-    # Japan
-    ("NHK World", "Japan", "https://www3.nhk.or.jp/rss/news/cat0.xml", "en", "Asia"),
-
-    # South Africa
-    ("News24", "South Africa", "https://feeds.news24.com/articles/news24/World/rss", "en", "Africa"),
-
-    # Germany
-    ("DW News", "Germany", "https://rss.dw.com/rdf/rss-en-world", "en", "Europe"),
-
-    # India
-    ("Times of India", "India", "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms", "en", "Asia"),
-    ("Hindustan Times", "India", "https://www.hindustantimes.com/feeds/rss/world-news/rssfeed.xml", "en", "Asia"),
+    ("RT", "Russia", "https://www.rt.com/rss/news/", "en", "World"),
+    ("Sputnik", "Russia", "https://sputnikglobe.com/export/rss2/archive/index.xml", "en", "World"),
 
     # USA
-    ("NPR World", "USA", "https://feeds.npr.org/1004/rss.xml", "en", "World"),
-    ("VOA News", "USA", "https://www.voanews.com/api/z$omretvi", "en", "World"),
+    ("Democracy Now", "USA", "https://www.democracynow.org/democracynow.rss", "en", "World"),
+    ("The Nation", "USA", "https://www.thenation.com/feed/", "en", "World"),
+    ("Middle East Eye", "UK", "https://www.middleeasteye.net/rss", "en", "Middle East"),
+
+    # China
+    ("China Daily", "China", "https://www.chinadaily.com.cn/rss/world_rss.xml", "en", "Asia"),
+    ("Global Times", "China", "https://www.globaltimes.cn/rss/outbrain.xml", "en", "Asia"),
+
+    # Britain
+    ("The Guardian", "UK", "https://www.theguardian.com/world/rss", "en", "World"),
+    ("The Independent", "UK", "https://www.independent.co.uk/news/world/rss", "en", "World"),
+
+    # Brasil
+    ("Brasil Wire", "Brasil", "http://www.brasilwire.com/feed/", "en", "World"),
+
+    # France
+    ("Le Monde Diplomatique", "France", "https://mondediplo.com/backend", "en", "Europe"),
+
+    # Japan
+    ("The Diplomat", "Japan", "https://thediplomat.com/feed/", "en", "Asia"),
+
+    # Ghana
+    ("Modern Ghana", "Ghana", "https://www.modernghana.com/news/rss/", "en", "Africa"),
+
+    # South Africa
+    ("Mail & Guardian", "South Africa", "https://mg.co.za/feed/", "en", "Africa"),
 
     # Arabic Sources
-    ("Al Jazeera Arabic", "Qatar", "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9", "ar", "World"),
-    ("Sky News Arabia", "UAE", "https://www.skynewsarabia.com/rss", "ar", "World"),
-    ("BBC Arabic", "UK", "https://feeds.bbci.co.uk/arabic/rss.xml", "ar", "World"),
+    ("Al Mayadeen Arabic", "Lebanon", "https://www.almayadeen.net/rss", "ar", "World"),
+    ("RT Arabic", "Russia", "https://arabic.rt.com/rss/", "ar", "World"),
 ]
 
 # User agent to avoid blocks
@@ -104,8 +109,8 @@ def fetch_rss_feed(url: str) -> Optional[feedparser.FeedParserDict]:
 
 def clean_title(title: str) -> str:
     """Clean and truncate title."""
-    # Remove HTML tags if any
     import re
+    # Remove HTML tags if any
     title = re.sub(r'<[^>]+>', '', title)
     # Remove extra whitespace
     title = ' '.join(title.split())
@@ -165,13 +170,20 @@ def save_headlines(headlines: list):
     if not headlines:
         return
 
+    # Deduplicate by headline_id (keep first occurrence)
+    seen = set()
+    unique_headlines = []
+    for h in headlines:
+        if h["headline_id"] not in seen:
+            seen.add(h["headline_id"])
+            unique_headlines.append(h)
+
     try:
-        # Upsert to handle duplicates
         result = supabase.table("news_headlines").upsert(
-            headlines,
+            unique_headlines,
             on_conflict="headline_id"
         ).execute()
-        print(f"Saved {len(headlines)} headlines to database")
+        print(f"Saved {len(unique_headlines)} unique headlines to database")
     except Exception as e:
         print(f"Error saving headlines: {e}")
 

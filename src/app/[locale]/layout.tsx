@@ -25,6 +25,16 @@ const themeScript = `
   })();
 `;
 
+// Shuffle array using Fisher-Yates algorithm
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // Fetch breaking news for ticker - server-side, no loading state
 // First tries external headlines, falls back to articles if none available
 async function getBreakingNews(locale: Locale): Promise<string[]> {
@@ -32,9 +42,11 @@ async function getBreakingNews(locale: Locale): Promise<string[]> {
     const language = locale === 'ar' ? 'ar' : 'en';
 
     // Try to fetch external headlines first
-    const headlines = await fetchNewsHeadlines(language, 15);
+    const headlines = await fetchNewsHeadlines(language, 30);
     if (headlines.length > 0) {
-      return headlines.map(dbHeadlineToTicker);
+      // Shuffle headlines so sources are mixed (not grouped together)
+      const shuffled = shuffleArray(headlines);
+      return shuffled.map(dbHeadlineToTicker);
     }
 
     // Fallback to articles if no external headlines
