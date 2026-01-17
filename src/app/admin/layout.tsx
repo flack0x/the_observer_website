@@ -18,6 +18,7 @@ const themeScript = `
 `;
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://al-muraqeb.com'),
   title: 'Admin | The Observer',
   description: 'Content Management System for The Observer',
 };

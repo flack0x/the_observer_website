@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const isArabic = locale === 'ar';
 
   return {
-    metadataBase: new URL('https://the-observer-website.vercel.app'),
+    metadataBase: new URL('https://al-muraqeb.com'),
     title: isArabic
       ? "المُراقِب | استخبارات وتحليل جيوسياسي"
       : "The Observer | Geopolitical Intelligence & Analysis",
