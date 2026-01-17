@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
             }}
           >
             <span style={{ color: "#c9a227", fontSize: 14 }}>
-              the-observer-website.vercel.app
+              al-muraqeb.com
             </span>
           </div>
         </div>

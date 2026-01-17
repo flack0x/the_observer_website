@@ -68,14 +68,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [ogImageUrl],
     },
     alternates: {
-      canonical: `/${locale}/frontline/${slug.join("/")}`,
+      canonical: `https://al-muraqeb.com/${locale}/frontline/${slug.join("/")}`,
+      languages: {
+        'en': `https://al-muraqeb.com/en/frontline/${slug.join("/")}`,
+        'ar': `https://al-muraqeb.com/ar/frontline/${slug.join("/")}`,
+        'x-default': `https://al-muraqeb.com/en/frontline/${slug.join("/")}`,
+      },
     },
   };
 }
 
 // JSON-LD structured data for NewsArticle
 function generateJsonLd(article: ReturnType<typeof dbArticleToFrontend>, locale: string) {
-  const baseUrl = "https://the-observer-website.vercel.app";
+  const baseUrl = "https://al-muraqeb.com";
   return {
     "@context": "https://schema.org",
     "@type": "NewsArticle",

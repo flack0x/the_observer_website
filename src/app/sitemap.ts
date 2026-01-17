@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
-import { fetchArticlesFromDB } from '@/lib/supabase';
+import { fetchArticlesFromDB, fetchBookReviews } from '@/lib/supabase';
 
-const baseUrl = 'https://the-observer-website.vercel.app';
+const baseUrl = 'https://al-muraqeb.com';
 const locales = ['en', 'ar'] as const;
 
 // Only pages that actually exist
@@ -9,16 +9,19 @@ const staticPaths = [
   '',
   '/frontline',
   '/situation-room',
+  '/books',
   '/about',
   '/privacy',
   '/terms',
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Fetch articles directly from Supabase (not self-referential API)
-  const [enArticles, arArticles] = await Promise.all([
+  // Fetch articles and book reviews directly from Supabase (not self-referential API)
+  const [enArticles, arArticles, enBooks, arBooks] = await Promise.all([
     fetchArticlesFromDB('en', 100),
     fetchArticlesFromDB('ar', 100),
+    fetchBookReviews('en', 50),
+    fetchBookReviews('ar', 50),
   ]);
 
   // Static pages for both locales
@@ -47,5 +50,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticEntries, ...enArticleEntries, ...arArticleEntries];
+  // Book review pages for English
+  const enBookEntries: MetadataRoute.Sitemap = enBooks.map((book) => ({
+    url: `${baseUrl}/en/books/${book.review_id}`,
+    lastModified: new Date(book.updated_at || book.created_at),
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }));
+
+  // Book review pages for Arabic
+  const arBookEntries: MetadataRoute.Sitemap = arBooks.map((book) => ({
+    url: `${baseUrl}/ar/books/${book.review_id}`,
+    lastModified: new Date(book.updated_at || book.created_at),
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }));
+
+  return [...staticEntries, ...enArticleEntries, ...arArticleEntries, ...enBookEntries, ...arBookEntries];
 }

@@ -63,7 +63,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: review.coverImageUrl ? [review.coverImageUrl] : [],
     },
     alternates: {
-      canonical: `/${locale}/books/${slug.join("/")}`,
+      canonical: `https://al-muraqeb.com/${locale}/books/${slug.join("/")}`,
+      languages: {
+        'en': `https://al-muraqeb.com/en/books/${slug.join("/")}`,
+        'ar': `https://al-muraqeb.com/ar/books/${slug.join("/")}`,
+        'x-default': `https://al-muraqeb.com/en/books/${slug.join("/")}`,
+      },
     },
   };
 }

@@ -69,6 +69,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : "In-depth geopolitical analysis, military intelligence, and strategic assessments.",
       type: "website",
       locale: isArabic ? "ar_SA" : "en_US",
+      alternateLocale: isArabic ? "en_US" : "ar_SA",
+    },
+    alternates: {
+      canonical: `https://al-muraqeb.com/${locale}`,
+      languages: {
+        'en': 'https://al-muraqeb.com/en',
+        'ar': 'https://al-muraqeb.com/ar',
+        'x-default': 'https://al-muraqeb.com/en',
+      },
     },
   };
 }
