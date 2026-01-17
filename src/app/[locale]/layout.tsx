@@ -8,8 +8,8 @@ import { getDictionary } from "@/lib/i18n";
 import { fetchArticlesFromDB, dbArticleToFrontend, fetchNewsHeadlines, dbHeadlineToTicker } from "@/lib/supabase";
 import { ThemeProvider } from "@/lib/theme";
 
-// Force dynamic rendering to fetch fresh headlines on each request
-export const dynamic = 'force-dynamic';
+// Revalidate every 30 minutes (1800 seconds) to fetch fresh headlines
+export const revalidate = 1800;
 
 // Inline script to prevent flash of wrong theme
 const themeScript = `
