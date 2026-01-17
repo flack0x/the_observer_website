@@ -259,7 +259,6 @@ export async function fetchNewsHeadlines(
 
 // Convert DB headline to ticker format
 export function dbHeadlineToTicker(headline: DBNewsHeadline): string {
-  // Format: "SOURCE: Title"
-  const source = headline.source_name.toUpperCase().split(' ')[0]; // First word of source name
-  return `${source}: ${headline.title}`;
+  // Format: "SOURCE: Title" - use full source name
+  return `${headline.source_name.toUpperCase()}: ${headline.title}`;
 }
