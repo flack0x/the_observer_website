@@ -1,3 +1,5 @@
 telethon==1.36.0
 supabase==2.10.0
 python-dotenv==1.0.0
+feedparser==6.0.11
+requests==2.32.3

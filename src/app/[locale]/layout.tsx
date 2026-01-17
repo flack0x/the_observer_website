@@ -5,7 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { locales, localeDirection, type Locale } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
-import { fetchArticlesFromDB, dbArticleToFrontend } from "@/lib/supabase";
+import { fetchArticlesFromDB, dbArticleToFrontend, fetchNewsHeadlines, dbHeadlineToTicker } from "@/lib/supabase";
 import { ThemeProvider } from "@/lib/theme";
 
 // Inline script to prevent flash of wrong theme
@@ -23,10 +23,19 @@ const themeScript = `
 `;
 
 // Fetch breaking news for ticker - server-side, no loading state
+// First tries external headlines, falls back to articles if none available
 async function getBreakingNews(locale: Locale): Promise<string[]> {
   try {
-    const channel = locale === 'ar' ? 'ar' : 'en';
-    const articles = await fetchArticlesFromDB(channel, 5);
+    const language = locale === 'ar' ? 'ar' : 'en';
+
+    // Try to fetch external headlines first
+    const headlines = await fetchNewsHeadlines(language, 15);
+    if (headlines.length > 0) {
+      return headlines.map(dbHeadlineToTicker);
+    }
+
+    // Fallback to articles if no external headlines
+    const articles = await fetchArticlesFromDB(language, 5);
     return articles.map((article) => {
       const a = dbArticleToFrontend(article);
       const prefix = a.category.toUpperCase();

@@ -216,3 +216,50 @@ export async function fetchBookReviewById(reviewId: string): Promise<DBBookRevie
 
   return data;
 }
+
+// ============================================
+// News Headlines (External Sources)
+// ============================================
+
+export interface DBNewsHeadline {
+  id: number;
+  headline_id: string;
+  source_name: string;
+  source_country: string;
+  title: string;
+  url: string;
+  category: string;
+  language: 'en' | 'ar' | 'other';
+  published_at: string | null;
+  fetched_at: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+// Fetch active news headlines from Supabase
+export async function fetchNewsHeadlines(
+  language: 'en' | 'ar' = 'en',
+  limit: number = 20
+): Promise<DBNewsHeadline[]> {
+  const { data, error } = await supabase
+    .from('news_headlines')
+    .select('*')
+    .eq('language', language)
+    .eq('is_active', true)
+    .order('fetched_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching news headlines from Supabase:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+// Convert DB headline to ticker format
+export function dbHeadlineToTicker(headline: DBNewsHeadline): string {
+  // Format: "SOURCE: Title"
+  const source = headline.source_name.toUpperCase().split(' ')[0]; // First word of source name
+  return `${source}: ${headline.title}`;
+}

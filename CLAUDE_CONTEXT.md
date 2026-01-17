@@ -116,6 +116,12 @@ Article content...
   1. `fetch_telegram.py` - Fetches new messages from Telegram
   2. `analyze_articles.py` - Computes metrics
 
+- **Workflow**: `.github/workflows/fetch-headlines.yml`
+- **Schedule**: Every 30 minutes (`*/30 * * * *`) + manual dispatch
+- **Concurrency**: `headlines-fetch` group
+- **Jobs**:
+  1. `fetch_news_headlines.py` - Fetches headlines from 25+ international news RSS feeds
+
 **fetch_telegram.py Features**:
 - Incremental sync (tracks last synced message ID per channel)
 - Groups consecutive messages within 180 seconds (multi-part articles)
@@ -277,6 +283,7 @@ src/
 | `20260109140000_fix_security_issues.sql` | Security hardening |
 | `20260110120000_fix_rls_performance.sql` | RLS performance optimization |
 | `20260113120000_create_book_reviews_table.sql` | Book reviews table |
+| `20260117120000_create_news_headlines_table.sql` | External news headlines |
 
 ### articles
 | Column | Type | Notes |
@@ -323,6 +330,22 @@ src/
 | last_edited_by | uuid | FK to auth.users |
 | created_at | timestamptz | DB insert time |
 | updated_at | timestamptz | Last update time |
+
+### news_headlines
+| Column | Type | Notes |
+|--------|------|-------|
+| id | serial | Auto-increment PK |
+| headline_id | text | Unique (MD5 hash of source+title) |
+| source_name | text | News source name (e.g., "BBC World") |
+| source_country | text | Country of origin |
+| title | text | Headline text |
+| url | text | Link to full article |
+| category | text | 'World', 'Middle East', 'Asia', etc. |
+| language | text | 'en', 'ar', 'other' |
+| published_at | timestamptz | Original publish time |
+| fetched_at | timestamptz | When we fetched it |
+| is_active | boolean | Whether to display |
+| created_at | timestamptz | DB insert time |
 
 ### subscribers
 | Column | Type |
@@ -443,6 +466,10 @@ Theme toggle in Header (desktop + mobile).
 
 **GET /api/metrics**
 - Returns: Aggregated stats (counts, trends, etc.)
+
+**GET /api/headlines**
+- Query: `language` ('en' | 'ar'), `limit`, `format` ('full' | 'ticker')
+- Returns: `NewsHeadline[]` or `string[]` (ticker format)
 
 **POST /api/subscribe**
 - Body: `{ email, locale? }`
@@ -582,12 +609,15 @@ npm run lint     # ESLint
 | `upload_image.py` | Upload image to Supabase Storage |
 | `publish_article.py` | Publish draft articles |
 | `generate_session_string.py` | Generate Telegram session string |
+| `fetch_news_headlines.py` | Fetch headlines from RSS feeds |
 
 **Python Dependencies** (`scripts/requirements.txt`):
 ```
 telethon
 python-dotenv
 supabase
+feedparser
+requests
 ```
 
 ## Git Conventions
@@ -774,6 +804,13 @@ python generate_session_string.py
   - Sitemap submitted: 228 pages discovered
   - Added ESLint configuration (`eslint.config.mjs`)
   - Updated metadataBase to production domain
+- **External News Headlines** (Jan 17): Breaking news ticker from international sources
+  - Fetches headlines from 25+ RSS feeds (Iraq, Iran, Lebanon, Russia, USA, China, UK, France, etc.)
+  - GitHub Actions workflow runs every 30 minutes
+  - Falls back to articles if no external headlines available
+  - Sources include: Press TV, RT, BBC, Al Jazeera, CGTN, NHK, France 24, etc.
+  - API endpoint: `/api/headlines`
+  - Migration: `20260117120000_create_news_headlines_table.sql`
 
 ## Google Search Console
 
