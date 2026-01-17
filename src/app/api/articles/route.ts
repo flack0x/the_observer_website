@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const channel = searchParams.get("channel") as "en" | "ar" | "all" | null;
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const limit = parseInt(searchParams.get("limit") || "500");
 
   try {
     if (channel === "all" || !channel) {

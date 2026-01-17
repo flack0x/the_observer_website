@@ -29,7 +29,7 @@ export interface DBArticle {
 // Fetch articles from Supabase
 export async function fetchArticlesFromDB(
   channel: 'en' | 'ar' = 'en',
-  limit: number = 20
+  limit: number = 500
 ): Promise<DBArticle[]> {
   const { data, error } = await supabase
     .from('articles')
@@ -164,7 +164,7 @@ export interface DBBookReview {
 // Fetch book reviews from Supabase
 export async function fetchBookReviews(
   channel: 'en' | 'ar' = 'en',
-  limit: number = 20
+  limit: number = 100
 ): Promise<DBBookReview[]> {
   const { data, error } = await supabase
     .from('book_reviews')

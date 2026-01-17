@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node scripts/verify_article.js:*)"
+      "Bash(node scripts/verify_article.js:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)",
+      "Bash(npm outdated:*)",
+      "Bash(ls:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm update:*)",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "WebSearch",
+      "WebFetch(domain:al-muraqeb.com)",
+      "WebFetch(domain:pagespeed.web.dev)"
     ]
   }
 }
