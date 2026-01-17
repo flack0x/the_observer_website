@@ -100,6 +100,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={validLocale} dir={direction} suppressHydrationWarning>
       <head>
+        <meta name="google-site-verification" content="6GZxTpIryls2s95Zkl3jkPxpPsYlvW3LGnEe4L6Qm2k" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

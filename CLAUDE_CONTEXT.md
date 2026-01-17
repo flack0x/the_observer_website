@@ -763,3 +763,22 @@ python generate_session_string.py
 - **Accessibility**: skip-to-content, focus-visible styles
 - **Database**: 11 migrations, PostgreSQL 17
 - **RLS Policies**: Optimized for performance, role-based access
+- **SEO Overhaul** (Jan 17): Critical fixes for Google indexing
+  - Changed all URLs from `the-observer-website.vercel.app` to `al-muraqeb.com`
+  - Files updated: `sitemap.ts`, `robots.ts`, article/book page JSON-LD, OG route
+  - Added hreflang tags for EN↔AR language alternates with x-default
+  - Made canonical URLs absolute (full domain)
+  - Added book reviews to sitemap (was missing)
+  - Added `/books` to static paths in sitemap
+  - Google Search Console verified via DNS TXT record
+  - Sitemap submitted: 228 pages discovered
+  - Added ESLint configuration (`eslint.config.mjs`)
+  - Updated metadataBase to production domain
+
+## Google Search Console
+
+- **Property**: al-muraqeb.com (Domain property)
+- **Verification**: DNS TXT record (Namecheap)
+- **Sitemap**: https://al-muraqeb.com/sitemap.xml (228 pages)
+- **Verification Code**: `google-site-verification=6GZxTpIryls2s95Zkl3jkPxpPsYlvW3LGnEe4L6Qm2k`
+- **Status**: Verified, sitemap submitted Jan 17, 2026
