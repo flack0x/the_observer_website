@@ -27,37 +27,17 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 # News sources with their RSS feeds
 # Format: (name, country, rss_url, language, category)
 NEWS_SOURCES = [
-    # Iraq
-    ("Iraqi News Agency", "Iraq", "https://ina.iq/eng/rss.xml", "en", "Middle East"),
-    ("Rudaw", "Iraq", "https://www.rudaw.net/english/rss", "en", "Middle East"),
-
-    # Iran
-    ("Press TV", "Iran", "https://www.presstv.ir/RSS", "en", "Middle East"),
-    ("Tasnim News", "Iran", "https://www.tasnimnews.com/en/rss/feed", "en", "Middle East"),
-    ("IRNA", "Iran", "https://en.irna.ir/rss.aspx", "en", "Middle East"),
-    ("Fars News", "Iran", "https://www.farsnews.ir/en/rss", "en", "Middle East"),
-
-    # Lebanon
-    ("Al Mayadeen", "Lebanon", "https://english.almayadeen.net/rss/all-news", "en", "Middle East"),
-    ("Daily Star Lebanon", "Lebanon", "https://www.dailystar.com.lb/RSS.aspx?feed=1", "en", "Middle East"),
-
     # Russia
-    ("RT", "Russia", "https://www.rt.com/rss/news/", "en", "World"),
     ("TASS", "Russia", "https://tass.com/rss/v2.xml", "en", "World"),
-    ("Sputnik", "Russia", "https://sputnikglobe.com/export/rss2/archive/index.xml", "en", "World"),
-
-    # USA
-    ("AP News", "USA", "https://apnews.com/world.rss", "en", "World"),
-    ("Reuters", "USA", "https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best", "en", "World"),
 
     # China
-    ("Xinhua", "China", "https://english.news.cn/rss.xml", "en", "Asia"),
-    ("CGTN", "China", "https://www.cgtn.com/rss/news.xml", "en", "Asia"),
     ("Global Times", "China", "https://www.globaltimes.cn/rss/outbrain.xml", "en", "Asia"),
 
-    # UK
+    # UK / International
     ("BBC World", "UK", "https://feeds.bbci.co.uk/news/world/rss.xml", "en", "World"),
-    ("Al Jazeera", "UK", "https://www.aljazeera.com/xml/rss/all.xml", "en", "World"),
+    ("BBC Middle East", "UK", "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml", "en", "Middle East"),
+    ("Al Jazeera", "Qatar", "https://www.aljazeera.com/xml/rss/all.xml", "en", "World"),
+    ("The Guardian World", "UK", "https://www.theguardian.com/world/rss", "en", "World"),
 
     # France
     ("France 24", "France", "https://www.france24.com/en/rss", "en", "Europe"),
@@ -65,18 +45,24 @@ NEWS_SOURCES = [
     # Japan
     ("NHK World", "Japan", "https://www3.nhk.or.jp/rss/news/cat0.xml", "en", "Asia"),
 
-    # Egypt
-    ("Ahram Online", "Egypt", "https://english.ahram.org.eg/Rss.aspx", "en", "Middle East"),
-
     # South Africa
     ("News24", "South Africa", "https://feeds.news24.com/articles/news24/World/rss", "en", "Africa"),
 
-    # Yemen
-    ("Yemen Press", "Yemen", "https://en.yemenpress.org/feed/", "en", "Middle East"),
+    # Germany
+    ("DW News", "Germany", "https://rss.dw.com/rdf/rss-en-world", "en", "Europe"),
+
+    # India
+    ("Times of India", "India", "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms", "en", "Asia"),
+    ("Hindustan Times", "India", "https://www.hindustantimes.com/feeds/rss/world-news/rssfeed.xml", "en", "Asia"),
+
+    # USA
+    ("NPR World", "USA", "https://feeds.npr.org/1004/rss.xml", "en", "World"),
+    ("VOA News", "USA", "https://www.voanews.com/api/z$omretvi", "en", "World"),
 
     # Arabic Sources
     ("Al Jazeera Arabic", "Qatar", "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9", "ar", "World"),
     ("Sky News Arabia", "UAE", "https://www.skynewsarabia.com/rss", "ar", "World"),
+    ("BBC Arabic", "UK", "https://feeds.bbci.co.uk/arabic/rss.xml", "ar", "World"),
 ]
 
 # User agent to avoid blocks
