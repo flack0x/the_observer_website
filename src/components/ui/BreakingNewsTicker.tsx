@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, memo } from "react";
+import { useMemo, memo } from "react";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface NewsItem {
@@ -12,6 +12,16 @@ interface BreakingNewsTickerProps {
   locale?: Locale;
   dict: Dictionary;
   initialNews: string[];
+}
+
+// Fisher-Yates shuffle
+function shuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 // Parse news string into structured format
@@ -58,27 +68,13 @@ const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) 
   );
 });
 
-export default function BreakingNewsTicker({ locale, dict, initialNews }: BreakingNewsTickerProps) {
-  // Start with initial news (server-rendered), then fetch fresh shuffled order
-  const [newsItems, setNewsItems] = useState<NewsItem[] | null>(() => {
+export default function BreakingNewsTicker({ dict, initialNews }: BreakingNewsTickerProps) {
+  // Shuffle and parse on initial render only (empty deps = runs once per mount)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const newsItems = useMemo(() => {
     if (initialNews.length === 0) return null;
-    return initialNews.map(parseNewsItem);
-  });
-
-  // Fetch fresh shuffled headlines on mount
-  useEffect(() => {
-    const language = locale === 'ar' ? 'ar' : 'en';
-    fetch(`/api/headlines?language=${language}&format=ticker&limit=30`)
-      .then(res => res.json())
-      .then((data: string[]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setNewsItems(data.map(parseNewsItem));
-        }
-      })
-      .catch(() => {
-        // Keep initial news on error
-      });
-  }, [locale]);
+    return shuffle(initialNews).map(parseNewsItem);
+  }, []);
 
   // Don't render ticker if no news available
   if (!newsItems) {
