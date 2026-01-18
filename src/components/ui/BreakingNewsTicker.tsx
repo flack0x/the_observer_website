@@ -14,28 +14,6 @@ interface BreakingNewsTickerProps {
   initialNews: string[];
 }
 
-// Fisher-Yates shuffle
-function shuffle<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// Parse news string into structured format
-function parseNewsItem(item: string): NewsItem {
-  const colonIndex = item.indexOf(":");
-  if (colonIndex > 0) {
-    return {
-      category: item.substring(0, colonIndex).trim(),
-      title: item.substring(colonIndex + 1).trim(),
-    };
-  }
-  return { category: "INTEL", title: item };
-}
-
 // Memoized ticker track to prevent animation restart on parent re-renders
 const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) {
   return (
@@ -69,14 +47,21 @@ const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) 
 });
 
 export default function BreakingNewsTicker({ dict, initialNews }: BreakingNewsTickerProps) {
-  // Shuffle and parse on initial render only (empty deps = runs once per mount)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Parse news into structured format - server already shuffles
   const newsItems = useMemo(() => {
     if (initialNews.length === 0) return null;
-    return shuffle(initialNews).map(parseNewsItem);
-  }, []);
+    return initialNews.map((item) => {
+      const colonIndex = item.indexOf(":");
+      if (colonIndex > 0) {
+        return {
+          category: item.substring(0, colonIndex).trim(),
+          title: item.substring(colonIndex + 1).trim(),
+        };
+      }
+      return { category: "INTEL", title: item };
+    });
+  }, [initialNews]);
 
-  // Don't render ticker if no news available
   if (!newsItems) {
     return null;
   }
