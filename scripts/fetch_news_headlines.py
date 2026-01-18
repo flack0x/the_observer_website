@@ -72,7 +72,7 @@ NEWS_SOURCES = [
     ("DW عربي", "Germany", "https://rss.dw.com/xml/rss-ar-all", "ar", "World"),
     ("سكاي نيوز عربية", "UAE", "https://www.skynewsarabia.com/web/rss", "ar", "Middle East"),
     ("RT عربي", "Russia", "https://arabic.rt.com/rss/", "ar", "World"),
-    ("المنار", "Lebanon", "https://almanar.com.lb/rss.xml", "ar", "Middle East"),
+    ("الميادين", "Lebanon", "https://www.almayadeen.net/ar/rss/latest", "ar", "Middle East"),
     ("سبوتنيك عربي", "Russia", "https://arabic.sputniknews.com/export/rss2/archive/index.xml", "ar", "World"),
 ]
 
