@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, memo } from "react";
+import { useState, useEffect, memo } from "react";
 import type { Locale, Dictionary } from "@/lib/i18n";
 
 interface NewsItem {
@@ -12,6 +12,18 @@ interface BreakingNewsTickerProps {
   locale?: Locale;
   dict: Dictionary;
   initialNews: string[];
+}
+
+// Parse news string into structured format
+function parseNewsItem(item: string): NewsItem {
+  const colonIndex = item.indexOf(":");
+  if (colonIndex > 0) {
+    return {
+      category: item.substring(0, colonIndex).trim(),
+      title: item.substring(colonIndex + 1).trim(),
+    };
+  }
+  return { category: "INTEL", title: item };
 }
 
 // Memoized ticker track to prevent animation restart on parent re-renders
@@ -46,24 +58,27 @@ const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) 
   );
 });
 
-export default function BreakingNewsTicker({ dict, initialNews }: BreakingNewsTickerProps) {
-  // Parse breaking news into structured format
-  const newsItems = useMemo(() => {
-    if (initialNews.length === 0) {
-      return null;
-    }
+export default function BreakingNewsTicker({ locale, dict, initialNews }: BreakingNewsTickerProps) {
+  // Start with initial news (server-rendered), then fetch fresh shuffled order
+  const [newsItems, setNewsItems] = useState<NewsItem[] | null>(() => {
+    if (initialNews.length === 0) return null;
+    return initialNews.map(parseNewsItem);
+  });
 
-    return initialNews.map((item) => {
-      const colonIndex = item.indexOf(":");
-      if (colonIndex > 0) {
-        return {
-          category: item.substring(0, colonIndex).trim(),
-          title: item.substring(colonIndex + 1).trim(),
-        };
-      }
-      return { category: "INTEL", title: item };
-    });
-  }, [initialNews]);
+  // Fetch fresh shuffled headlines on mount
+  useEffect(() => {
+    const language = locale === 'ar' ? 'ar' : 'en';
+    fetch(`/api/headlines?language=${language}&format=ticker&limit=30`)
+      .then(res => res.json())
+      .then((data: string[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setNewsItems(data.map(parseNewsItem));
+        }
+      })
+      .catch(() => {
+        // Keep initial news on error
+      });
+  }, [locale]);
 
   // Don't render ticker if no news available
   if (!newsItems) {

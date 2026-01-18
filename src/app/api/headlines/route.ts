@@ -5,6 +5,16 @@ import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
 // Always fetch fresh from database
 export const dynamic = 'force-dynamic';
 
+// Fisher-Yates shuffle for randomizing headlines
+function shuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export async function GET(request: Request) {
   // Rate limiting - 100 requests per minute per IP (default)
   const clientId = getClientIdentifier(request);
@@ -28,14 +38,17 @@ export async function GET(request: Request) {
   try {
     const headlines = await fetchNewsHeadlines(language || 'en', limit);
 
+    // Shuffle headlines so each page load shows different order
+    const shuffledHeadlines = shuffle(headlines);
+
     if (format === "ticker") {
       // Return in ticker format: ["SOURCE: Title", ...]
-      const tickerItems = headlines.map(dbHeadlineToTicker);
+      const tickerItems = shuffledHeadlines.map(dbHeadlineToTicker);
       return NextResponse.json(tickerItems);
     }
 
     // Return full headline objects
-    return NextResponse.json(headlines.map(h => ({
+    return NextResponse.json(shuffledHeadlines.map(h => ({
       id: h.headline_id,
       source: h.source_name,
       country: h.source_country,

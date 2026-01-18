@@ -14,7 +14,8 @@
       "Bash(npx next:*)",
       "WebSearch",
       "WebFetch(domain:al-muraqeb.com)",
-      "WebFetch(domain:pagespeed.web.dev)"
+      "WebFetch(domain:pagespeed.web.dev)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" push)"
     ]
   }
 }
