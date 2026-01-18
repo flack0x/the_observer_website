@@ -66,8 +66,14 @@ NEWS_SOURCES = [
     ("Mail & Guardian", "South Africa", "https://mg.co.za/feed/", "en", "Africa"),
 
     # Arabic Sources
-    ("Al Mayadeen Arabic", "Lebanon", "https://www.almayadeen.net/rss", "ar", "World"),
-    ("RT Arabic", "Russia", "https://arabic.rt.com/rss/", "ar", "World"),
+    ("الجزيرة", "Qatar", "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4571-a955-a7cdc1cef8b7/73d0e1b4-532f-45ef-b135-bfdff8b8cab9", "ar", "World"),
+    ("بي بي سي عربي", "UK", "https://feeds.bbci.co.uk/arabic/rss.xml", "ar", "World"),
+    ("فرانس 24", "France", "https://www.france24.com/ar/rss", "ar", "World"),
+    ("DW عربي", "Germany", "https://rss.dw.com/xml/rss-ar-all", "ar", "World"),
+    ("سكاي نيوز عربية", "UAE", "https://www.skynewsarabia.com/web/rss", "ar", "Middle East"),
+    ("RT عربي", "Russia", "https://arabic.rt.com/rss/", "ar", "World"),
+    ("المنار", "Lebanon", "https://almanar.com.lb/rss.xml", "ar", "Middle East"),
+    ("سبوتنيك عربي", "Russia", "https://arabic.sputniknews.com/export/rss2/archive/index.xml", "ar", "World"),
 ]
 
 # User agent to avoid blocks
