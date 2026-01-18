@@ -548,6 +548,20 @@ a {
   }
 }
 
+/* RTL support - reverse ticker direction for Arabic */
+[dir="rtl"] .ticker-track {
+  animation-name: ticker-scroll-rtl;
+}
+
+@keyframes ticker-scroll-rtl {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(25%);
+  }
+}
+
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   .ticker-track {
