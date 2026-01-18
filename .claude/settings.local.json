@@ -15,7 +15,10 @@
       "WebSearch",
       "WebFetch(domain:al-muraqeb.com)",
       "WebFetch(domain:pagespeed.web.dev)",
-      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" push)"
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" push)",
+      "Bash(curl:*)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" add -A)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"Fix ticker endless loop with 4 copies\n\n- Render 4 copies of headlines for seamless looping\n- Change animation to -25% to match 4 copies\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\")"
     ]
   }
 }

@@ -14,34 +14,31 @@ interface BreakingNewsTickerProps {
   initialNews: string[];
 }
 
+// Render a single item
+const TickerItem = memo(function TickerItem({ item, keyPrefix, index }: { item: NewsItem; keyPrefix: string; index: number }) {
+  return (
+    <span key={`${keyPrefix}-${index}`} className="ticker-item">
+      <span className="ticker-category">{item.category}</span>
+      <span className="ticker-title">{item.title}</span>
+      <span className="ticker-separator">
+        <span className="ticker-separator-line" />
+        <span className="ticker-separator-dot" />
+        <span className="ticker-separator-line" />
+      </span>
+    </span>
+  );
+});
+
 // Memoized ticker track to prevent animation restart on parent re-renders
 const TickerTrack = memo(function TickerTrack({ items }: { items: NewsItem[] }) {
   return (
     <div className="ticker-track">
-      {/* First set */}
-      {items.map((item, index) => (
-        <span key={`a-${index}`} className="ticker-item">
-          <span className="ticker-category">{item.category}</span>
-          <span className="ticker-title">{item.title}</span>
-          <span className="ticker-separator">
-            <span className="ticker-separator-line" />
-            <span className="ticker-separator-dot" />
-            <span className="ticker-separator-line" />
-          </span>
-        </span>
-      ))}
-      {/* Duplicate for seamless loop */}
-      {items.map((item, index) => (
-        <span key={`b-${index}`} className="ticker-item">
-          <span className="ticker-category">{item.category}</span>
-          <span className="ticker-title">{item.title}</span>
-          <span className="ticker-separator">
-            <span className="ticker-separator-line" />
-            <span className="ticker-separator-dot" />
-            <span className="ticker-separator-line" />
-          </span>
-        </span>
-      ))}
+      {/* Render 4 copies for seamless infinite loop */}
+      {[0, 1, 2, 3].map((copy) =>
+        items.map((item, index) => (
+          <TickerItem key={`${copy}-${index}`} item={item} keyPrefix={`${copy}`} index={index} />
+        ))
+      )}
     </div>
   );
 });
