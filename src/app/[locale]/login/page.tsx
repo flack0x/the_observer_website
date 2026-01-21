@@ -1,20 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/context';
 import { Eye, EyeOff, Loader2, Shield, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '@/lib/theme';
 
-interface LoginPageProps {
-  params: {
-    locale: string;
-  };
-}
-
-export default function LoginPage({ params }: LoginPageProps) {
+export default function LoginPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const { signIn } = useAuth();
   const { theme } = useTheme();
 
@@ -38,7 +34,7 @@ export default function LoginPage({ params }: LoginPageProps) {
         return;
       }
 
-      router.push(`/${params.locale}/frontline`);
+      router.push(`/${locale}/frontline`);
     } catch (err) {
       setError('An unexpected error occurred');
       setIsLoading(false);
@@ -121,7 +117,7 @@ export default function LoginPage({ params }: LoginPageProps) {
           <div className="mt-6 text-center">
             <p className="text-slate-dark text-sm">
               Don't have an account?{' '}
-              <Link href={`/${params.locale}/signup`} className="text-tactical-red hover:text-tactical-red-hover">
+              <Link href={`/${locale}/signup`} className="text-tactical-red hover:text-tactical-red-hover">
                 Sign Up
               </Link>
             </p>

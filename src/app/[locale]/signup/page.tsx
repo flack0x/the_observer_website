@@ -1,19 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/context';
 import { Eye, EyeOff, Loader2, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
-interface SignUpPageProps {
-  params: {
-    locale: string;
-  };
-}
-
-export default function SignUpPage({ params }: SignUpPageProps) {
+export default function SignUpPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const { signUp } = useAuth();
 
   const [fullName, setFullName] = useState('');
@@ -74,7 +70,7 @@ export default function SignUpPage({ params }: SignUpPageProps) {
               Your account has been created successfully.
             </p>
             <Link
-              href={`/${params.locale}/login`}
+              href={`/${locale}/login`}
               className="inline-block bg-tactical-red text-white font-heading font-bold uppercase tracking-wider px-6 py-3 rounded-lg hover:bg-tactical-red-hover transition-colors"
             >
               Sign In
@@ -180,7 +176,7 @@ export default function SignUpPage({ params }: SignUpPageProps) {
           <div className="mt-6 text-center">
             <p className="text-slate-dark text-sm">
               Already have an account?{' '}
-              <Link href={`/${params.locale}/login`} className="text-tactical-red hover:text-tactical-red-hover">
+              <Link href={`/${locale}/login`} className="text-tactical-red hover:text-tactical-red-hover">
                 Sign In
               </Link>
             </p>
