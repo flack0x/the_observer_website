@@ -15,6 +15,8 @@ import {
   User,
   Sun,
   Moon,
+  Bookmark,
+  LayoutDashboard,
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
 import type { Locale, Dictionary } from "@/lib/i18n";
@@ -30,6 +32,7 @@ interface HeaderProps {
 
 export default function Header({ locale, dict, breakingNews }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const isRTL = locale === 'ar';
@@ -138,17 +141,87 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
 
               {/* Profile / Sign In - Desktop */}
               {user ? (
-                <Link
-                  href={`/${locale}/dashboard`}
-                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 pl-1.5 pr-3 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red group"
-                >
-                  <div className="w-5 h-5 rounded-full bg-midnight-700 flex items-center justify-center text-slate-light group-hover:bg-tactical-red group-hover:text-white transition-colors">
-                    <User className="h-3 w-3" aria-hidden="true" />
-                  </div>
-                  <span className="max-w-[100px] truncate">
-                    {user.user_metadata?.full_name || (locale === "en" ? "Profile" : "الملف الشخصي")}
-                  </span>
-                </Link>
+                <div className="relative hidden sm:block">
+                  <button
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className={`flex items-center gap-1.5 rounded-full border px-1.5 pr-3 py-1 font-heading text-[10px] font-medium uppercase tracking-wider transition-all group ${
+                      profileMenuOpen
+                        ? 'border-tactical-red text-tactical-red'
+                        : 'border-midnight-500 text-slate-medium hover:border-tactical-red hover:text-tactical-red'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                      profileMenuOpen ? 'bg-tactical-red text-white' : 'bg-midnight-700 text-slate-light group-hover:bg-tactical-red group-hover:text-white'
+                    }`}>
+                      <User className="h-3 w-3" aria-hidden="true" />
+                    </div>
+                    <span className="max-w-[100px] truncate">
+                      {user.user_metadata?.full_name || (locale === "en" ? "Profile" : "الملف الشخصي")}
+                    </span>
+                  </button>
+
+                  <AnimatePresence>
+                    {profileMenuOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setProfileMenuOpen(false)} 
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.1 }}
+                          className="absolute right-0 mt-2 w-56 rounded-xl border border-midnight-600 bg-midnight-800 shadow-xl z-50 overflow-hidden"
+                        >
+                          {/* User Info */}
+                          <div className="px-4 py-3 border-b border-midnight-700">
+                            <p className="text-sm font-bold text-slate-light truncate">
+                              {user.user_metadata?.full_name || 'User'}
+                            </p>
+                            <p className="text-xs text-slate-dark truncate mt-0.5">
+                              {user.email}
+                            </p>
+                          </div>
+
+                          {/* Links */}
+                          <div className="py-1">
+                            <Link
+                              href={`/${locale}/dashboard`}
+                              className="flex items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
+                              onClick={() => setProfileMenuOpen(false)}
+                            >
+                              <LayoutDashboard className="h-4 w-4" />
+                              {locale === "en" ? "Overview" : "نظرة عامة"}
+                            </Link>
+                            <Link
+                              href={`/${locale}/dashboard/bookmarks`}
+                              className="flex items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
+                              onClick={() => setProfileMenuOpen(false)}
+                            >
+                              <Bookmark className="h-4 w-4" />
+                              {locale === "en" ? "Bookmarks" : "المحفوظات"}
+                            </Link>
+                          </div>
+
+                          {/* Footer */}
+                          <div className="border-t border-midnight-700 py-1">
+                            <button
+                              onClick={() => {
+                                signOut();
+                                setProfileMenuOpen(false);
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
+                            >
+                              <LogOut className="h-4 w-4" />
+                              {locale === "en" ? "Sign Out" : "خروج"}
+                            </button>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               ) : (
                 <Link
                   href={`/${locale}/login`}
@@ -260,23 +333,37 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
               {/* Profile / Sign In - Mobile */}
               <div className="mt-4 pt-4 border-t border-midnight-700">
                 {user ? (
-                  <Link
-                    href={`/${locale}/dashboard`}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-midnight-600 flex items-center justify-center text-tactical-red">
-                        <User className="h-4 w-4" />
+                  <>
+                    <Link
+                      href={`/${locale}/dashboard`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-midnight-600 flex items-center justify-center text-tactical-red">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-heading text-sm font-medium uppercase tracking-wider">
+                            {user.user_metadata?.full_name || (locale === "en" ? "Profile" : "الملف الشخصي")}
+                          </span>
+                          <span className="text-[10px] text-slate-medium">{user.email}</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="font-heading text-sm font-medium uppercase tracking-wider">
-                          {user.user_metadata?.full_name || (locale === "en" ? "Profile" : "الملف الشخصي")}
-                        </span>
-                        <span className="text-[10px] text-slate-medium">{user.email}</span>
-                      </div>
-                    </div>
-                  </Link>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full rounded-lg px-4 py-2 mt-1 text-slate-medium hover:text-tactical-red hover:bg-midnight-700 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4 ml-1" />
+                      <span className="font-heading text-xs font-medium uppercase tracking-wider">
+                        {locale === "en" ? "Sign Out" : "تسجيل الخروج"}
+                      </span>
+                    </button>
+                  </>
                 ) : (
                   <Link
                     href={`/${locale}/login`}
