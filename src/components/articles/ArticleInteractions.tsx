@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Share2, Loader2 } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, Loader2, Bookmark } from 'lucide-react';
 import { useAuth } from '@/lib/auth/context';
 import { getClient } from '@/lib/supabase/client';
 import { useRouter, usePathname } from 'next/navigation';
@@ -28,8 +28,10 @@ export default function ArticleInteractions({
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
   const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isVoting, setIsVoting] = useState(false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
   const [showShareTooltip, setShowShareTooltip] = useState(false);
 
   // Fetch initial data
@@ -55,17 +57,27 @@ export default function ArticleInteractions({
         setDislikes(dislikeCount || 0);
       }
 
-      // Get user vote if logged in
+      // Get user interactions if logged in
       if (user) {
-        const { data } = await supabase
+        // Vote
+        const { data: voteData } = await supabase
           .from('article_interactions')
           .select('interaction_type')
           .eq('article_id', articleId)
           .eq('user_id', user.id)
           .single();
         
-        if (mounted && data) {
-          setUserVote(data.interaction_type as 'like' | 'dislike');
+        // Bookmark
+        const { data: bookmarkData } = await supabase
+          .from('bookmarks')
+          .select('id')
+          .eq('article_id', articleId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (mounted) {
+          if (voteData) setUserVote(voteData.interaction_type as 'like' | 'dislike');
+          setIsBookmarked(!!bookmarkData);
         }
       }
       
@@ -76,6 +88,45 @@ export default function ArticleInteractions({
 
     return () => { mounted = false; };
   }, [articleId, user, supabase]);
+
+  const handleBookmark = async () => {
+    if (!isAuthenticated) {
+      router.push(`/${locale}/login`);
+      return;
+    }
+
+    if (isBookmarking) return;
+    setIsBookmarking(true);
+
+    // Optimistic update
+    const previousState = isBookmarked;
+    setIsBookmarked(!previousState);
+
+    try {
+      if (previousState) {
+        // Remove bookmark
+        await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('article_id', articleId)
+          .eq('user_id', user!.id);
+      } else {
+        // Add bookmark
+        await supabase
+          .from('bookmarks')
+          .insert({
+            article_id: articleId,
+            user_id: user!.id
+          });
+      }
+    } catch (error) {
+      // Revert on error
+      console.error('Bookmark failed:', error);
+      setIsBookmarked(previousState);
+    } finally {
+      setIsBookmarking(false);
+    }
+  };
 
   const handleVote = async (type: 'like' | 'dislike') => {
     if (!isAuthenticated) {
@@ -186,6 +237,21 @@ export default function ArticleInteractions({
 
       {/* Divider */}
       <div className="h-6 w-px bg-midnight-700 mx-2" />
+
+      {/* Bookmark Button */}
+      <button
+        onClick={handleBookmark}
+        disabled={isBookmarking}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${
+          isBookmarked
+            ? 'bg-tactical-amber/10 text-tactical-amber'
+            : 'text-slate-medium hover:bg-midnight-700 hover:text-tactical-amber'
+        }`}
+        title={isBookmarked ? 'Remove Bookmark' : 'Bookmark Article'}
+      >
+        <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
+        <span className="text-sm font-medium hidden sm:inline">Save</span>
+      </button>
 
       {/* Share Button */}
       <div className="relative">
