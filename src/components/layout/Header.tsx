@@ -45,6 +45,10 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
     { name: dict.nav.about, href: `/${locale}/about` },
   ];
 
+  if (user) {
+    navigation.push({ name: locale === 'en' ? 'Dashboard' : 'لوحة التحكم', href: `/${locale}/dashboard` });
+  }
+
   const switchLanguage = () => {
     const newLocale = locale === 'en' ? 'ar' : 'en';
     // Replace current locale in pathname with new locale
@@ -132,15 +136,19 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 {locale === "en" ? "AR" : "EN"}
               </button>
 
-              {/* Sign In/Out - Desktop */}
+              {/* Profile / Sign In - Desktop */}
               {user ? (
-                <button
-                  onClick={() => signOut()}
-                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
+                <Link
+                  href={`/${locale}/dashboard`}
+                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 pl-1.5 pr-3 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red group"
                 >
-                  <LogOut className="h-3 w-3" aria-hidden="true" />
-                  {locale === "en" ? "Sign Out" : "خروج"}
-                </button>
+                  <div className="w-5 h-5 rounded-full bg-midnight-700 flex items-center justify-center text-slate-light group-hover:bg-tactical-red group-hover:text-white transition-colors">
+                    <User className="h-3 w-3" aria-hidden="true" />
+                  </div>
+                  <span className="max-w-[100px] truncate">
+                    {user.user_metadata?.full_name || (locale === "en" ? "Profile" : "الملف الشخصي")}
+                  </span>
+                </Link>
               ) : (
                 <Link
                   href={`/${locale}/login`}
@@ -249,23 +257,26 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 </button>
               </div>
 
-              {/* Sign In/Out - Mobile */}
+              {/* Profile / Sign In - Mobile */}
               <div className="mt-4 pt-4 border-t border-midnight-700">
                 {user ? (
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setMobileMenuOpen(false);
-                    }}
+                  <Link
+                    href={`/${locale}/dashboard`}
+                    onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
                   >
-                    <span className="font-heading text-sm font-medium uppercase tracking-wider">
-                      {locale === "en" ? "Sign Out" : "تسجيل الخروج"}
-                    </span>
-                    <span className="flex items-center gap-2 text-tactical-red">
-                      <LogOut className="h-4 w-4" />
-                    </span>
-                  </button>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-midnight-600 flex items-center justify-center text-tactical-red">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-heading text-sm font-medium uppercase tracking-wider">
+                          {user.user_metadata?.full_name || (locale === "en" ? "Profile" : "الملف الشخصي")}
+                        </span>
+                        <span className="text-[10px] text-slate-medium">{user.email}</span>
+                      </div>
+                    </div>
+                  </Link>
                 ) : (
                   <Link
                     href={`/${locale}/login`}
