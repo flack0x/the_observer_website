@@ -16,6 +16,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import CategoryPlaceholder from "@/components/ui/CategoryPlaceholder";
+import ArticleStats from "@/components/articles/ArticleStats";
 import { useArticles } from "@/lib/hooks";
 import { getDictionary, getCountryName, type Locale } from "@/lib/i18n";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
@@ -69,6 +70,9 @@ export default function FrontlinePage() {
     readTime: `${Math.ceil((article.content?.split(" ").length || 100) / 200)} ${isArabic ? 'دقيقة' : 'min'}`,
     imageUrl: article.imageUrl,
     videoUrl: article.videoUrl,
+    views: article.views,
+    likes: article.likes,
+    dislikes: article.dislikes,
   }));
 
   // Show loading state
@@ -178,7 +182,7 @@ export default function FrontlinePage() {
                 className="group rounded-xl border border-midnight-600 bg-midnight-800 overflow-hidden transition-all hover:border-tactical-red card-hover"
               >
                 {/* Article Media */}
-                <div className="relative aspect-video w-full bg-midnight-700">
+                <div className="relative aspect-video w-full bg-midnight-700 group-hover:opacity-90 transition-opacity">
                   {article.videoUrl ? (
                     <div className="relative h-full w-full">
                       <video
@@ -205,6 +209,16 @@ export default function FrontlinePage() {
                   ) : (
                     <CategoryPlaceholder category={article.category} />
                   )}
+                  
+                  {/* Stats Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                    <ArticleStats 
+                      views={article.views} 
+                      likes={article.likes} 
+                      dislikes={article.dislikes}
+                      className="text-white/90" 
+                    />
+                  </div>
                 </div>
 
                 <div className="p-6">

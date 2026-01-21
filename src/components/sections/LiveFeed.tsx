@@ -152,7 +152,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                 className="group relative bg-midnight-800 rounded-xl border border-midnight-700 hover:border-tactical-red/50 transition-all duration-300 overflow-hidden"
               >
                 {/* Article Media */}
-                <div className="relative aspect-video w-full bg-midnight-700">
+                <div className="relative aspect-video w-full bg-midnight-700 group-hover:opacity-90 transition-opacity">
                   {article.videoUrl ? (
                     <div className="relative h-full w-full">
                       <video
@@ -179,6 +179,16 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                   ) : (
                     <CategoryPlaceholder category={article.category} />
                   )}
+
+                  {/* Stats Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                    <ArticleStats 
+                      views={article.views} 
+                      likes={article.likes} 
+                      dislikes={article.dislikes}
+                      className="text-white/90" 
+                    />
+                  </div>
                 </div>
 
                 <div className="p-5 sm:p-6">
@@ -203,27 +213,19 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                     {article.excerpt}
                   </p>
 
-                  {/* Stats & Actions */}
-                  <div className="flex flex-col gap-3 pt-4 border-t border-midnight-700">
-                    <ArticleStats 
-                      views={article.views} 
-                      likes={article.likes} 
-                      dislikes={article.dislikes} 
-                    />
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-dark flex items-center gap-1">
-                        <BookOpen className="h-3 w-3" aria-hidden="true" />
-                        {calculateReadTime(article.content, locale)}
-                      </span>
-                      <Link
-                        href={`/${locale}/frontline/${article.id}`}
-                        className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
-                      >
-                        {dict.common.readMore}
-                        <ArrowRight className={`h-3 w-3 transition-transform ${isArabic ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} aria-hidden="true" />
-                      </Link>
-                    </div>
+                  {/* Read more */}
+                  <div className="flex items-center justify-between pt-4 border-t border-midnight-700">
+                    <span className="text-xs text-slate-dark flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" aria-hidden="true" />
+                      {calculateReadTime(article.content, locale)}
+                    </span>
+                    <Link
+                      href={`/${locale}/frontline/${article.id}`}
+                      className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
+                    >
+                      {dict.common.readMore}
+                      <ArrowRight className={`h-3 w-3 transition-transform ${isArabic ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} aria-hidden="true" />
+                    </Link>
                   </div>
                 </div>
 
