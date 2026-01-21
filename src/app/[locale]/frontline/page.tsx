@@ -209,16 +209,6 @@ export default function FrontlinePage() {
                   ) : (
                     <CategoryPlaceholder category={article.category} />
                   )}
-                  
-                  {/* Stats Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                    <ArticleStats 
-                      views={article.views} 
-                      likes={article.likes} 
-                      dislikes={article.dislikes}
-                      className="text-white/90" 
-                    />
-                  </div>
                 </div>
 
                 <div className="p-6">
@@ -269,15 +259,22 @@ export default function FrontlinePage() {
                   {article.excerpt}
                 </p>
 
-                <div className="flex items-center justify-between border-t border-midnight-700 pt-4">
+                <div className="flex flex-col gap-3 border-t border-midnight-700 pt-4">
+                  <div className="flex items-center justify-between">
+                    <ArticleStats 
+                      views={article.views} 
+                      likes={article.likes} 
+                      dislikes={article.dislikes} 
+                    />
+                    <Link
+                      href={`/${locale}/frontline/${article.id}`}
+                      className="flex items-center gap-1 font-heading text-xs font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
+                    >
+                      {dict.frontline.fullReport}
+                      <ArrowRight className={`h-3 w-3 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
+                    </Link>
+                  </div>
                   <span className="text-xs text-slate-dark">{article.readTime} {dict.frontline.read}</span>
-                  <Link
-                    href={`/${locale}/frontline/${article.id}`}
-                    className="flex items-center gap-1 font-heading text-xs font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
-                  >
-                    {dict.frontline.fullReport}
-                    <ArrowRight className={`h-3 w-3 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true" />
-                  </Link>
                 </div>
                 </div>
               </motion.article>

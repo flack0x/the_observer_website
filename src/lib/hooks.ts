@@ -45,7 +45,14 @@ export function useArticles(channel: "en" | "ar" | "all" = "en") {
     async function fetchArticles() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/articles?channel=${channel}`);
+        // Add timestamp to prevent caching
+        const response = await fetch(`/api/articles?channel=${channel}&t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache'
+          }
+        });
 
         if (!response.ok) {
           throw new Error("Failed to fetch articles");

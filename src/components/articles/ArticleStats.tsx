@@ -29,13 +29,10 @@ export default function ArticleStats({ views, likes, dislikes, className = '' }:
           <ThumbsUp className="h-3 w-3" />
           <span>{formatNumber(likes)}</span>
         </div>
-        {/* Only show dislikes if meaningful to save space, or always? Requirement says "show stats". */}
-        {dislikes > 0 && (
-          <div className="flex items-center gap-1" title={`${dislikes} dislikes`}>
-            <ThumbsDown className="h-3 w-3" />
-            <span>{formatNumber(dislikes)}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-1" title={`${dislikes} dislikes`}>
+          <ThumbsDown className="h-3 w-3" />
+          <span>{formatNumber(dislikes)}</span>
+        </div>
       </div>
     </div>
   );
