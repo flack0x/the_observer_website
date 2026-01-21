@@ -19,6 +19,9 @@ export interface Article {
   isBreaking: boolean;
   imageUrl: string | null;
   videoUrl: string | null;
+  views: number;
+  likes: number;
+  dislikes: number;
 }
 
 // Parse date strings from API response into Date objects

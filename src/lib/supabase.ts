@@ -24,6 +24,9 @@ export interface DBArticle {
   video_url: string | null;
   created_at: string;
   updated_at: string;
+  views: number;
+  likes_count: number;
+  dislikes_count: number;
 }
 
 // Fetch articles from Supabase
@@ -118,6 +121,9 @@ export function dbArticleToFrontend(article: DBArticle) {
     isBreaking: article.category === 'Breaking',
     imageUrl: article.image_url || null,
     videoUrl: article.video_url || null,
+    views: article.views || 0,
+    likes: article.likes_count || 0,
+    dislikes: article.dislikes_count || 0,
   };
 }
 

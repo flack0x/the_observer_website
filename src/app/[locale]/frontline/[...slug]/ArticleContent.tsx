@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin } from "lucide-react";
+import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin, Eye } from "lucide-react";
 import Image from "next/image";
 import DOMPurify from "dompurify";
 import ArticleInteractions from "@/components/articles/ArticleInteractions";
 import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
+import { getClient } from "@/lib/supabase/client";
 
 /**
  * Convert Telegram markdown to HTML and clean up the content
@@ -107,6 +108,9 @@ interface ArticleContentProps {
     link: string;
     imageUrl: string | null;
     videoUrl: string | null;
+    views: number;
+    likes: number;
+    dislikes: number;
   };
   locale: Locale;
   dict: Dictionary;
@@ -115,6 +119,25 @@ interface ArticleContentProps {
 export default function ArticleContent({ article, locale, dict }: ArticleContentProps) {
   const isArabic = locale === 'ar';
   const [showCopied, setShowCopied] = useState(false);
+  const supabase = getClient();
+
+  useEffect(() => {
+    // Increment view count
+    const incrementView = async () => {
+      // Check session storage to prevent duplicate counts in same session
+      const storageKey = `viewed_${article.dbId}`;
+      if (sessionStorage.getItem(storageKey)) return;
+
+      try {
+        await supabase.rpc('increment_view_count', { p_article_id: article.dbId });
+        sessionStorage.setItem(storageKey, 'true');
+      } catch (err) {
+        console.error('Failed to increment view count:', err);
+      }
+    };
+
+    incrementView();
+  }, [article.dbId, supabase]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -172,6 +195,10 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
             <span className="flex items-center gap-1.5 text-sm text-slate-dark">
               <Clock className="h-4 w-4" aria-hidden="true" />
               {getRelativeTime(article.date, locale)}
+            </span>
+            <span className="flex items-center gap-1.5 text-sm text-slate-dark border-l border-midnight-600 pl-3 ml-1">
+              <Eye className="h-4 w-4" aria-hidden="true" />
+              {article.views + 1} {/* Optimistic update */}
             </span>
           </div>
 
