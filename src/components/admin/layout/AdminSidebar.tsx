@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  LogOut,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { useState } from 'react';
@@ -42,7 +43,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed = false, onToggle, onClose, isMobile = false }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
 
   const isActive = (href: string) => {
     if (href === '/admin') {
@@ -158,6 +159,21 @@ export function AdminSidebar({ collapsed = false, onToggle, onClose, isMobile = 
           })}
         </ul>
       </nav>
+
+      {/* Sign Out Button */}
+      <div className={`border-t border-midnight-700 ${collapsed ? 'p-2' : 'p-4'}`}>
+        <button
+          onClick={() => signOut()}
+          className={`
+            flex items-center gap-3 w-full rounded-lg transition-colors text-slate-medium hover:bg-midnight-700 hover:text-slate-light
+            ${collapsed ? 'justify-center p-2' : 'px-3 py-2.5'}
+          `}
+          title={collapsed ? "Sign Out" : undefined}
+        >
+          <LogOut className="h-5 w-5 flex-shrink-0" />
+          {!collapsed && <span className="font-medium text-sm">Sign Out</span>}
+        </button>
+      </div>
 
       {/* Expand button when collapsed */}
       {collapsed && onToggle && (
