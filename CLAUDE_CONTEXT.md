@@ -284,6 +284,10 @@ src/
 | `20260110120000_fix_rls_performance.sql` | RLS performance optimization |
 | `20260113120000_create_book_reviews_table.sql` | Book reviews table |
 | `20260117120000_create_news_headlines_table.sql` | External news headlines |
+| `20260121120000_add_interactions.sql` | Likes, dislikes, shares |
+| `20260121130000_add_bookmarks.sql` | User bookmarks system |
+| `20260121140000_add_views_and_guest_votes.sql` | View counters + guest support |
+| `20260121150000_fix_guest_policy.sql` | Guest interactions RLS fix |
 
 ### articles
 | Column | Type | Notes |
@@ -306,8 +310,38 @@ src/
 | published_at | timestamptz | Publication date |
 | author_id | uuid | FK to auth.users |
 | last_edited_by | uuid | FK to auth.users |
+| views | integer | Total view count (0 default) |
+| likes_count | integer | Total likes (cached) |
+| dislikes_count | integer | Total dislikes (cached) |
 | created_at | timestamptz | DB insert time |
 | updated_at | timestamptz | Last update time |
+
+### article_interactions
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| article_id | bigint | FK to articles |
+| user_id | uuid | FK to auth.users (nullable) |
+| session_id | text | Guest session UUID (nullable) |
+| interaction_type | text | 'like' or 'dislike' |
+| created_at | timestamptz | |
+
+### bookmarks
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK to auth.users |
+| article_id | bigint | FK to articles |
+| created_at | timestamptz | |
+
+### article_shares
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| article_id | bigint | FK to articles |
+| user_id | uuid | FK to auth.users |
+| platform | text | e.g., 'copy_link' |
+| created_at | timestamptz | |
 
 ### book_reviews
 | Column | Type | Notes |
@@ -759,6 +793,16 @@ python generate_session_string.py
 
 ## Recent Changes (Jan 2026)
 
+- **User System & Dashboard** (Jan 21): Full public authentication and user features
+  - **Public Auth**: Sign In/Sign Up pages (`/login`, `/signup`) with email trimming
+  - **Dashboard**: User hub (`/dashboard`) showing overview, bookmarks, and history
+  - **Interactions**: Like, Dislike, Bookmark, and Share functionality
+  - **Guest Support**: Anonymous users can view stats and "vote" (session-based)
+  - **View Counters**: Legitimate, atomic view counting via DB RPC functions
+  - **Engagement Metrics**: Thumbnails display Views, Likes, and Dislikes
+  - **Header UX**: Profile dropdown menu with quick links and Sign Out
+  - **Database**: 4 new migrations for interactions, bookmarks, views, and guest policies
+  - **Performance**: Cached like/dislike counts in `articles` table via triggers
 - **Content Formatting Fix** (Jan 15): Telegram markdown to HTML conversion
   - `processContent()` in ArticleContent.tsx converts `**bold**` → `<strong>`
   - Converts `__italic__` → `<em>`
