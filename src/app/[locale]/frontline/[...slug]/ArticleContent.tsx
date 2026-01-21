@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin } from "lucide-react";
 import Image from "next/image";
 import DOMPurify from "dompurify";
+import ArticleInteractions from "@/components/articles/ArticleInteractions";
 import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
@@ -95,6 +96,8 @@ function processContent(rawContent: string, title: string): string {
 
 interface ArticleContentProps {
   article: {
+    id: string; // Telegram ID
+    dbId: number; // Database ID for interactions
     title: string;
     excerpt: string;
     content: string;
@@ -310,6 +313,14 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
           })}
         </motion.div>
 
+        {/* Interactions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <ArticleInteractions articleId={article.dbId} locale={locale} />
+        </motion.div>
       </div>
     </article>
   );

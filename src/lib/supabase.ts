@@ -104,6 +104,7 @@ function sanitizeExcerpt(excerpt: string): string {
 export function dbArticleToFrontend(article: DBArticle) {
   return {
     id: article.telegram_id,
+    dbId: article.id,
     title: sanitizeTitle(article.title),
     excerpt: sanitizeExcerpt(article.excerpt),
     content: article.content,

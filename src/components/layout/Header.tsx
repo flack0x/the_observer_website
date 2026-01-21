@@ -11,6 +11,8 @@ import {
   Globe,
   Send,
   LogIn,
+  LogOut,
+  User,
   Sun,
   Moon,
 } from "lucide-react";
@@ -18,6 +20,7 @@ import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
 import type { Locale, Dictionary } from "@/lib/i18n";
 import { getTelegramChannel } from "@/lib/config";
 import { useTheme } from "@/lib/theme";
+import { useAuth } from "@/lib/auth";
 
 interface HeaderProps {
   locale: Locale;
@@ -31,6 +34,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
   const pathname = usePathname();
   const isRTL = locale === 'ar';
   const { resolvedTheme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
 
   const navigation = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
@@ -128,14 +132,24 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 {locale === "en" ? "AR" : "EN"}
               </button>
 
-              {/* Sign In - Desktop */}
-              <Link
-                href="/admin/login"
-                className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
-              >
-                <LogIn className="h-3 w-3" aria-hidden="true" />
-                {locale === "en" ? "Sign In" : "تسجيل"}
-              </Link>
+              {/* Sign In/Out - Desktop */}
+              {user ? (
+                <button
+                  onClick={() => signOut()}
+                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
+                >
+                  <LogOut className="h-3 w-3" aria-hidden="true" />
+                  {locale === "en" ? "Sign Out" : "خروج"}
+                </button>
+              ) : (
+                <Link
+                  href={`/${locale}/login`}
+                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
+                >
+                  <LogIn className="h-3 w-3" aria-hidden="true" />
+                  {locale === "en" ? "Sign In" : "تسجيل"}
+                </Link>
+              )}
 
               {/* Telegram CTA - Desktop only */}
               <a
@@ -235,20 +249,37 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 </button>
               </div>
 
-              {/* Sign In - Mobile */}
+              {/* Sign In/Out - Mobile */}
               <div className="mt-4 pt-4 border-t border-midnight-700">
-                <Link
-                  href="/admin/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
-                >
-                  <span className="font-heading text-sm font-medium uppercase tracking-wider">
-                    {locale === "en" ? "Admin Sign In" : "تسجيل الدخول"}
-                  </span>
-                  <span className="flex items-center gap-2 text-tactical-red">
-                    <LogIn className="h-4 w-4" />
-                  </span>
-                </Link>
+                {user ? (
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
+                  >
+                    <span className="font-heading text-sm font-medium uppercase tracking-wider">
+                      {locale === "en" ? "Sign Out" : "تسجيل الخروج"}
+                    </span>
+                    <span className="flex items-center gap-2 text-tactical-red">
+                      <LogOut className="h-4 w-4" />
+                    </span>
+                  </button>
+                ) : (
+                  <Link
+                    href={`/${locale}/login`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between w-full rounded-lg px-4 py-3 text-slate-light hover:bg-midnight-700 transition-colors"
+                  >
+                    <span className="font-heading text-sm font-medium uppercase tracking-wider">
+                      {locale === "en" ? "Sign In" : "تسجيل الدخول"}
+                    </span>
+                    <span className="flex items-center gap-2 text-tactical-red">
+                      <LogIn className="h-4 w-4" />
+                    </span>
+                  </Link>
+                )}
               </div>
 
               {/* Telegram CTA */}
