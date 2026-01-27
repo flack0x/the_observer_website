@@ -288,6 +288,8 @@ src/
 | `20260121130000_add_bookmarks.sql` | User bookmarks system |
 | `20260121140000_add_views_and_guest_votes.sql` | View counters + guest support |
 | `20260121150000_fix_guest_policy.sql` | Guest interactions RLS fix |
+| `20260121160000_fix_vote_trigger.sql` | Vote trigger handles UPDATE |
+| `20260127120000_secure_guest_voting.sql` | RPC functions for guest voting |
 
 ### articles
 | Column | Type | Notes |
@@ -407,6 +409,22 @@ src/
 | metric_type | varchar(50) | 'daily_snapshot', 'country_mentions', etc. |
 | data | jsonb | Computed metrics |
 | computed_at | timestamptz | When metrics were computed |
+
+### RPC Functions
+
+**`increment_view_count(p_article_id BIGINT)`**
+- Atomically increments article view count
+- Called from article detail pages
+- `SECURITY DEFINER` - bypasses RLS
+
+**`guest_vote(p_article_id BIGINT, p_session_id TEXT, p_interaction_type TEXT)`**
+- Adds or changes a guest vote (like/dislike)
+- Deletes existing vote first, then inserts new one
+- `SECURITY DEFINER` - bypasses RLS for secure guest operations
+
+**`guest_unvote(p_article_id BIGINT, p_session_id TEXT)`**
+- Removes a guest vote
+- `SECURITY DEFINER` - bypasses RLS
 
 ## Middleware (`middleware.ts`)
 
@@ -793,6 +811,13 @@ python generate_session_string.py
 
 ## Recent Changes (Jan 2026)
 
+- **Guest Voting Fix** (Jan 27): Fixed likes/dislikes not persisting after refresh
+  - Root cause: RLS policies required headers that Supabase client couldn't send
+  - Solution: Created `guest_vote` and `guest_unvote` RPC functions with `SECURITY DEFINER`
+  - Guest operations now use RPC functions instead of direct table access
+  - Authenticated users still use direct table operations
+  - Replaced `upsert` with delete+insert for reliable partial index handling
+  - Migration: `20260127120000_secure_guest_voting.sql`
 - **User System & Dashboard** (Jan 21): Full public authentication and user features
   - **Public Auth**: Sign In/Sign Up pages (`/login`, `/signup`) with email trimming
   - **Dashboard**: User hub (`/dashboard`) showing overview, bookmarks, and history
