@@ -172,71 +172,46 @@ export default function ArticleInteractions({
     }
 
     try {
-      if (previousVote === type) {
-        // Delete interaction
-        const query = supabase.from('article_interactions').delete().eq('article_id', articleId);
-        if (isAuthenticated) query.eq('user_id', user!.id);
-        else query.eq('session_id', sessionId!);
-        
-        await query;
-      } else {
-        // Upsert interaction
-        // For upsert to work with different constraints, we might need separate calls or careful handling
-        // Since we have specific indexes, upsert might be tricky if we don't match the constraint exactly
-        // Let's try to just insert, and if conflict, update? No, existing rows have IDs.
-        
-        // Simpler: Delete existing vote for this user/session first to avoid unique constraint issues if switching vote
-        // actually upsert handles this if we define the onConflict columns
-        
-        const payload: any = {
-          article_id: articleId,
-          interaction_type: type,
-        };
-        
-        if (isAuthenticated) {
-            payload.user_id = user!.id;
-            await supabase.from('article_interactions').upsert(payload, { onConflict: 'article_id,user_id' });
+      if (isAuthenticated) {
+        // Authenticated user: use direct table operations
+        if (previousVote === type) {
+          // Toggle off
+          await supabase
+            .from('article_interactions')
+            .delete()
+            .eq('article_id', articleId)
+            .eq('user_id', user!.id);
         } else {
-            payload.session_id = sessionId;
-            // We need to set the custom header for RLS policy to work for DELETE/UPDATE, 
-            // but for INSERT it should be fine if we set session_id.
-            // Wait, for upsert (update) we need RLS permission.
-            // The policy "Users can modify own interactions" uses `current_setting('request.headers')::json->>'x-session-id'`
-            // We can't easily set headers in supabase-js client side for just one request.
-            // Actually, for guest voting, maybe just INSERT is enough? 
-            // If they change vote, we need UPDATE/DELETE.
-            
-            // Workaround: We can't easily use RLS with session_id header from client without a proxy/edge function.
-            // BUT, if we made the policy "session_id = ...", we need to match the row.
-            // Let's rely on the DB policy "Anyone can create interactions" and "Users can modify own interactions"
-            // The modify policy I wrote requires a header. That's hard from client.
-            // Let's relax the policy for now or use an RPC?
-            
-            // Alternative: Just use INSERT/DELETE where we match the session_id column?
-            // "DELETE FROM article_interactions WHERE session_id = '...'"
-            // RLS "USING (session_id = '...')" ? No, that allows anyone to delete anyone's vote if they guess the ID.
-            // But session_id is a random UUID. It's effectively a secret key.
-            // So if I know the session_id, I own it.
-            
-            // Let's try standard operations. If RLS fails, we might need to adjust the migration.
-            // Re-reading migration: 
-            // DELETE USING ( (auth.uid() = user_id) OR (session_id = current_setting(...)) )
-            // This definitely requires the header.
-            
-            // FIX: I will use an RPC for guest voting to bypass the header requirement safely-ish, 
-            // or just update the policy to trust the session_id provided in the WHERE clause? 
-            // No, RLS doesn't see the WHERE clause of the query, it adds to it.
-            
-            // Okay, let's assume for this turn I need to update the migration to allow 
-            // operations if the session_id matches the row.
-            // BUT, how do we prove we own the session_id? 
-            // We can't. But since it's a UUID generated on client, it's hard to guess.
-            // So: "session_id IS NOT NULL" might be too broad (anyone deletes any guest vote).
-            
-            // Let's try sending the vote. If it fails, I'll fix the policy in next turn.
-            // For now, assume simple insert works.
-            
-             await supabase.from('article_interactions').upsert(payload, { onConflict: 'article_id,session_id' });
+          // Delete existing vote first, then insert new
+          await supabase
+            .from('article_interactions')
+            .delete()
+            .eq('article_id', articleId)
+            .eq('user_id', user!.id);
+
+          await supabase
+            .from('article_interactions')
+            .insert({
+              article_id: articleId,
+              user_id: user!.id,
+              interaction_type: type,
+            });
+        }
+      } else {
+        // Guest user: use RPC functions for secure operations
+        if (previousVote === type) {
+          // Toggle off - use guest_unvote RPC
+          await supabase.rpc('guest_unvote', {
+            p_article_id: articleId,
+            p_session_id: sessionId!,
+          });
+        } else {
+          // Add or change vote - use guest_vote RPC
+          await supabase.rpc('guest_vote', {
+            p_article_id: articleId,
+            p_session_id: sessionId!,
+            p_interaction_type: type,
+          });
         }
       }
     } catch (error) {
