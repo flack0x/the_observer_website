@@ -2,6 +2,7 @@ import HeroSection from "@/components/sections/HeroSection";
 import LiveFeed from "@/components/sections/LiveFeed";
 import SituationRoomPreview from "@/components/sections/SituationRoomPreview";
 import IntelDashboard from "@/components/sections/IntelDashboard";
+import FeaturedVoices from "@/components/sections/FeaturedVoices";
 import Community from "@/components/sections/Community";
 import { getDictionary, type Locale } from "@/lib/i18n";
 
@@ -20,6 +21,7 @@ export default async function Home({ params }: Props) {
       <LiveFeed locale={validLocale} dict={dict} />
       <SituationRoomPreview locale={validLocale} dict={dict} />
       <IntelDashboard locale={validLocale} dict={dict} />
+      <FeaturedVoices locale={validLocale} dict={dict} />
       <Community locale={validLocale} dict={dict} />
     </main>
   );
