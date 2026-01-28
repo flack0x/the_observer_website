@@ -51,8 +51,11 @@ export async function fetchArticlesFromDB(
 
 // Sanitize title to remove prefixes and handle malformed titles
 function sanitizeTitle(title: string): string {
+  // Remove corrupted Unicode replacement characters (appear as ���)
+  let clean = title.replace(/\uFFFD+/g, '');
+
   // Remove TITLE: prefix (English and Arabic)
-  let clean = title.replace(/^(?:TITLE|العنوان)\s*[:\-–—]\s*/i, '');
+  clean = clean.replace(/^(?:TITLE|العنوان)\s*[:\-–—]\s*/i, '');
 
   // If it's just pipe-separated keywords, take first meaningful part
   if ((clean.match(/\|/g) || []).length >= 2) {
@@ -72,6 +75,9 @@ function sanitizeTitle(title: string): string {
 // Clean excerpt by removing markdown formatting and metadata
 function sanitizeExcerpt(excerpt: string): string {
   let clean = excerpt;
+
+  // Remove corrupted Unicode replacement characters (appear as ���)
+  clean = clean.replace(/\uFFFD+/g, '');
 
   // Remove Telegram markdown formatting
   clean = clean.replace(/\*\*([^*]+)\*\*/g, '$1'); // **bold** → bold

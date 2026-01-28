@@ -18,6 +18,9 @@ import { getClient } from "@/lib/supabase/client";
 function processContent(rawContent: string, title: string): string {
   let content = rawContent;
 
+  // Remove corrupted Unicode replacement characters (appear as ���)
+  content = content.replace(/\uFFFD+/g, '');
+
   // Remove the header section (title, category, countries, orgs) from the beginning
   // These patterns match the structured header formats
   const headerPatterns = [
