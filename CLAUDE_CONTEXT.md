@@ -267,6 +267,374 @@ src/
             └── PoliticalHistoryofModernIran.jpg
 ```
 
+## Type Definitions & Interfaces
+
+### Article (Frontend - `src/lib/hooks.ts`)
+```typescript
+interface Article {
+  id: string;              // telegram_id (e.g., "observer_5/425")
+  title: string;
+  excerpt: string;
+  content: string;
+  date: Date;              // Use getRelativeTime(date, locale) for display
+  link: string;            // Telegram URL
+  channel: "en" | "ar";
+  category: string;        // Military, Political, Economic, etc.
+  countries: string[];
+  organizations: string[];
+  isStructured: boolean;
+  isBreaking: boolean;
+  imageUrl: string | null;
+  videoUrl: string | null;
+  views: number;
+  likes: number;
+  dislikes: number;
+}
+```
+
+### BookReview (Frontend - `src/lib/hooks.ts`)
+```typescript
+interface BookReview {
+  id: string;              // review_id
+  bookTitle: string;
+  author: string;
+  coverImageUrl: string | null;
+  excerpt: string | null;
+  description: string;     // HTML content
+  keyPoints: string[];
+  rating: number | null;   // 1-5
+  recommendationLevel: 'essential' | 'recommended' | 'optional' | null;
+  telegramLink: string | null;
+  channel: 'en' | 'ar';
+  createdAt: Date;
+}
+```
+
+### Metrics (Frontend - `src/lib/hooks.ts`)
+```typescript
+interface Metrics {
+  computed_at: string;
+  total_articles: number;
+  countries: Record<string, number>;      // { "Iran": 45, "Israel": 38, ... }
+  organizations: Record<string, number>;  // { "IDF": 20, "Hamas": 15, ... }
+  categories: Record<string, number>;
+  temporal: {
+    articles_today: number;
+    articles_this_week: number;
+    daily_trend: { date: string; count: number }[];
+  };
+  sentiment: {
+    percentages: Record<string, number>;  // { negative: 60, neutral: 30, positive: 10 }
+  };
+  trending: { topic: string; mentions: number }[];
+}
+```
+
+### Locale System (`src/lib/i18n/config.ts`)
+```typescript
+const locales = ['en', 'ar'] as const;
+type Locale = 'en' | 'ar';
+const defaultLocale: Locale = 'en';
+const localeDirection: Record<Locale, 'ltr' | 'rtl'> = { en: 'ltr', ar: 'rtl' };
+```
+
+### Auth State (`src/lib/auth/context.tsx`)
+```typescript
+interface AuthState {
+  user: User | null;           // Supabase User
+  profile: UserProfile | null; // From user_profiles table
+  session: Session | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+}
+
+interface AuthContextType extends AuthState {
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+```
+
+### Theme System (`src/lib/theme/ThemeContext.tsx`)
+```typescript
+type Theme = 'light' | 'dark' | 'system';
+type ResolvedTheme = 'light' | 'dark';
+
+interface ThemeContextType {
+  theme: Theme;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+}
+// Storage key: 'theme' in localStorage
+// Applied via: document.documentElement.setAttribute('data-theme', resolved)
+```
+
+## Client-Side Hooks (`src/lib/hooks.ts`)
+
+```typescript
+// Fetch articles with caching disabled
+function useArticles(channel: "en" | "ar" | "all" = "en"): {
+  articles: Article[];
+  loading: boolean;
+  error: string | null;
+}
+
+// Fetch metrics for dashboard
+function useMetrics(): {
+  metrics: Metrics | null;
+  loading: boolean;
+  error: string | null;
+}
+
+// Fetch book reviews
+function useBookReviews(channel: 'en' | 'ar' = 'en'): {
+  bookReviews: BookReview[];
+  loading: boolean;
+  error: string | null;
+}
+```
+
+## Utility Functions
+
+### Time (`src/lib/time.ts`)
+```typescript
+// "5 minutes ago", "منذ ٥ دقيقة"
+function getRelativeTime(date: Date, locale: Locale): string;
+
+// "January 15, 2026", "١٥ يناير ٢٠٢٦"
+function formatDate(date: Date, locale: Locale): string;
+
+// "14:30", "٢:٣٠"
+function formatTime(date: Date, locale: Locale): string;
+```
+
+### Categories (`src/lib/categories.ts`)
+```typescript
+const CATEGORIES = {
+  ALL: 'All', BREAKING: 'Breaking', MILITARY: 'Military',
+  POLITICAL: 'Political', ECONOMIC: 'Economic', INTELLIGENCE: 'Intelligence',
+  DIPLOMATIC: 'Diplomatic', ANALYSIS: 'Analysis', GEOPOLITICS: 'Geopolitics',
+};
+
+// Get localized category name
+function getCategoryDisplay(category: string, locale: 'en' | 'ar'): string;
+
+// Get category list for filters
+function getCategoryList(locale: 'en' | 'ar'): string[];
+
+// Filter articles by category
+function filterByCategory<T extends { category: string }>(
+  articles: T[], selectedCategory: string, locale: 'en' | 'ar'
+): T[];
+```
+
+### i18n (`src/lib/i18n/dictionaries.ts`)
+```typescript
+// Get full dictionary (synchronous)
+function getDictionary(locale: Locale): Dictionary;
+
+// Translate country name
+function getCountryName(country: string, locale: Locale): string;
+
+// Translate array of countries
+function getCountryNames(countries: string[], locale: Locale): string[];
+```
+
+### Config (`src/lib/config.ts`)
+```typescript
+const TELEGRAM_CHANNELS = { en: 'https://t.me/observer_5', ar: 'https://t.me/almuraqb' };
+const CONTACT_EMAIL = 'contact@theobserver.com';
+function getTelegramChannel(locale: 'en' | 'ar'): string;
+```
+
+## Content Sanitization (`src/lib/supabase.ts`)
+
+```typescript
+// Strip corrupted characters, TITLE: prefix, pipe-separated metadata
+function sanitizeTitle(title: string): string;
+
+// Strip markdown, emojis, metadata from excerpts
+function sanitizeExcerpt(excerpt: string): string;
+
+// Convert DB article to frontend format (applies sanitization)
+function dbArticleToFrontend(article: DBArticle): Article;
+```
+
+### Content Processing (`src/app/[locale]/frontline/[...slug]/ArticleContent.tsx`)
+
+```typescript
+// Comprehensive emoji regex for stripping decorative emojis
+const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}...]+/gu;
+
+function processContent(rawContent: string, title: string): string {
+  // 1. Remove U+FFFD replacement characters
+  // 2. Skip header section (title, category, countries)
+  // 3. Remove emoji markers at start of lines
+  // 4. Convert **bold** → <strong>, __italic__ → <em>
+  // 5. Clean up multiple newlines
+  // 6. Remove footer/channel references
+}
+```
+
+## Supabase Clients
+
+### Browser Client (`src/lib/supabase/client.ts`)
+```typescript
+import { getClient } from '@/lib/supabase/client';
+const supabase = getClient();  // Singleton, use in client components
+
+// Example: RPC call
+await supabase.rpc('increment_view_count', { p_article_id: 123 });
+await supabase.rpc('guest_vote', { p_article_id: 123, p_session_id: 'uuid', p_interaction_type: 'like' });
+```
+
+### Server Client (`src/lib/supabase/server.ts`)
+```typescript
+import { createClient, getUser, getUserProfile } from '@/lib/supabase/server';
+
+// In Server Components or Route Handlers
+const supabase = await createClient();
+const user = await getUser();           // Returns User | null
+const profile = await getUserProfile(); // Returns { ...user, profile } | null
+```
+
+## Middleware (`middleware.ts`)
+
+**Locale Detection:**
+1. Check if locale already in path → proceed
+2. Detect from Accept-Language header
+3. Redirect to `/{locale}{pathname}`
+
+**Admin Auth:**
+- `/admin/login`, `/admin/signup` → accessible without auth (redirect to `/admin` if logged in)
+- `/admin/*` → require authenticated user
+- `/admin/users` → require `role = 'admin'` in user_profiles
+
+**Public Paths (no locale):** `/api/*`, `/_next/*`, `/images/*`, `/admin/*`, `/favicon.ico`, `/robots.txt`, `/sitemap.xml`
+
+## Rate Limiting (`src/lib/rate-limit.ts`)
+
+```typescript
+// Default: 100 req/min, Subscribe: 5 req/min
+function rateLimit(identifier: string, config?: RateLimitConfig): {
+  success: boolean;
+  remaining: number;
+  reset: number;
+}
+
+function getClientIdentifier(request: Request): string; // IP from headers
+```
+
+## Auth Context (`src/lib/auth/context.tsx`)
+
+```typescript
+import { useAuth } from '@/lib/auth/context';
+
+const { user, profile, isAuthenticated, isLoading, signIn, signUp, signOut } = useAuth();
+
+// Sign in
+const { error } = await signIn('email@example.com', 'password');
+
+// Sign up (creates profile via DB trigger)
+const { error } = await signUp('email@example.com', 'password', 'Full Name');
+
+// Sign out
+await signOut();
+```
+
+## Guest Session Pattern
+
+```typescript
+// Get or create guest session ID (stored in localStorage)
+const getGuestSessionId = () => {
+  let sessionId = localStorage.getItem('guest_session_id');
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem('guest_session_id', sessionId);
+  }
+  return sessionId;
+};
+
+// Guest voting uses RPC functions (bypasses RLS)
+await supabase.rpc('guest_vote', { p_article_id, p_session_id, p_interaction_type });
+await supabase.rpc('guest_unvote', { p_article_id, p_session_id });
+```
+
+## Component Patterns
+
+### Page with Locale
+```typescript
+// src/app/[locale]/pagename/page.tsx
+import { getDictionary, type Locale } from '@/lib/i18n';
+
+export function generateStaticParams() {
+  return [{ locale: 'en' }, { locale: 'ar' }];
+}
+
+export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const dict = getDictionary(locale as Locale);
+  const isArabic = locale === 'ar';
+
+  return <div dir={isArabic ? 'rtl' : 'ltr'}>...</div>;
+}
+```
+
+### Client Component with Auth
+```typescript
+'use client';
+import { useAuth } from '@/lib/auth/context';
+import { getClient } from '@/lib/supabase/client';
+
+export default function MyComponent({ locale }: { locale: string }) {
+  const { user, isAuthenticated } = useAuth();
+  const supabase = getClient();
+
+  // Redirect to login if needed
+  if (!isAuthenticated) {
+    router.push(`/${locale}/login`);
+    return;
+  }
+}
+```
+
+### API Route
+```typescript
+// src/app/api/example/route.ts
+import { NextResponse } from "next/server";
+import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
+
+export const dynamic = 'force-dynamic'; // Disable caching
+
+export async function GET(request: Request) {
+  const clientId = getClientIdentifier(request);
+  const { success } = rateLimit(`example:${clientId}`);
+  if (!success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
+  // ... fetch data
+  return NextResponse.json(data);
+}
+```
+
+## Dictionary Structure (`src/lib/i18n/dictionaries.ts`)
+
+```typescript
+dict.nav           // { frontline, situationRoom, books, dossier, chronicles, about }
+dict.header        // { title, subtitle, live }
+dict.common        // { readMore, viewAll, share, loading, ... }
+dict.home          // { heroTitle, heroSubtitle, liveFeed, ... }
+dict.frontline     // { title, subtitle, backToFrontline, filter, ... }
+dict.article       // { copied, stayInformed, joinObserver }
+dict.books         // { title, rating, author, keyPoints, essential, ... }
+dict.dashboard     // { totalArticles, thisWeek, countries, ... }
+dict.footer        // { about, privacy, subscribe, ... }
+dict.countries     // { Russia: "Russia"/"روسيا", Iran: "Iran"/"إيران", ... }
+dict.about         // { title, missionTitle, principlesTitle, ... }
+dict.community     // { joinNetwork, telegramEnglish, ... }
+```
+
 ## Database Schema (Supabase)
 
 ### Migrations (`supabase/migrations/`)
