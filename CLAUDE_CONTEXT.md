@@ -799,18 +799,27 @@ python generate_session_string.py
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Jan 15, 2026)
+## Database Stats (Jan 28, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (EN) | 206 | 3 structured, 142 with images, 50 with videos |
-| Articles (AR) | 233 | 4 structured, 154 with images, 59 with videos |
+| Articles (EN) | 249 | Telegram synced |
+| Articles (AR) | 282 | Telegram synced |
 | Book Reviews | 14 | 7 EN, 7 AR published |
+| News Headlines | 217 | Active from RSS feeds |
 | User Profiles | 1 | Admin configured |
 | Subscribers | 0 | Table ready |
 
 ## Recent Changes (Jan 2026)
 
+- **Emoji Sanitization Fix** (Jan 28): Comprehensive emoji stripping from article content
+  - Root cause: Telegram emojis (📰, ✌, etc.) rendering as broken box characters
+  - Solution: Replaced hardcoded emoji lists with comprehensive Unicode range regex
+  - Regex covers: `U+1F300-1F9FF`, `U+2600-27BF`, `U+1F600-1F64F`, `U+1F680-1F6FF`, etc.
+  - Also strips `U+FFFD` replacement characters and variation selectors
+  - Applied to `processContent()` in `ArticleContent.tsx`
+  - Applied to `sanitizeTitle()` and `sanitizeExcerpt()` in `supabase.ts`
+  - Database scan: 531 articles checked, 4 minor issues handled by frontend sanitization
 - **Guest Voting Fix** (Jan 27): Fixed likes/dislikes not persisting after refresh
   - Root cause: RLS policies required headers that Supabase client couldn't send
   - Solution: Created `guest_vote` and `guest_unvote` RPC functions with `SECURITY DEFINER`
