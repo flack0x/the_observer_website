@@ -31,7 +31,9 @@
       "Bash(node:*)",
       "WebFetch(domain:supabase.com)",
       "Bash(rm:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "WebFetch(domain:michaelspringmann.com)",
+      "WebFetch(domain:www.amazon.com)"
     ]
   }
 }

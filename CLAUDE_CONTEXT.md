@@ -168,6 +168,10 @@ src/
 │   │   │   └── [...slug]/           # Book detail
 │   │   │       ├── page.tsx
 │   │   │       └── BookReviewContent.tsx
+│   │   ├── voices/                  # External Voices (Authors/Analysts)
+│   │   │   ├── page.tsx             # Voices listing
+│   │   │   └── [...slug]/           # Voice detail
+│   │   │       └── page.tsx
 │   │   ├── situation-room/          # Analytics dashboard
 │   │   ├── dossier/                 # Key figures (placeholder)
 │   │   ├── chronicles/              # Timeline (placeholder)
@@ -221,6 +225,7 @@ src/
 │   │   ├── LiveFeed.tsx             # Article cards
 │   │   ├── SituationRoomPreview.tsx # Metrics preview
 │   │   ├── IntelDashboard.tsx       # Charts
+│   │   ├── FeaturedVoices.tsx       # External authors preview
 │   │   └── Community.tsx            # Telegram CTAs
 │   ├── admin/
 │   │   ├── layout/
@@ -243,6 +248,7 @@ src/
 │   ├── categories.ts                # Category display names
 │   ├── time.ts                      # Date formatting utilities
 │   ├── hooks.ts                     # useArticles, useMetrics, useBreakingNews, useBookReviews
+│   ├── voices.ts                    # External voices data and helpers
 │   ├── rate-limit.ts                # Rate limiting
 │   ├── theme/                       # Theme system
 │   │   ├── index.ts                 # Exports useTheme
@@ -621,19 +627,63 @@ export async function GET(request: Request) {
 ## Dictionary Structure (`src/lib/i18n/dictionaries.ts`)
 
 ```typescript
-dict.nav           // { frontline, situationRoom, books, dossier, chronicles, about }
+dict.nav           // { frontline, situationRoom, books, voices, dossier, chronicles, about }
 dict.header        // { title, subtitle, live }
 dict.common        // { readMore, viewAll, share, loading, ... }
 dict.home          // { heroTitle, heroSubtitle, liveFeed, ... }
 dict.frontline     // { title, subtitle, backToFrontline, filter, ... }
 dict.article       // { copied, stayInformed, joinObserver }
 dict.books         // { title, rating, author, keyPoints, essential, ... }
+dict.voices        // { title, subtitle, featuredVoices, viewProfile, credentials, ... }
 dict.dashboard     // { totalArticles, thisWeek, countries, ... }
 dict.footer        // { about, privacy, subscribe, ... }
 dict.countries     // { Russia: "Russia"/"روسيا", Iran: "Iran"/"إيران", ... }
 dict.about         // { title, missionTitle, principlesTitle, ... }
 dict.community     // { joinNetwork, telegramEnglish, ... }
 ```
+
+## External Voices System (`src/lib/voices.ts`)
+
+Static data system for featuring external authors and analysts.
+
+### ExternalVoice Interface
+```typescript
+interface ExternalVoice {
+  slug: string;                    // URL slug: "j-michael-springmann"
+  name: string;                    // Display name
+  nameAr?: string;                 // Arabic name
+  title: string;                   // "Former US Diplomat & Author"
+  titleAr?: string;                // Arabic title
+  avatar: string;                  // Image URL
+  bio: string;                     // Full biography
+  bioAr?: string;                  // Arabic biography
+  credentials: string[];           // List of credentials
+  credentialsAr?: string[];        // Arabic credentials
+  links: {
+    substack?: string;
+    twitter?: string;
+    website?: string;
+    amazon?: string;
+  };
+  featuredArticles: { title: string; url: string; description?: string }[];
+  books?: { title: string; url?: string; coverImage?: string }[];
+}
+```
+
+### Helper Functions
+```typescript
+getAllVoices(): ExternalVoice[]              // Get all voices
+getVoiceBySlug(slug: string): ExternalVoice  // Get single voice
+getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for homepage
+```
+
+### Current Voices
+- **J. Michael Springmann** (`j-michael-springmann`) - Former US diplomat, author of "Visas for Al Qaeda"
+
+### Adding a New Voice
+1. Add entry to `EXTERNAL_VOICES` array in `src/lib/voices.ts`
+2. Include: slug, name, nameAr, title, titleAr, avatar, bio, bioAr, credentials, links, featuredArticles, books
+3. Pages auto-generate via `generateStaticParams()`
 
 ## Database Schema (Supabase)
 
@@ -658,6 +708,7 @@ dict.community     // { joinNetwork, telegramEnglish, ... }
 | `20260121150000_fix_guest_policy.sql` | Guest interactions RLS fix |
 | `20260121160000_fix_vote_trigger.sql` | Vote trigger handles UPDATE |
 | `20260127120000_secure_guest_voting.sql` | RPC functions for guest voting |
+| `20260128120000_create_comments_table.sql` | Article comments with threading |
 
 ### articles
 | Column | Type | Notes |
@@ -683,6 +734,7 @@ dict.community     // { joinNetwork, telegramEnglish, ... }
 | views | integer | Total view count (0 default) |
 | likes_count | integer | Total likes (cached) |
 | dislikes_count | integer | Total dislikes (cached) |
+| comment_count | integer | Total comments (cached via trigger) |
 | created_at | timestamptz | DB insert time |
 | updated_at | timestamptz | Last update time |
 
@@ -712,6 +764,19 @@ dict.community     // { joinNetwork, telegramEnglish, ... }
 | user_id | uuid | FK to auth.users |
 | platform | text | e.g., 'copy_link' |
 | created_at | timestamptz | |
+
+### article_comments
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| article_id | bigint | FK to articles |
+| user_id | uuid | FK to auth.users |
+| parent_id | uuid | FK to article_comments (nullable, for replies) |
+| content | text | 3-2000 characters |
+| is_approved | boolean | For moderation (default true) |
+| is_edited | boolean | Auto-set on update |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
 ### book_reviews
 | Column | Type | Notes |
@@ -919,9 +984,10 @@ Desktop nav (in order):
 1. Frontline (`/[locale]/frontline`)
 2. Situation Room (`/[locale]/situation-room`)
 3. Library (`/[locale]/books`)
-4. Dossier (`/[locale]/dossier`)
-5. Chronicles (`/[locale]/chronicles`)
-6. About (`/[locale]/about`)
+4. Voices (`/[locale]/voices`)
+5. Dossier (`/[locale]/dossier`)
+6. Chronicles (`/[locale]/chronicles`)
+7. About (`/[locale]/about`)
 
 Admin sidebar:
 1. Dashboard (`/admin`)
@@ -1177,9 +1243,28 @@ python generate_session_string.py
 | News Headlines | 217 | Active from RSS feeds |
 | User Profiles | 1 | Admin configured |
 | Subscribers | 0 | Table ready |
+| Comments | 0 | New feature |
 
 ## Recent Changes (Jan 2026)
 
+- **Article Comments System** (Jan 28): Full commenting feature for articles
+  - `article_comments` table with threading support (parent_id for replies)
+  - API routes: GET/POST `/api/articles/[id]/comments`, DELETE/PATCH `/api/articles/[id]/comments/[commentId]`
+  - `CommentSection` component with form, replies, edit/delete functionality
+  - Only authenticated users can comment
+  - Owners can edit/delete their own comments
+  - Admins can delete any comment (moderation)
+  - Bilingual support (EN/AR) with full translations
+  - Integrated into `ArticleContent.tsx` below interactions
+  - Comment count cached in `articles.comment_count` via trigger
+- **External Voices Section** (Jan 28): New section for featuring external authors/analysts
+  - `/[locale]/voices` - List page showing all featured voices
+  - `/[locale]/voices/[slug]` - Detail page with bio, articles, books, credentials
+  - `FeaturedVoices.tsx` - Homepage section preview
+  - Static data in `src/lib/voices.ts` (can migrate to DB later)
+  - First voice: J. Michael Springmann (former US diplomat, author)
+  - Bilingual support (EN/AR) with full translations
+  - Added "Voices" to main navigation
 - **Emoji Sanitization Fix** (Jan 28): Comprehensive emoji stripping from article content
   - Root cause: Telegram emojis (📰, ✌, etc.) rendering as broken box characters
   - Solution: Replaced hardcoded emoji lists with comprehensive Unicode range regex

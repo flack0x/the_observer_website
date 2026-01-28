@@ -7,6 +7,7 @@ import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin, Eye } from "luci
 import Image from "next/image";
 import DOMPurify from "dompurify";
 import ArticleInteractions from "@/components/articles/ArticleInteractions";
+import CommentSection from "@/components/comments/CommentSection";
 import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
@@ -353,6 +354,19 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
           transition={{ delay: 0.3 }}
         >
           <ArticleInteractions articleId={article.dbId} locale={locale} />
+        </motion.div>
+
+        {/* Comments */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <CommentSection
+            articleId={article.dbId}
+            locale={locale}
+            dict={dict}
+          />
         </motion.div>
       </div>
     </article>
