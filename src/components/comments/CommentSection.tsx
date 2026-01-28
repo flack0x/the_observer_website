@@ -1,11 +1,32 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { MessageSquare, Send, Loader2, Trash2, Edit2, X, Check, Reply, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageSquare, Send, Loader2, Trash2, Edit2, X, Check, Reply, ChevronDown, ChevronUp, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/context';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+
+// Helper to get/set guest session ID
+const getGuestSessionId = () => {
+  if (typeof window === 'undefined') return null;
+  let sessionId = localStorage.getItem('guest_session_id');
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem('guest_session_id', sessionId);
+  }
+  return sessionId;
+};
+
+// Helper to get/set guest name
+const getStoredGuestName = () => {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('guest_comment_name') || '';
+};
+
+const setStoredGuestName = (name: string) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('guest_comment_name', name);
+};
 
 interface Comment {
   id: string;
@@ -13,7 +34,9 @@ interface Comment {
   parentId: string | null;
   isEdited: boolean;
   createdAt: string;
-  userId: string;
+  userId: string | null;
+  sessionId: string | null;
+  isGuest: boolean;
   author: {
     name: string;
     avatar: string | null;
@@ -40,26 +63,37 @@ interface CommentSectionProps {
       hideReplies: string;
       deleteConfirm: string;
       replyingTo: string;
+      guestName: string;
+      guestLabel: string;
     };
   };
 }
 
 export default function CommentSection({ articleId, locale, dict }: CommentSectionProps) {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [guestName, setGuestName] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
+  const [replyGuestName, setReplyGuestName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   const isArabic = locale === 'ar';
+  const sessionId = getGuestSessionId();
+
+  // Load stored guest name on mount
+  useEffect(() => {
+    const storedName = getStoredGuestName();
+    setGuestName(storedName);
+    setReplyGuestName(storedName);
+  }, []);
 
   // Fetch comments
   const fetchComments = useCallback(async () => {
@@ -80,13 +114,25 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
     fetchComments();
   }, [fetchComments]);
 
+  // Check if current user/guest owns a comment
+  const isCommentOwner = (comment: Comment) => {
+    if (isAuthenticated && user) {
+      return comment.userId === user.id;
+    }
+    if (comment.isGuest && comment.sessionId && sessionId) {
+      return comment.sessionId === sessionId;
+    }
+    return false;
+  };
+
   // Submit new comment
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || isSubmitting) return;
 
-    if (!isAuthenticated) {
-      router.push(`/${locale}/login`);
+    // Validate guest name if not authenticated
+    if (!isAuthenticated && !guestName.trim()) {
+      setError(isArabic ? 'الاسم مطلوب' : 'Name is required');
       return;
     }
 
@@ -94,10 +140,21 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
     setError(null);
 
     try {
+      const body: Record<string, string | null | undefined> = {
+        content: newComment.trim(),
+      };
+
+      if (!isAuthenticated) {
+        body.guestName = guestName.trim();
+        body.sessionId = sessionId;
+        // Store guest name for future use
+        setStoredGuestName(guestName.trim());
+      }
+
       const res = await fetch(`/api/articles/${articleId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newComment.trim() }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -121,8 +178,9 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
   const handleReply = async (parentId: string) => {
     if (!replyContent.trim() || isSubmitting) return;
 
-    if (!isAuthenticated) {
-      router.push(`/${locale}/login`);
+    // Validate guest name if not authenticated
+    if (!isAuthenticated && !replyGuestName.trim()) {
+      setError(isArabic ? 'الاسم مطلوب' : 'Name is required');
       return;
     }
 
@@ -130,10 +188,21 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
     setError(null);
 
     try {
+      const body: Record<string, string | null | undefined> = {
+        content: replyContent.trim(),
+        parentId,
+      };
+
+      if (!isAuthenticated) {
+        body.guestName = replyGuestName.trim();
+        body.sessionId = sessionId;
+        setStoredGuestName(replyGuestName.trim());
+      }
+
       const res = await fetch(`/api/articles/${articleId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: replyContent.trim(), parentId }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -157,17 +226,26 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
   };
 
   // Edit comment
-  const handleEdit = async (commentId: string) => {
+  const handleEdit = async (commentId: string, comment: Comment) => {
     if (!editContent.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
+      const body: Record<string, string | null | undefined> = {
+        content: editContent.trim(),
+      };
+
+      // If guest, include sessionId
+      if (comment.isGuest) {
+        body.sessionId = sessionId;
+      }
+
       const res = await fetch(`/api/articles/${articleId}/comments/${commentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: editContent.trim() }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -191,13 +269,17 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
   };
 
   // Delete comment
-  const handleDelete = async (commentId: string) => {
+  const handleDelete = async (commentId: string, comment: Comment) => {
     if (!confirm(dict.comments.deleteConfirm)) return;
 
     try {
-      const res = await fetch(`/api/articles/${articleId}/comments/${commentId}`, {
-        method: 'DELETE',
-      });
+      // Build URL with sessionId for guests
+      let url = `/api/articles/${articleId}/comments/${commentId}`;
+      if (comment.isGuest && sessionId) {
+        url += `?sessionId=${sessionId}`;
+      }
+
+      const res = await fetch(url, { method: 'DELETE' });
 
       if (res.ok) {
         // Remove comment and its replies
@@ -250,7 +332,7 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
   // Render single comment
   const renderComment = (comment: Comment, isReply = false) => {
     const replies = getReplies(comment.id);
-    const isOwner = user?.id === comment.userId;
+    const isOwner = isCommentOwner(comment);
     const isEditing = editingId === comment.id;
     const isReplying = replyTo === comment.id;
     const showReplies = expandedReplies.has(comment.id);
@@ -275,7 +357,7 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
               />
             ) : (
               <div
-                className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-midnight-700 flex items-center justify-center`}
+                className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} rounded-full ${comment.isGuest ? 'bg-midnight-600' : 'bg-midnight-700'} flex items-center justify-center`}
               >
                 <span className="text-slate-medium text-sm font-medium">
                   {comment.author.name.charAt(0).toUpperCase()}
@@ -290,6 +372,11 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
               <span className="font-medium text-slate-light text-sm">
                 {comment.author.name}
               </span>
+              {comment.isGuest && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-midnight-700 text-slate-dark">
+                  {dict.comments.guestLabel}
+                </span>
+              )}
               <span className="text-xs text-slate-dark">
                 {formatDate(comment.createdAt)}
               </span>
@@ -312,7 +399,7 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
                 />
                 <div className="flex gap-2 mt-2">
                   <button
-                    onClick={() => handleEdit(comment.id)}
+                    onClick={() => handleEdit(comment.id, comment)}
                     disabled={isSubmitting || !editContent.trim()}
                     className="flex items-center gap-1 px-3 py-1 bg-earth-olive text-white rounded text-xs hover:bg-earth-olive/90 disabled:opacity-50"
                   >
@@ -340,7 +427,7 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
             {/* Actions */}
             {!isEditing && (
               <div className="flex items-center gap-3 mt-2">
-                {isAuthenticated && !isReply && (
+                {!isReply && (
                   <button
                     onClick={() => {
                       setReplyTo(isReplying ? null : comment.id);
@@ -365,7 +452,7 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
                       {dict.comments.edit}
                     </button>
                     <button
-                      onClick={() => handleDelete(comment.id)}
+                      onClick={() => handleDelete(comment.id, comment)}
                       className="flex items-center gap-1 text-xs text-slate-dark hover:text-tactical-red transition-colors"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -388,6 +475,23 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
                   <div className="text-xs text-slate-dark mb-2">
                     {dict.comments.replyingTo} <span className="text-slate-medium">{comment.author.name}</span>
                   </div>
+                  {/* Guest name input for replies */}
+                  {!isAuthenticated && (
+                    <div className="mb-2">
+                      <div className="flex items-center gap-2 bg-midnight-800 border border-midnight-600 rounded-lg px-3 py-2">
+                        <User className="h-4 w-4 text-slate-dark" />
+                        <input
+                          type="text"
+                          value={replyGuestName}
+                          onChange={(e) => setReplyGuestName(e.target.value)}
+                          placeholder={dict.comments.guestName}
+                          className="flex-1 bg-transparent text-slate-light text-sm focus:outline-none"
+                          maxLength={50}
+                          dir={isArabic ? 'rtl' : 'ltr'}
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <textarea
                       value={replyContent}
@@ -401,7 +505,7 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
                     <div className="flex flex-col gap-1">
                       <button
                         onClick={() => handleReply(comment.id)}
-                        disabled={isSubmitting || !replyContent.trim()}
+                        disabled={isSubmitting || !replyContent.trim() || (!isAuthenticated && !replyGuestName.trim())}
                         className="p-2 bg-tactical-red text-white rounded-lg hover:bg-tactical-red/90 disabled:opacity-50"
                       >
                         {isSubmitting ? (
@@ -498,58 +602,65 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
         )}
       </AnimatePresence>
 
-      {/* New comment form */}
-      {authLoading ? null : isAuthenticated ? (
-        <form onSubmit={handleSubmit} className="mb-8">
-          <div className="flex gap-3">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-midnight-700 flex items-center justify-center">
-                <span className="text-slate-medium text-sm font-medium">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-            </div>
-            <div className="flex-1">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder={dict.comments.placeholder}
-                className="w-full bg-midnight-800 border border-midnight-600 rounded-lg px-4 py-3 text-slate-light resize-none focus:outline-none focus:border-tactical-red transition-colors"
-                rows={3}
-                maxLength={2000}
-                dir={isArabic ? 'rtl' : 'ltr'}
-              />
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-xs text-slate-dark">
-                  {newComment.length}/2000
-                </span>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !newComment.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-tactical-red text-white rounded-lg font-medium text-sm hover:bg-tactical-red/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  {dict.comments.submit}
-                </button>
-              </div>
+      {/* New comment form - available to everyone */}
+      <form onSubmit={handleSubmit} className="mb-8">
+        <div className="flex gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-midnight-700 flex items-center justify-center">
+              <span className="text-slate-medium text-sm font-medium">
+                {isAuthenticated
+                  ? (user?.email?.charAt(0).toUpperCase() || 'U')
+                  : (guestName.charAt(0).toUpperCase() || '?')}
+              </span>
             </div>
           </div>
-        </form>
-      ) : (
-        <div className="mb-8 p-4 bg-midnight-800 border border-midnight-700 rounded-lg text-center">
-          <p className="text-slate-medium mb-3">{dict.comments.loginToComment}</p>
-          <button
-            onClick={() => router.push(`/${locale}/login`)}
-            className="px-4 py-2 bg-tactical-red text-white rounded-lg font-medium text-sm hover:bg-tactical-red/90 transition-colors"
-          >
-            {isArabic ? 'تسجيل الدخول' : 'Sign In'}
-          </button>
+          <div className="flex-1">
+            {/* Guest name input */}
+            {!isAuthenticated && (
+              <div className="mb-3">
+                <div className="flex items-center gap-2 bg-midnight-800 border border-midnight-600 rounded-lg px-4 py-2.5">
+                  <User className="h-4 w-4 text-slate-dark" />
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder={dict.comments.guestName}
+                    className="flex-1 bg-transparent text-slate-light focus:outline-none"
+                    maxLength={50}
+                    dir={isArabic ? 'rtl' : 'ltr'}
+                  />
+                </div>
+              </div>
+            )}
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder={dict.comments.placeholder}
+              className="w-full bg-midnight-800 border border-midnight-600 rounded-lg px-4 py-3 text-slate-light resize-none focus:outline-none focus:border-tactical-red transition-colors"
+              rows={3}
+              maxLength={2000}
+              dir={isArabic ? 'rtl' : 'ltr'}
+            />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs text-slate-dark">
+                {newComment.length}/2000
+              </span>
+              <button
+                type="submit"
+                disabled={isSubmitting || !newComment.trim() || (!isAuthenticated && !guestName.trim())}
+                className="flex items-center gap-2 px-4 py-2 bg-tactical-red text-white rounded-lg font-medium text-sm hover:bg-tactical-red/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {dict.comments.submit}
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+      </form>
 
       {/* Comments list */}
       {topLevelComments.length === 0 ? (

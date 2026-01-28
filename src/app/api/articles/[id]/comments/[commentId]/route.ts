@@ -23,41 +23,40 @@ export async function DELETE(
     return NextResponse.json({ error: 'Invalid article ID' }, { status: 400 });
   }
 
-  // Create authenticated Supabase client
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            // Ignore if called from Server Component
-          }
-        },
-      },
-    }
-  );
-
-  // Check authentication
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
-
   try {
+    // Get sessionId from query params (for guests)
+    const url = new URL(request.url);
+    const sessionId = url.searchParams.get('sessionId');
+
+    // Check if authenticated user
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options);
+              });
+            } catch {
+              // Ignore
+            }
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Fetch the comment to check ownership
     const { data: comment, error: fetchError } = await supabaseAdmin
       .from('article_comments')
-      .select('id, user_id, article_id')
+      .select('id, user_id, session_id, article_id')
       .eq('id', commentId)
       .eq('article_id', articleId)
       .single();
@@ -66,17 +65,26 @@ export async function DELETE(
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
-    // Check if user is the owner or an admin
-    const { data: profile } = await supabaseAdmin
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Check authorization
+    let isAuthorized = false;
 
-    const isOwner = comment.user_id === user.id;
-    const isAdmin = profile?.role === 'admin';
+    if (user) {
+      // Authenticated user
+      const { data: profile } = await supabaseAdmin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    if (!isOwner && !isAdmin) {
+      const isOwner = comment.user_id === user.id;
+      const isAdmin = profile?.role === 'admin';
+      isAuthorized = isOwner || isAdmin;
+    } else if (sessionId && comment.session_id) {
+      // Guest user - can only delete own comments
+      isAuthorized = comment.session_id === sessionId && comment.user_id === null;
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Not authorized to delete this comment' }, { status: 403 });
     }
 
@@ -110,39 +118,9 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid article ID' }, { status: 400 });
   }
 
-  // Create authenticated Supabase client
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            // Ignore if called from Server Component
-          }
-        },
-      },
-    }
-  );
-
-  // Check authentication
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
-
   try {
     const body = await request.json();
-    const { content } = body;
+    const { content, sessionId } = body;
 
     // Validate content
     if (!content || typeof content !== 'string') {
@@ -158,10 +136,35 @@ export async function PATCH(
       return NextResponse.json({ error: 'Comment must be less than 2000 characters' }, { status: 400 });
     }
 
+    // Check if authenticated user
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options);
+              });
+            } catch {
+              // Ignore
+            }
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Fetch the comment to check ownership
     const { data: comment, error: fetchError } = await supabaseAdmin
       .from('article_comments')
-      .select('id, user_id, article_id')
+      .select('id, user_id, session_id, article_id, guest_name')
       .eq('id', commentId)
       .eq('article_id', articleId)
       .single();
@@ -170,8 +173,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
-    // Only owner can edit
-    if (comment.user_id !== user.id) {
+    // Check authorization
+    let isAuthorized = false;
+    const isGuest = !comment.user_id;
+
+    if (user) {
+      // Authenticated user - can only edit own comments
+      isAuthorized = comment.user_id === user.id;
+    } else if (sessionId && comment.session_id) {
+      // Guest user - can only edit own comments
+      isAuthorized = comment.session_id === sessionId && comment.user_id === null;
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Not authorized to edit this comment' }, { status: 403 });
     }
 
@@ -180,14 +194,7 @@ export async function PATCH(
       .from('article_comments')
       .update({ content: trimmedContent })
       .eq('id', commentId)
-      .select(`
-        id,
-        content,
-        parent_id,
-        is_edited,
-        created_at,
-        user_id
-      `)
+      .select('id, content, parent_id, is_edited, created_at, user_id, guest_name, session_id')
       .single();
 
     if (updateError) {
@@ -195,12 +202,21 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update comment' }, { status: 500 });
     }
 
-    // Fetch user profile for response
-    const { data: profile } = await supabaseAdmin
-      .from('user_profiles')
-      .select('full_name, avatar_url')
-      .eq('id', user.id)
-      .single();
+    // Get author name
+    let authorName = 'Anonymous';
+    let authorAvatar = null;
+
+    if (isGuest) {
+      authorName = comment.guest_name || 'Guest';
+    } else if (user) {
+      const { data: profile } = await supabaseAdmin
+        .from('user_profiles')
+        .select('full_name, avatar_url')
+        .eq('id', user.id)
+        .single();
+      authorName = profile?.full_name || 'Anonymous';
+      authorAvatar = profile?.avatar_url || null;
+    }
 
     const transformedComment = {
       id: updatedComment.id,
@@ -209,9 +225,11 @@ export async function PATCH(
       isEdited: updatedComment.is_edited,
       createdAt: updatedComment.created_at,
       userId: updatedComment.user_id,
+      sessionId: updatedComment.session_id,
+      isGuest,
       author: {
-        name: profile?.full_name || 'Anonymous',
-        avatar: profile?.avatar_url || null,
+        name: authorName,
+        avatar: authorAvatar,
       },
     };
 

@@ -309,6 +309,8 @@ const dictionaries = {
       hideReplies: 'Hide replies',
       deleteConfirm: 'Are you sure you want to delete this comment?',
       replyingTo: 'Replying to',
+      guestName: 'Your name',
+      guestLabel: 'Guest',
     },
   },
   ar: {
@@ -619,6 +621,8 @@ const dictionaries = {
       hideReplies: 'إخفاء الردود',
       deleteConfirm: 'هل أنت متأكد من حذف هذا التعليق؟',
       replyingTo: 'الرد على',
+      guestName: 'اسمك',
+      guestLabel: 'زائر',
     },
   },
 };
