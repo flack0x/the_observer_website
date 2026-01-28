@@ -21,6 +21,9 @@ function processContent(rawContent: string, title: string): string {
   // Remove corrupted Unicode replacement characters (appear as ���)
   content = content.replace(/\uFFFD+/g, '');
 
+  // Comprehensive emoji regex - matches most emoji including compound sequences
+  const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{200D}\u{FE0F}]+/gu;
+
   // Remove the header section (title, category, countries, orgs) from the beginning
   // These patterns match the structured header formats
   const headerPatterns = [
@@ -43,8 +46,7 @@ function processContent(rawContent: string, title: string): string {
     // Skip if it's a header-like line
     if (
       line.match(/^\*\*(?:Category|Title|Countries?|Orgs?|Organizations?|Brief)/i) ||
-      line.match(/^🔴/) ||
-      line.match(/^[🔵🟢🟡⚫⚪💳👍🤔🚨💰📺⚠️🔽]/) ||
+      line.match(emojiRegex) && line.match(/^\*\*/) || // Emoji + bold header
       line.match(/^\*\*[^*]+\*\*$/) && i < 10 || // Standalone bold line in header
       line === '' ||
       line.match(/^(?:Geopolitics|Military|Political|Economic)\s*\|/i) // Category line
@@ -67,8 +69,8 @@ function processContent(rawContent: string, title: string): string {
   // Take content from after headers
   content = lines.slice(contentStartIndex).join('\n').trim();
 
-  // Remove leading emoji markers
-  content = content.replace(/^[🔴🔵🟢🟡⚫⚪⚠️🚨📢💳👍🤔📺💰🔽\s]+/, '');
+  // Remove leading emoji markers (using comprehensive regex)
+  content = content.replace(new RegExp('^' + emojiRegex.source + '\\s*', 'u'), '');
 
   // Convert Telegram markdown to HTML
   // Bold: **text** → <strong>text</strong>
@@ -83,8 +85,8 @@ function processContent(rawContent: string, title: string): string {
   // Convert bullet points
   content = content.replace(/^[•]\s*/gm, '• ');
 
-  // Remove remaining standalone emoji markers that are decorative
-  content = content.replace(/^[🔴🔵🟢🟡💳👍🤔📺💰🚨⚠️🔽]\s*/gm, '');
+  // Remove emoji markers at the start of each line
+  content = content.replace(new RegExp('^' + emojiRegex.source + '\\s*', 'gmu'), '');
 
   // Clean up multiple newlines
   content = content.replace(/\n{3,}/g, '\n\n');
@@ -93,7 +95,8 @@ function processContent(rawContent: string, title: string): string {
   content = content.replace(/\n*@observer_?\d*\s*$/gi, '');
   content = content.replace(/\n*@almuraqb\s*$/gi, '');
   content = content.replace(/\n*Link to.*$/gi, '');
-  content = content.replace(/\n*🔵.*$/gi, '');
+  // Remove lines that are just emoji + link/channel info
+  content = content.replace(new RegExp('\\n*' + emojiRegex.source + '.*(?:t\\.me|@|telegram).*$', 'giu'), '');
 
   return content.trim();
 }
