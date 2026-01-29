@@ -33,7 +33,9 @@
       "Bash(rm:*)",
       "Bash(git restore:*)",
       "WebFetch(domain:michaelspringmann.com)",
-      "WebFetch(domain:www.amazon.com)"
+      "WebFetch(domain:www.amazon.com)",
+      "Bash(npx vercel inspect:*)",
+      "Bash(npx vercel:*)"
     ]
   }
 }

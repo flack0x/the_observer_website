@@ -479,8 +479,9 @@ function processContent(rawContent: string, title: string): string {
   // 2. Skip header section (title, category, countries)
   // 3. Remove emoji markers at start of lines
   // 4. Convert **bold** → <strong>, __italic__ → <em>
-  // 5. Clean up multiple newlines
-  // 6. Remove footer/channel references
+  // 5. Strip self-referential links: [Our website](https://al-muraqeb.com/...)
+  // 6. Clean up multiple newlines
+  // 7. Remove footer/channel references
 }
 ```
 
@@ -566,6 +567,14 @@ const getGuestSessionId = () => {
 // Guest voting uses RPC functions (bypasses RLS)
 await supabase.rpc('guest_vote', { p_article_id, p_session_id, p_interaction_type });
 await supabase.rpc('guest_unvote', { p_article_id, p_session_id });
+
+// Guest commenting uses RPC functions (bypasses RLS)
+await supabase.rpc('guest_comment', { p_article_id, p_session_id, p_guest_name, p_content, p_parent_id });
+await supabase.rpc('guest_delete_comment', { p_comment_id, p_session_id });
+
+// Guest name persistence (stored separately from session ID)
+localStorage.getItem('guest_comment_name');
+localStorage.setItem('guest_comment_name', name);
 ```
 
 ## Component Patterns
@@ -709,6 +718,8 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260121160000_fix_vote_trigger.sql` | Vote trigger handles UPDATE |
 | `20260127120000_secure_guest_voting.sql` | RPC functions for guest voting |
 | `20260128120000_create_comments_table.sql` | Article comments with threading |
+| `20260128120000_allow_guest_comments.sql` | Guest commenting: nullable user_id, guest_name, session_id |
+| `20260128130000_allow_guest_comments.sql` | Guest comment RPC functions (guest_comment, guest_delete_comment) |
 
 ### articles
 | Column | Type | Notes |
@@ -770,13 +781,17 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 |--------|------|-------|
 | id | uuid | PK |
 | article_id | bigint | FK to articles |
-| user_id | uuid | FK to auth.users |
+| user_id | uuid | FK to auth.users (nullable for guests) |
 | parent_id | uuid | FK to article_comments (nullable, for replies) |
+| guest_name | text | Display name for guest commenters |
+| session_id | text | Guest session UUID for ownership verification |
 | content | text | 3-2000 characters |
 | is_approved | boolean | For moderation (default true) |
 | is_edited | boolean | Auto-set on update |
 | created_at | timestamptz | |
 | updated_at | timestamptz | |
+
+**Constraint**: `comment_author_check` — every comment must have either `user_id` (authenticated) OR both `guest_name` AND `session_id` (guest).
 
 ### book_reviews
 | Column | Type | Notes |
@@ -857,6 +872,18 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 
 **`guest_unvote(p_article_id BIGINT, p_session_id TEXT)`**
 - Removes a guest vote
+- `SECURITY DEFINER` - bypasses RLS
+
+**`guest_comment(p_article_id BIGINT, p_session_id TEXT, p_guest_name TEXT, p_content TEXT, p_parent_id UUID DEFAULT NULL)`**
+- Creates a comment as a guest user
+- Validates content (3-2000 chars) and name (1-50 chars)
+- Returns UUID of created comment
+- `SECURITY DEFINER` - bypasses RLS
+
+**`guest_delete_comment(p_comment_id UUID, p_session_id TEXT)`**
+- Deletes a guest comment by verifying session ownership
+- Only deletes if `session_id` matches AND `user_id IS NULL`
+- Returns boolean success indicator
 - `SECURITY DEFINER` - bypasses RLS
 
 ## Middleware (`middleware.ts`)
@@ -1247,16 +1274,21 @@ python generate_session_string.py
 
 ## Recent Changes (Jan 2026)
 
-- **Article Comments System** (Jan 28): Full commenting feature for articles
+- **Article Comments System + Guest Comments** (Jan 28-29): Full commenting with frictionless guest support
   - `article_comments` table with threading support (parent_id for replies)
   - API routes: GET/POST `/api/articles/[id]/comments`, DELETE/PATCH `/api/articles/[id]/comments/[commentId]`
   - `CommentSection` component with form, replies, edit/delete functionality
-  - Only authenticated users can comment
-  - Owners can edit/delete their own comments
+  - Both authenticated users and guests can comment
+  - Guests provide a name (persisted in localStorage) and are tracked via session_id
+  - Guest comments show "Guest" badge; guest name stored for repeat visits
+  - `guest_comment` and `guest_delete_comment` RPC functions (`SECURITY DEFINER`)
+  - DB constraint ensures every comment has either `user_id` or `guest_name` + `session_id`
+  - Owners can edit/delete their own comments (guests via session_id match)
   - Admins can delete any comment (moderation)
-  - Bilingual support (EN/AR) with full translations
+  - Bilingual support (EN/AR) with full translations (`guestName`, `guestLabel`)
   - Integrated into `ArticleContent.tsx` below interactions
   - Comment count cached in `articles.comment_count` via trigger
+  - Migrations: `20260128120000` (table), `20260128120000` (guest fields), `20260128130000` (RPC functions)
 - **External Voices Section** (Jan 28): New section for featuring external authors/analysts
   - `/[locale]/voices` - List page showing all featured voices
   - `/[locale]/voices/[slug]` - Detail page with bio, articles, books, credentials
@@ -1265,6 +1297,11 @@ python generate_session_string.py
   - First voice: J. Michael Springmann (former US diplomat, author)
   - Bilingual support (EN/AR) with full translations
   - Added "Voices" to main navigation
+- **Self-Referential Link Stripping** (Jan 29): Remove `[Our website](https://al-muraqeb.com/en)` from article content
+  - Telegram posts include promotional links back to the site that rendered as raw markdown text
+  - Added regex in `processContent()` to strip `[...](https://al-muraqeb.com/...)` patterns
+  - Added paragraph filter fallback to skip standalone self-referential link paragraphs
+  - Handles all variations: any link text, any path, http/https
 - **Emoji Sanitization Fix** (Jan 28): Comprehensive emoji stripping from article content
   - Root cause: Telegram emojis (📰, ✌, etc.) rendering as broken box characters
   - Solution: Replaced hardcoded emoji lists with comprehensive Unicode range regex

@@ -92,6 +92,9 @@ function processContent(rawContent: string, title: string): string {
   // Clean up multiple newlines
   content = content.replace(/\n{3,}/g, '\n\n');
 
+  // Remove self-referential website links (e.g., [Our website](https://al-muraqeb.com/en))
+  content = content.replace(/\[.*?\]\(https?:\/\/(?:www\.)?al-muraqeb\.com[^)]*\)\s*/gi, '');
+
   // Remove footer/channel references
   content = content.replace(/\n*@observer_?\d*\s*$/gi, '');
   content = content.replace(/\n*@almuraqb\s*$/gi, '');
@@ -322,7 +325,8 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               plainText.includes("@almuraqb") ||
               plainText.startsWith("Link to") ||
               plainText.startsWith("🔵") ||
-              plainText.length < 3
+              plainText.length < 3 ||
+              /^\[.*?\]\(https?:\/\/(?:www\.)?al-muraqeb\.com[^)]*\)$/.test(plainText.trim())
             ) {
               return null;
             }
