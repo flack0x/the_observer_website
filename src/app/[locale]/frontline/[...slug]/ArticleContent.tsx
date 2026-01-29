@@ -73,6 +73,12 @@ function processContent(rawContent: string, title: string): string {
   // Remove leading emoji markers (using comprehensive regex)
   content = content.replace(new RegExp('^' + emojiRegex.source + '\\s*', 'u'), '');
 
+  // Strip self-referential and promotional markdown links BEFORE bold conversion
+  // Matches: [**Our website**](https://al-muraqeb.com/en), [Our website](https://al-muraqeb.com/...)
+  content = content.replace(/\[.*?\]\(https?:\/\/(?:www\.)?al-muraqeb\.com[^)]*\)/gi, '');
+  // Matches: [Link to the article in Arabic](https://t.me/...), [**text**](https://t.me/...)
+  content = content.replace(/\[.*?\]\(https?:\/\/t\.me\/[^)]*\)/gi, '');
+
   // Convert Telegram markdown to HTML
   // Bold: **text** → <strong>text</strong>
   content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -91,9 +97,6 @@ function processContent(rawContent: string, title: string): string {
 
   // Clean up multiple newlines
   content = content.replace(/\n{3,}/g, '\n\n');
-
-  // Remove self-referential website links (e.g., [Our website](https://al-muraqeb.com/en))
-  content = content.replace(/\[.*?\]\(https?:\/\/(?:www\.)?al-muraqeb\.com[^)]*\)\s*/gi, '');
 
   // Remove footer/channel references
   content = content.replace(/\n*@observer_?\d*\s*$/gi, '');

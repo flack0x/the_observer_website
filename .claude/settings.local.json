@@ -35,7 +35,8 @@
       "WebFetch(domain:michaelspringmann.com)",
       "WebFetch(domain:www.amazon.com)",
       "Bash(npx vercel inspect:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "WebFetch(domain:the-observer-website-o5hng0v1p-lineati-consultancy.vercel.app)"
     ]
   }
 }
