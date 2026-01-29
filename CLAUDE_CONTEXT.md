@@ -1297,9 +1297,10 @@ python generate_session_string.py
   - First voice: J. Michael Springmann (former US diplomat, author)
   - Bilingual support (EN/AR) with full translations
   - Added "Voices" to main navigation
-- **Self-Referential Link Stripping** (Jan 29): Remove `[Our website](https://al-muraqeb.com/en)` from article content
-  - Telegram posts include promotional links back to the site that rendered as raw markdown text
-  - Added regex in `processContent()` to strip `[...](https://al-muraqeb.com/...)` patterns
+- **Self-Referential Link Stripping** (Jan 29): Remove promotional markdown links from article content
+  - Telegram posts include `[**Our website**](https://al-muraqeb.com/en)` and `[Link to Arabic](https://t.me/almuraqb/...)` links
+  - Added regex in `processContent()` to strip `[...](https://al-muraqeb.com/...)` and `[...](https://t.me/...)` patterns
+  - Stripping runs BEFORE bold conversion to catch `[**text**](url)` in raw markdown form
   - Added paragraph filter fallback to skip standalone self-referential link paragraphs
   - Handles all variations: any link text, any path, http/https
 - **Emoji Sanitization Fix** (Jan 28): Comprehensive emoji stripping from article content
