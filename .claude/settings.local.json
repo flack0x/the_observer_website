@@ -36,7 +36,16 @@
       "WebFetch(domain:www.amazon.com)",
       "Bash(npx vercel inspect:*)",
       "Bash(npx vercel:*)",
-      "WebFetch(domain:the-observer-website-o5hng0v1p-lineati-consultancy.vercel.app)"
+      "WebFetch(domain:the-observer-website-o5hng0v1p-lineati-consultancy.vercel.app)",
+      "Bash(copy \"C:\\\\Users\\\\PC\\\\Downloads\\\\photo_2026-01-31_13-22-23.jpg\" \"C:\\\\Users\\\\PC\\\\Downloads\\\\harris-maliki-meeting-baghdad.jpg\")",
+      "Bash(copy:*)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" status)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" diff)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" log --oneline -5)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" add scripts/post_iraq_articles.mjs)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\nfeat: Add script for posting Iraq sovereignty articles\n\nAdd post_iraq_articles.mjs for inserting bilingual articles\n\\(EN/AR\\) directly into Supabase with image uploads.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(source \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\\\\.env.local\")",
+      "Bash(echo:*)"
     ]
   }
 }
