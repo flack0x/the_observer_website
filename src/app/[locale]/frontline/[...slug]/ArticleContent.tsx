@@ -338,7 +338,7 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               return (
                 <h2
                   key={index}
-                  className="font-heading text-xl font-bold text-slate-light mt-8 mb-4"
+                  className="font-heading text-xl font-bold text-slate-light mt-8 mb-4 normal-case"
                   dangerouslySetInnerHTML={{ __html: paragraph }}
                 />
               );
