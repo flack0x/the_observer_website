@@ -137,16 +137,6 @@ Article content...
 - Minimum message length: 20 chars (allows short headers in multi-part posts)
 - Use `--full` flag to force complete re-sync
 
-**Sync State** (`scripts/.sync_state.json`):
-- Tracks `last_message_id` per channel
-- Tracks `last_sync` timestamp
-- Used for incremental syncs
-
-**Telegram Session** (`scripts/observer_session.session`):
-- Local file-based session for development
-- For CI/CD: use `TELEGRAM_SESSION_STRING` env var
-- Generate with `scripts/generate_session_string.py`
-
 **Frontend Title Sanitization** (`src/lib/supabase.ts`):
 - `sanitizeTitle()` strips `TITLE:` / `العنوان:` prefixes
 - Handles pipe-separated fallback titles by extracting meaningful part
@@ -1111,18 +1101,16 @@ npm run start    # Start production server
 npm run lint     # ESLint
 ```
 
-## Python Scripts (`scripts/`)
+## Scripts (`scripts/`)
 
 | Script | Purpose |
 |--------|---------|
 | `fetch_telegram.py` | Main article fetcher (Telegram → Supabase) |
-| `analyze_articles.py` | Compute metrics from articles |
-| `create_admin_user.js` | Create admin user in Supabase |
-| `check_articles.py` | Validate articles in database |
-| `upload_image.py` | Upload image to Supabase Storage |
-| `publish_article.py` | Publish draft articles |
-| `generate_session_string.py` | Generate Telegram session string |
 | `fetch_news_headlines.py` | Fetch headlines from RSS feeds |
+| `publish_article.py` | Publish draft articles |
+| `upload_image.py` | Upload image to Supabase Storage |
+| `create_admin_user.js` | Create admin user in Supabase |
+| `schema.sql` | Database schema reference |
 
 **Python Dependencies** (`scripts/requirements.txt`):
 ```
@@ -1228,13 +1216,7 @@ for r in result.data:
 3. Database not updated → Run sync again
 
 ### Telegram session expired
-**Fix**:
-```bash
-cd scripts
-python login_telegram.py      # Re-authenticate
-# Or generate new session string for CI/CD:
-python generate_session_string.py
-```
+**Fix**: Re-authenticate via Telethon. For CI/CD, set `TELEGRAM_SESSION_STRING` environment variable.
 
 ### Article content showing raw markdown
 **Symptoms**: `**text**` or `__text__` visible instead of bold/italic
@@ -1260,20 +1242,26 @@ python generate_session_string.py
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Jan 28, 2026)
+## Database Stats (Jan 31, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (EN) | 249 | Telegram synced |
-| Articles (AR) | 282 | Telegram synced |
+| Articles (total) | 572 | EN + AR combined |
 | Book Reviews | 14 | 7 EN, 7 AR published |
-| News Headlines | 217 | Active from RSS feeds |
+| News Headlines | 200+ | Active from RSS feeds |
 | User Profiles | 1 | Admin configured |
 | Subscribers | 0 | Table ready |
-| Comments | 0 | New feature |
+| Comments | 0 | Feature ready |
 
 ## Recent Changes (Jan 2026)
 
+- **Manual Article Posting + Scripts Cleanup** (Jan 31):
+  - Posted bilingual Iraq sovereignty analysis articles directly to Supabase
+  - EN: "The Viceroy's Stamp: Washington's Veto on Iraqi Democracy"
+  - AR: "من يحكم العراق؟ الفيتو الأمريكي على السيادة العراقية"
+  - Images uploaded to Supabase Storage (`article-media` bucket)
+  - Cleaned up scripts folder: removed test files, one-off scripts, stale artifacts
+  - Kept only essential pipeline scripts (fetch_telegram.py, fetch_news_headlines.py, etc.)
 - **Article Comments System + Guest Comments** (Jan 28-29): Full commenting with frictionless guest support
   - `article_comments` table with threading support (parent_id for replies)
   - API routes: GET/POST `/api/articles/[id]/comments`, DELETE/PATCH `/api/articles/[id]/comments/[commentId]`
