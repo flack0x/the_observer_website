@@ -1291,11 +1291,12 @@ for r in result.data:
   - Color scheme: Categories (red), Countries (blue), Time (amber), Video (green)
   - All filters chain: Category → Country → Time → Video → Search (no conflicts)
 
-- **Frontline Filter UI Fix** (Feb 1):
-  - Reorganized filter bar layout in `src/app/[locale]/frontline/page.tsx`
-  - Search bar moved to top with full width (max 400px)
-  - Category filter buttons below with Filter label
-  - Cleaner visual hierarchy
+- **Frontline Filter UI** (Feb 1):
+  - Compact 3-row layout: Search+Video+Time | Categories | Countries
+  - Search bar: Fixed width (256px), not expanding
+  - Filters scroll horizontally on mobile
+  - Color scheme: Categories (red), Countries (blue), Time (amber), Video (green)
+  - All filters chain without conflicts
 
 - **SEO H1 Fix** (Feb 1):
   - Homepage H1 was "Observe Analyze Understand" - not descriptive for search engines
