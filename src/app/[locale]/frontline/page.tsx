@@ -183,11 +183,11 @@ export default function FrontlinePage() {
       </section>
 
       {/* Filters */}
-      <section className="border-b border-midnight-700 bg-midnight-800/50 py-4">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-3">
-          {/* Row 1: Search + Video Toggle */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
+      <section className="border-b border-midnight-700 bg-midnight-800/50 py-3">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-2">
+          {/* Row 1: Search + Video + Time */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-dark" aria-hidden="true" />
               <label htmlFor="frontline-search" className="sr-only">{dict.common.search}</label>
               <input
@@ -196,32 +196,30 @@ export default function FrontlinePage() {
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder={dict.common.search + '...'}
-                className="w-full rounded-lg border border-midnight-600 bg-midnight-700 py-2 pl-10 pr-4 text-sm text-slate-light placeholder-slate-dark outline-none focus:border-tactical-red focus:ring-1 focus:ring-tactical-red transition-colors"
+                className="w-full rounded-lg border border-midnight-600 bg-midnight-700 py-1.5 pl-9 pr-3 text-sm text-slate-light placeholder-slate-dark outline-none focus:border-tactical-red focus:ring-1 focus:ring-tactical-red transition-colors"
                 dir={isArabic ? 'rtl' : 'ltr'}
               />
             </div>
-            {/* Video toggle */}
             <button
               onClick={handleVideoToggle}
-              className={`flex items-center gap-2 rounded-lg px-3 py-2 font-heading text-xs font-medium uppercase tracking-wider transition-all shrink-0 ${
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
                 videoOnly
                   ? "bg-green-600 text-white"
                   : "border border-midnight-600 text-slate-medium hover:border-green-500 hover:text-green-500"
               }`}
             >
-              <Video className="h-4 w-4" />
-              <span className="hidden sm:inline">{isArabic ? 'فيديو فقط' : 'Video'}</span>
+              <Video className="h-3.5 w-3.5" />
+              {isArabic ? 'فيديو' : 'Video'}
             </button>
-            {/* Time range - compact */}
-            <div className="hidden sm:flex items-center gap-1 border border-midnight-600 rounded-lg p-1">
+            <div className="flex items-center border border-midnight-600 rounded-lg overflow-hidden">
               {TIME_RANGES.map((range) => (
                 <button
                   key={range.key}
                   onClick={() => handleTimeRangeChange(range.key)}
-                  className={`rounded-md px-2.5 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
+                  className={`px-2.5 py-1.5 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
                     activeTimeRange === range.key
                       ? "bg-tactical-amber text-midnight-900"
-                      : "text-slate-medium hover:text-tactical-amber"
+                      : "text-slate-medium hover:bg-midnight-700"
                   }`}
                 >
                   {range.key === 'all' ? (isArabic ? 'الكل' : 'All') : range.key.toUpperCase()}
@@ -230,64 +228,50 @@ export default function FrontlinePage() {
             </div>
           </div>
 
-          {/* Row 2: Category filters - horizontal scroll on mobile */}
-          <div className="flex items-center gap-2">
+          {/* Row 2: Category filters */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
             <Filter className="h-4 w-4 text-slate-dark shrink-0" />
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap ${
-                    activeCategory === category
-                      ? "bg-tactical-red text-white"
-                      : "border border-midnight-600 text-slate-medium hover:border-tactical-red hover:text-tactical-red"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => handleCategoryChange(category)}
+                className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap ${
+                  activeCategory === category
+                    ? "bg-tactical-red text-white"
+                    : "border border-midnight-600 text-slate-medium hover:border-tactical-red hover:text-tactical-red"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
           </div>
 
-          {/* Row 3: Country filters - horizontal scroll on mobile */}
-          <div className="flex items-center gap-2">
+          {/* Row 3: Country filters */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
             <MapPin className="h-4 w-4 text-slate-dark shrink-0" />
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-              {[null, ...TOP_COUNTRIES].map((country) => (
-                <button
-                  key={country || 'all'}
-                  onClick={() => handleCountryChange(country)}
-                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap ${
-                    activeCountry === country
-                      ? "bg-intel-blue text-white"
-                      : "border border-midnight-600 text-slate-medium hover:border-intel-blue hover:text-intel-blue"
-                  }`}
-                >
-                  {country ? getCountryName(country, locale) : (isArabic ? 'الكل' : 'All')}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile only: Time range */}
-          <div className="flex sm:hidden items-center gap-2">
-            <Calendar className="h-4 w-4 text-slate-dark shrink-0" />
-            <div className="flex gap-1.5">
-              {TIME_RANGES.map((range) => (
-                <button
-                  key={range.key}
-                  onClick={() => handleTimeRangeChange(range.key)}
-                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
-                    activeTimeRange === range.key
-                      ? "bg-tactical-amber text-midnight-900"
-                      : "border border-midnight-600 text-slate-medium hover:border-tactical-amber hover:text-tactical-amber"
-                  }`}
-                >
-                  {range.key === 'all' ? (isArabic ? 'الكل' : 'All') : range.key.toUpperCase()}
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={() => handleCountryChange(null)}
+              className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap ${
+                activeCountry === null
+                  ? "bg-intel-blue text-white"
+                  : "border border-midnight-600 text-slate-medium hover:border-intel-blue hover:text-intel-blue"
+              }`}
+            >
+              {isArabic ? 'الكل' : 'All'}
+            </button>
+            {TOP_COUNTRIES.map((country) => (
+              <button
+                key={country}
+                onClick={() => handleCountryChange(country)}
+                className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap ${
+                  activeCountry === country
+                    ? "bg-intel-blue text-white"
+                    : "border border-midnight-600 text-slate-medium hover:border-intel-blue hover:text-intel-blue"
+                }`}
+              >
+                {getCountryName(country, locale)}
+              </button>
+            ))}
           </div>
         </div>
       </section>
