@@ -24,6 +24,12 @@ import { getRelativeTime } from "@/lib/time";
 
 const ARTICLES_PER_PAGE = 6;
 
+// Top countries from database analysis (sorted by article count)
+const TOP_COUNTRIES = [
+  'Israel', 'Palestine', 'Iran', 'Lebanon', 'USA', 'Iraq',
+  'Yemen', 'Syria', 'Russia', 'China', 'Saudi Arabia', 'Egypt'
+];
+
 export default function FrontlinePage() {
   const params = useParams();
   const locale = (params.locale as Locale) || 'en';
@@ -31,6 +37,7 @@ export default function FrontlinePage() {
   const dict = getDictionary(locale);
   const categories = getCategoryList(locale);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const [activeCountry, setActiveCountry] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE);
 
@@ -42,20 +49,31 @@ export default function FrontlinePage() {
     setVisibleCount(ARTICLES_PER_PAGE);
   };
 
+  const handleCountryChange = (country: string | null) => {
+    setActiveCountry(country);
+    setVisibleCount(ARTICLES_PER_PAGE);
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setVisibleCount(ARTICLES_PER_PAGE);
   };
 
-  // Filter articles by category and search
+  // Filter articles by category, country, and search
   const filteredByCategory = filterByCategory(articles, activeCategory, locale);
 
-  const filteredArticles = searchQuery
+  const filteredByCountry = activeCountry
     ? filteredByCategory.filter(article =>
+        article.countries?.includes(activeCountry)
+      )
+    : filteredByCategory;
+
+  const filteredArticles = searchQuery
+    ? filteredByCountry.filter(article =>
         article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : filteredByCategory;
+    : filteredByCountry;
 
   // Transform filtered articles
   const newsArticles = filteredArticles.map((article) => ({
@@ -159,6 +177,38 @@ export default function FrontlinePage() {
                   }`}
                 >
                   {category}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Country filters */}
+          <div className="flex items-center gap-3 mt-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <MapPin className="h-4 w-4 text-slate-dark" />
+              <span className="text-sm text-slate-dark">{isArabic ? 'الدولة:' : 'Region:'}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleCountryChange(null)}
+                className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
+                  activeCountry === null
+                    ? "bg-intel-blue text-white"
+                    : "border border-midnight-600 text-slate-medium hover:border-intel-blue hover:text-intel-blue"
+                }`}
+              >
+                {isArabic ? 'الكل' : 'All'}
+              </button>
+              {TOP_COUNTRIES.map((country) => (
+                <button
+                  key={country}
+                  onClick={() => handleCountryChange(country)}
+                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium tracking-wider transition-all ${
+                    activeCountry === country
+                      ? "bg-intel-blue text-white"
+                      : "border border-midnight-600 text-slate-medium hover:border-intel-blue hover:text-intel-blue"
+                  }`}
+                >
+                  {getCountryName(country, locale)}
                 </button>
               ))}
             </div>
