@@ -61,26 +61,35 @@ export default function HeroSection({ locale, dict }: HeroSectionProps) {
             </span>
           </motion.div>
 
-          {/* Main Title */}
+          {/* Main Title - SEO-friendly H1 with visual tagline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className={`font-heading text-[2.5rem] font-black uppercase text-slate-light sm:text-6xl lg:text-7xl ${isArabic ? 'leading-[1.4] tracking-normal' : 'tracking-tight'}`}
           >
-            {isArabic ? (
-              <>
-                <span className="block py-1">راقب</span>
-                <span className="block py-1 text-gradient-ar">حلل</span>
-                <span className="block py-1">افهم</span>
-              </>
-            ) : (
-              <>
-                <span className="block">Observe</span>
-                <span className="block text-gradient">Analyze</span>
-                <span className="block">Understand</span>
-              </>
-            )}
+            {/* Screen-reader & SEO text */}
+            <span className="sr-only">
+              {isArabic
+                ? 'المراقب - استخبارات جيوسياسية وتحليل استراتيجي'
+                : 'The Observer - Geopolitical Intelligence & Strategic Analysis'}
+            </span>
+            {/* Visual tagline */}
+            <span aria-hidden="true">
+              {isArabic ? (
+                <>
+                  <span className="block py-1">راقب</span>
+                  <span className="block py-1 text-gradient-ar">حلل</span>
+                  <span className="block py-1">افهم</span>
+                </>
+              ) : (
+                <>
+                  <span className="block">Observe</span>
+                  <span className="block text-gradient">Analyze</span>
+                  <span className="block">Understand</span>
+                </>
+              )}
+            </span>
           </motion.h1>
 
           {/* Subtitle */}
