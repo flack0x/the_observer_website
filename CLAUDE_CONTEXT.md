@@ -1273,6 +1273,13 @@ for r in result.data:
 
 ## Recent Changes (Feb 2026)
 
+- **SEO H1 Fix** (Feb 1):
+  - Homepage H1 was "Observe Analyze Understand" - not descriptive for search engines
+  - Added sr-only span with "The Observer - Geopolitical Intelligence & Strategic Analysis"
+  - Visual design unchanged, but Google now sees meaningful H1 content
+  - Bilingual support (EN/AR) for screen reader text
+  - Note: Site not yet indexed by Google despite 380 URLs in sitemap (submitted Jan 17)
+
 - **ALL CAPS Content Fix + Workflow Fix** (Feb 1):
   - Fixed article content displaying in ALL CAPS (from Telegram posts)
   - Added `src/lib/content.ts` utility for normalizing text to sentence case
@@ -1406,6 +1413,9 @@ for r in result.data:
 
 - **Property**: al-muraqeb.com (Domain property)
 - **Verification**: DNS TXT record (Namecheap)
-- **Sitemap**: https://al-muraqeb.com/sitemap.xml (228 pages)
+- **Sitemap**: https://al-muraqeb.com/sitemap.xml (380 pages as of Feb 1)
 - **Verification Code**: `google-site-verification=6GZxTpIryls2s95Zkl3jkPxpPsYlvW3LGnEe4L6Qm2k`
 - **Status**: Verified, sitemap submitted Jan 17, 2026
+- **Indexing Status** (Feb 1): `site:al-muraqeb.com` returns 0 results - not yet indexed
+- **SEO Health**: robots.txt OK, no noindex tags, canonical URLs present, JSON-LD structured data present
+- **Known Issues**: URL slugs use Telegram IDs (`/observer_5/447`) instead of descriptive slugs
