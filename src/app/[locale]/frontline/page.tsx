@@ -184,10 +184,10 @@ export default function FrontlinePage() {
 
       {/* Filters */}
       <section className="border-b border-midnight-700 bg-midnight-800/50 py-4">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Search bar - full width on top */}
-          <div className="mb-4">
-            <div className="relative max-w-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-3">
+          {/* Row 1: Search + Video Toggle */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-dark" aria-hidden="true" />
               <label htmlFor="frontline-search" className="sr-only">{dict.common.search}</label>
               <input
@@ -200,19 +200,45 @@ export default function FrontlinePage() {
                 dir={isArabic ? 'rtl' : 'ltr'}
               />
             </div>
-          </div>
-          {/* Category filters */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 shrink-0">
-              <Filter className="h-4 w-4 text-slate-dark" />
-              <span className="text-sm text-slate-dark">{dict.frontline.filter}</span>
+            {/* Video toggle */}
+            <button
+              onClick={handleVideoToggle}
+              className={`flex items-center gap-2 rounded-lg px-3 py-2 font-heading text-xs font-medium uppercase tracking-wider transition-all shrink-0 ${
+                videoOnly
+                  ? "bg-green-600 text-white"
+                  : "border border-midnight-600 text-slate-medium hover:border-green-500 hover:text-green-500"
+              }`}
+            >
+              <Video className="h-4 w-4" />
+              <span className="hidden sm:inline">{isArabic ? 'فيديو فقط' : 'Video'}</span>
+            </button>
+            {/* Time range - compact */}
+            <div className="hidden sm:flex items-center gap-1 border border-midnight-600 rounded-lg p-1">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.key}
+                  onClick={() => handleTimeRangeChange(range.key)}
+                  className={`rounded-md px-2.5 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
+                    activeTimeRange === range.key
+                      ? "bg-tactical-amber text-midnight-900"
+                      : "text-slate-medium hover:text-tactical-amber"
+                  }`}
+                >
+                  {range.key === 'all' ? (isArabic ? 'الكل' : 'All') : range.key.toUpperCase()}
+                </button>
+              ))}
             </div>
-            <div className="flex flex-wrap gap-2">
+          </div>
+
+          {/* Row 2: Category filters - horizontal scroll on mobile */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-slate-dark shrink-0" />
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category)}
-                  className={`rounded-full px-4 py-1.5 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
+                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap ${
                     activeCategory === category
                       ? "bg-tactical-red text-white"
                       : "border border-midnight-600 text-slate-medium hover:border-tactical-red hover:text-tactical-red"
@@ -223,81 +249,45 @@ export default function FrontlinePage() {
               ))}
             </div>
           </div>
-          {/* Country filters */}
-          <div className="flex items-center gap-3 mt-3">
-            <div className="flex items-center gap-2 shrink-0">
-              <MapPin className="h-4 w-4 text-slate-dark" />
-              <span className="text-sm text-slate-dark">{isArabic ? 'الدولة:' : 'Region:'}</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => handleCountryChange(null)}
-                className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
-                  activeCountry === null
-                    ? "bg-intel-blue text-white"
-                    : "border border-midnight-600 text-slate-medium hover:border-intel-blue hover:text-intel-blue"
-                }`}
-              >
-                {isArabic ? 'الكل' : 'All'}
-              </button>
-              {TOP_COUNTRIES.map((country) => (
+
+          {/* Row 3: Country filters - horizontal scroll on mobile */}
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-slate-dark shrink-0" />
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+              {[null, ...TOP_COUNTRIES].map((country) => (
                 <button
-                  key={country}
+                  key={country || 'all'}
                   onClick={() => handleCountryChange(country)}
-                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium tracking-wider transition-all ${
+                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap ${
                     activeCountry === country
                       ? "bg-intel-blue text-white"
                       : "border border-midnight-600 text-slate-medium hover:border-intel-blue hover:text-intel-blue"
                   }`}
                 >
-                  {getCountryName(country, locale)}
+                  {country ? getCountryName(country, locale) : (isArabic ? 'الكل' : 'All')}
                 </button>
               ))}
             </div>
           </div>
-          {/* Time range and Video toggle */}
-          <div className="flex flex-wrap items-center gap-6 mt-3">
-            {/* Time range */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 shrink-0">
-                <Calendar className="h-4 w-4 text-slate-dark" />
-                <span className="text-sm text-slate-dark">{isArabic ? 'الفترة:' : 'Time:'}</span>
-              </div>
-              <div className="flex gap-1">
-                {TIME_RANGES.map((range) => (
-                  <button
-                    key={range.key}
-                    onClick={() => handleTimeRangeChange(range.key)}
-                    className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
-                      activeTimeRange === range.key
-                        ? "bg-tactical-amber text-midnight-900"
-                        : "border border-midnight-600 text-slate-medium hover:border-tactical-amber hover:text-tactical-amber"
-                    }`}
-                  >
-                    {range.key === 'all'
-                      ? (isArabic ? 'الكل' : 'All')
-                      : range.key === '7d'
-                      ? (isArabic ? '٧ أيام' : '7d')
-                      : range.key === '30d'
-                      ? (isArabic ? '٣٠ يوم' : '30d')
-                      : (isArabic ? '٩٠ يوم' : '90d')
-                    }
-                  </button>
-                ))}
-              </div>
+
+          {/* Mobile only: Time range */}
+          <div className="flex sm:hidden items-center gap-2">
+            <Calendar className="h-4 w-4 text-slate-dark shrink-0" />
+            <div className="flex gap-1.5">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.key}
+                  onClick={() => handleTimeRangeChange(range.key)}
+                  className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
+                    activeTimeRange === range.key
+                      ? "bg-tactical-amber text-midnight-900"
+                      : "border border-midnight-600 text-slate-medium hover:border-tactical-amber hover:text-tactical-amber"
+                  }`}
+                >
+                  {range.key === 'all' ? (isArabic ? 'الكل' : 'All') : range.key.toUpperCase()}
+                </button>
+              ))}
             </div>
-            {/* Video toggle */}
-            <button
-              onClick={handleVideoToggle}
-              className={`flex items-center gap-2 rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
-                videoOnly
-                  ? "bg-green-600 text-white"
-                  : "border border-midnight-600 text-slate-medium hover:border-green-600 hover:text-green-500"
-              }`}
-            >
-              <Video className="h-3.5 w-3.5" />
-              {isArabic ? 'فيديو فقط' : 'Video Only'}
-            </button>
           </div>
         </div>
       </section>
