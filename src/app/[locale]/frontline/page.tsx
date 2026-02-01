@@ -162,21 +162,21 @@ export default function FrontlinePage() {
   return (
     <div className="min-h-screen bg-midnight-900" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* Hero */}
-      <section className="border-b border-midnight-700 bg-midnight-800 py-16">
+      <section className="border-b border-midnight-700 bg-midnight-800 py-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-3"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-tactical-red/10">
-              <AlertTriangle className="h-6 w-6 text-tactical-red" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-tactical-red/10">
+              <AlertTriangle className="h-5 w-5 text-tactical-red" />
             </div>
             <div>
-              <h1 className="font-heading text-3xl font-bold uppercase tracking-wider text-slate-light">
+              <h1 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
                 {dict.frontline.title}
               </h1>
-              <p className="text-slate-dark">{dict.frontline.subtitle}</p>
+              <p className="text-sm text-slate-dark">{dict.frontline.subtitle}</p>
             </div>
           </motion.div>
         </div>
