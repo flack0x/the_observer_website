@@ -69,13 +69,13 @@ function convertWord(word: string, isFirstWord: boolean): string {
  * - First letter of each sentence uppercase
  * - Rest lowercase except acronyms and proper nouns
  */
-export function convertAllCapsToSentenceCase(text: string): string {
-  if (!isAllCaps(text)) {
+export function convertAllCapsToSentenceCase(text: string, forceConvert: boolean = false): string {
+  if (!forceConvert && !isAllCaps(text)) {
     return text;
   }
 
-  // Split into sentences (by . ! ? or colon followed by space/newline)
-  const sentences = text.split(/(?<=[.!?:])\s+/);
+  // Split into sentences (by . ! ? followed by space - NOT colon, to preserve inline headers)
+  const sentences = text.split(/(?<=[.!?])\s+/);
 
   return sentences.map(sentence => {
     // Split into words while preserving punctuation
@@ -123,8 +123,8 @@ export function processParagraph(paragraph: string): string {
     if (part.startsWith('<')) {
       return part;
     }
-    // Convert text content
-    return convertAllCapsToSentenceCase(part);
+    // Convert text content - force convert since we already checked the whole paragraph
+    return convertAllCapsToSentenceCase(part, true);
   }).join('');
 }
 

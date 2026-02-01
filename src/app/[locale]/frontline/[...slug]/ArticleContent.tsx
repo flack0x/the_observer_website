@@ -320,11 +320,11 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
             // Strip HTML tags for text analysis
             const plainText = paragraph.replace(/<[^>]+>/g, '');
 
-            // Check if it's a section header (Roman numerals, numbered, or short bold text)
+            // Check if it's a section header - must be SHORT and standalone (not a full paragraph)
+            // Only treat as header if it's a short line that's entirely bold OR a Roman numeral header
             const isHeader =
-              /^[IVX]+\.\s/.test(plainText) ||
-              /^\d+\.\s/.test(plainText) ||
-              (plainText.length < 80 && paragraph.startsWith('<strong>') && paragraph.endsWith('</strong>'));
+              (plainText.length < 60 && /^[IVX]+\.\s/.test(plainText)) ||
+              (plainText.length < 60 && paragraph.startsWith('<strong>') && paragraph.endsWith('</strong>'));
 
             // Skip footer content and empty paragraphs
             if (
