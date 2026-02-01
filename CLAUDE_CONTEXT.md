@@ -1279,6 +1279,13 @@ for r in result.data:
   - Added to both `[locale]/layout.tsx` and `admin/layout.tsx`
   - Uses `next/script` with `afterInteractive` strategy
   - Property URL: https://analytics.google.com (search "Al Muraqeb")
+  - Status: Active and receiving data
+
+- **Frontline Filter UI Fix** (Feb 1):
+  - Reorganized filter bar layout in `src/app/[locale]/frontline/page.tsx`
+  - Search bar moved to top with full width (max 400px)
+  - Category filter buttons below with Filter label
+  - Cleaner visual hierarchy
 
 - **SEO H1 Fix** (Feb 1):
   - Homepage H1 was "Observe Analyze Understand" - not descriptive for search engines
