@@ -1281,6 +1281,14 @@ for r in result.data:
   - Property URL: https://analytics.google.com (search "Al Muraqeb")
   - Status: Active and receiving data
 
+- **Frontline Country Filter** (Feb 1):
+  - Added country/region filter based on DB analysis (577 articles)
+  - Top 12 countries: Israel (332), Palestine (207), Iran (188), Lebanon (180),
+    USA (171), Iraq (153), Yemen (121), Syria (87), Russia (51), China (50),
+    Saudi Arabia (50), Egypt (46)
+  - Blue color scheme for country filters (vs red for categories)
+  - Filters combine: Category + Country + Search
+
 - **Frontline Filter UI Fix** (Feb 1):
   - Reorganized filter bar layout in `src/app/[locale]/frontline/page.tsx`
   - Search bar moved to top with full width (max 400px)
