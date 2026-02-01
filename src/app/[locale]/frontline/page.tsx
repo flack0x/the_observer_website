@@ -125,8 +125,25 @@ export default function FrontlinePage() {
       {/* Filters */}
       <section className="border-b border-midnight-700 bg-midnight-800/50 py-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
+          {/* Search bar - full width on top */}
+          <div className="mb-4">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-dark" aria-hidden="true" />
+              <label htmlFor="frontline-search" className="sr-only">{dict.common.search}</label>
+              <input
+                id="frontline-search"
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder={dict.common.search + '...'}
+                className="w-full rounded-lg border border-midnight-600 bg-midnight-700 py-2 pl-10 pr-4 text-sm text-slate-light placeholder-slate-dark outline-none focus:border-tactical-red focus:ring-1 focus:ring-tactical-red transition-colors"
+                dir={isArabic ? 'rtl' : 'ltr'}
+              />
+            </div>
+          </div>
+          {/* Category filters */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 shrink-0">
               <Filter className="h-4 w-4 text-slate-dark" />
               <span className="text-sm text-slate-dark">{dict.frontline.filter}</span>
             </div>
@@ -144,19 +161,6 @@ export default function FrontlinePage() {
                   {category}
                 </button>
               ))}
-            </div>
-            <div className={`${isArabic ? 'mr-auto' : 'ml-auto'} flex items-center gap-2 rounded-lg border border-midnight-600 bg-midnight-700 px-3 py-2 focus-within:border-tactical-red focus-within:ring-1 focus-within:ring-tactical-red transition-colors`}>
-              <Search className="h-4 w-4 text-slate-dark" aria-hidden="true" />
-              <label htmlFor="frontline-search" className="sr-only">{dict.common.search}</label>
-              <input
-                id="frontline-search"
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder={dict.common.search + '...'}
-                className="bg-transparent text-sm text-slate-light placeholder-slate-dark outline-none w-32 sm:w-48"
-                dir={isArabic ? 'rtl' : 'ltr'}
-              />
             </div>
           </div>
         </div>
