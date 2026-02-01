@@ -47,7 +47,10 @@
       "Bash(source \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\\\\.env.local\")",
       "Bash(echo:*)",
       "Bash(gh workflow run:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(gcloud --version:*)",
+      "Bash(gcloud config:*)",
+      "Bash(gcloud projects list:*)"
     ]
   }
 }

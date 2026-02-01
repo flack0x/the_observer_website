@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Script from 'next/script';
 import '../globals.css';
 import AdminLayoutClient from './AdminLayoutClient';
 import { ThemeProvider } from '@/lib/theme';
@@ -41,6 +42,19 @@ export default function AdminLayout({
         />
       </head>
       <body className="min-h-screen bg-midnight-900 text-slate-light antialiased">
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-0Z0P2B5QT8"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-0Z0P2B5QT8');
+          `}
+        </Script>
         <ThemeProvider>
           <AdminLayoutClient>{children}</AdminLayoutClient>
         </ThemeProvider>
