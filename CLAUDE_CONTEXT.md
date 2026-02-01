@@ -415,7 +415,10 @@ function normalizeContent(content: string): string;
 // Process single paragraph - converts ALL CAPS, preserves HTML tags
 function processParagraph(paragraph: string): string;
 
-// Check if text is mostly ALL CAPS (>70% uppercase)
+// Convert text to sentence case (forceConvert skips isAllCaps check)
+function convertAllCapsToSentenceCase(text: string, forceConvert?: boolean): string;
+
+// Check if text is mostly ALL CAPS (>70% uppercase, min 10 letters)
 function isAllCaps(text: string): boolean;
 
 // Preserved acronyms: USA, UK, UN, EU, NATO, CIA, IDF, IRGC, PMF, etc.
@@ -1278,6 +1281,10 @@ for r in result.data:
   - Applied to admin editor on content load (editors see normalized text)
   - Fixed GitHub Actions workflow: removed deleted `analyze_articles.py` reference
   - Workflow now only runs `fetch_telegram.py` (metrics analysis was removed during cleanup)
+  - **Follow-up fix**: Numbered paragraphs (1. **Military Deterrence:**) now convert properly
+    - Removed duplicate `isAllCaps` check causing short segments to skip conversion
+    - Don't split sentences on colons (preserves inline bold headers)
+    - Numbered paragraphs no longer treated as section headers (only short standalone bold lines)
 
 ## Recent Changes (Jan 2026)
 
