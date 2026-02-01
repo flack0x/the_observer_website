@@ -26,6 +26,7 @@ import { TipTapEditor } from '@/components/admin/editor';
 import { ArticlePreviewModal } from '@/components/admin/articles';
 import { CATEGORIES } from '@/lib/categories';
 import { ShowForAdmin } from '@/lib/auth';
+import { normalizeContent } from '@/lib/content';
 
 const COMMON_COUNTRIES = [
   'Iran', 'Israel', 'USA', 'Palestine', 'Lebanon', 'Syria', 'Iraq',
@@ -98,7 +99,7 @@ export default function EditArticlePage({ params }: PageProps) {
           if (enData) {
             setTitleEn(enData.title || '');
             setExcerptEn(enData.excerpt || '');
-            setContentEn(enData.content || '');
+            setContentEn(normalizeContent(enData.content || ''));
             setCategory(enData.category || 'Analysis');
             setCountries(enData.countries || []);
             setOrganizations(enData.organizations || []);
@@ -110,7 +111,7 @@ export default function EditArticlePage({ params }: PageProps) {
           if (arData) {
             setTitleAr(arData.title || '');
             setExcerptAr(arData.excerpt || '');
-            setContentAr(arData.content || '');
+            setContentAr(normalizeContent(arData.content || ''));
           }
         } else {
           const article = result.data;
@@ -118,12 +119,12 @@ export default function EditArticlePage({ params }: PageProps) {
             setEnArticle(article);
             setTitleEn(article.title || '');
             setExcerptEn(article.excerpt || '');
-            setContentEn(article.content || '');
+            setContentEn(normalizeContent(article.content || ''));
           } else {
             setArArticle(article);
             setTitleAr(article.title || '');
             setExcerptAr(article.excerpt || '');
-            setContentAr(article.content || '');
+            setContentAr(normalizeContent(article.content || ''));
           }
           setCategory(article.category || 'Analysis');
           setCountries(article.countries || []);

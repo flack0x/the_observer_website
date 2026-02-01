@@ -41,11 +41,3 @@ jobs:
         run: |
           cd scripts
           python fetch_telegram.py
-
-      - name: Analyze articles and compute metrics
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          cd scripts
-          python analyze_articles.py

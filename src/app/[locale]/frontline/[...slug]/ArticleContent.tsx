@@ -12,6 +12,7 @@ import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
 import { getClient } from "@/lib/supabase/client";
+import { normalizeContent } from "@/lib/content";
 
 /**
  * Convert Telegram markdown to HTML and clean up the content
@@ -72,6 +73,9 @@ function processContent(rawContent: string, title: string): string {
 
   // Remove leading emoji markers (using comprehensive regex)
   content = content.replace(new RegExp('^' + emojiRegex.source + '\\s*', 'u'), '');
+
+  // Convert ALL CAPS text to sentence case
+  content = normalizeContent(content);
 
   // Strip self-referential and promotional markdown links BEFORE bold conversion
   // Matches: [**Our website**](https://al-muraqeb.com/en), [Our website](https://al-muraqeb.com/...)
