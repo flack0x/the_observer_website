@@ -45,7 +45,9 @@
       "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" add scripts/post_iraq_articles.mjs)",
       "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\nfeat: Add script for posting Iraq sovereignty articles\n\nAdd post_iraq_articles.mjs for inserting bilingual articles\n\\(EN/AR\\) directly into Supabase with image uploads.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(source \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\\\\.env.local\")",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(gh workflow run:*)",
+      "Bash(gh run list:*)"
     ]
   }
 }

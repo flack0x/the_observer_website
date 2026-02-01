@@ -236,6 +236,7 @@ src/
 │   │   └── server.ts                # Server-side Supabase client
 │   ├── config.ts                    # Telegram channels, contact email
 │   ├── categories.ts                # Category display names
+│   ├── content.ts                   # Content normalization (ALL CAPS → sentence case)
 │   ├── time.ts                      # Date formatting utilities
 │   ├── hooks.ts                     # useArticles, useMetrics, useBreakingNews, useBookReviews
 │   ├── voices.ts                    # External voices data and helpers
@@ -404,6 +405,20 @@ function formatDate(date: Date, locale: Locale): string;
 
 // "14:30", "٢:٣٠"
 function formatTime(date: Date, locale: Locale): string;
+```
+
+### Content (`src/lib/content.ts`)
+```typescript
+// Convert ALL CAPS text to sentence case (preserves acronyms)
+function normalizeContent(content: string): string;
+
+// Process single paragraph - converts ALL CAPS, preserves HTML tags
+function processParagraph(paragraph: string): string;
+
+// Check if text is mostly ALL CAPS (>70% uppercase)
+function isAllCaps(text: string): boolean;
+
+// Preserved acronyms: USA, UK, UN, EU, NATO, CIA, IDF, IRGC, PMF, etc.
 ```
 
 ### Categories (`src/lib/categories.ts`)
@@ -1242,7 +1257,7 @@ for r in result.data:
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Jan 31, 2026)
+## Database Stats (Feb 1, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
@@ -1252,6 +1267,17 @@ for r in result.data:
 | User Profiles | 1 | Admin configured |
 | Subscribers | 0 | Table ready |
 | Comments | 0 | Feature ready |
+
+## Recent Changes (Feb 2026)
+
+- **ALL CAPS Content Fix + Workflow Fix** (Feb 1):
+  - Fixed article content displaying in ALL CAPS (from Telegram posts)
+  - Added `src/lib/content.ts` utility for normalizing text to sentence case
+  - Preserves acronyms (USA, IDF, NATO, IRGC, etc.) during conversion
+  - Applied to frontend display (`ArticleContent.tsx`)
+  - Applied to admin editor on content load (editors see normalized text)
+  - Fixed GitHub Actions workflow: removed deleted `analyze_articles.py` reference
+  - Workflow now only runs `fetch_telegram.py` (metrics analysis was removed during cleanup)
 
 ## Recent Changes (Jan 2026)
 
