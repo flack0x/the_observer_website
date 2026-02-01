@@ -1273,6 +1273,13 @@ for r in result.data:
 
 ## Recent Changes (Feb 2026)
 
+- **Google Analytics 4** (Feb 1):
+  - Measurement ID: `G-0Z0P2B5QT8`
+  - Stream ID: 13395111011
+  - Added to both `[locale]/layout.tsx` and `admin/layout.tsx`
+  - Uses `next/script` with `afterInteractive` strategy
+  - Property URL: https://analytics.google.com (search "Al Muraqeb")
+
 - **SEO H1 Fix** (Feb 1):
   - Homepage H1 was "Observe Analyze Understand" - not descriptive for search engines
   - Added sr-only span with "The Observer - Geopolitical Intelligence & Strategic Analysis"
