@@ -11,6 +11,8 @@ import {
   Search,
   Loader2,
   Play,
+  Calendar,
+  Video,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -30,6 +32,16 @@ const TOP_COUNTRIES = [
   'Yemen', 'Syria', 'Russia', 'China', 'Saudi Arabia', 'Egypt'
 ];
 
+// Time range options in days (null = all time)
+const TIME_RANGES = [
+  { key: 'all', days: null },
+  { key: '7d', days: 7 },
+  { key: '30d', days: 30 },
+  { key: '90d', days: 90 },
+] as const;
+
+type TimeRangeKey = typeof TIME_RANGES[number]['key'];
+
 export default function FrontlinePage() {
   const params = useParams();
   const locale = (params.locale as Locale) || 'en';
@@ -38,6 +50,8 @@ export default function FrontlinePage() {
   const categories = getCategoryList(locale);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
+  const [activeTimeRange, setActiveTimeRange] = useState<TimeRangeKey>('all');
+  const [videoOnly, setVideoOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE);
 
@@ -54,12 +68,23 @@ export default function FrontlinePage() {
     setVisibleCount(ARTICLES_PER_PAGE);
   };
 
+  const handleTimeRangeChange = (range: TimeRangeKey) => {
+    setActiveTimeRange(range);
+    setVisibleCount(ARTICLES_PER_PAGE);
+  };
+
+  const handleVideoToggle = () => {
+    setVideoOnly(prev => !prev);
+    setVisibleCount(ARTICLES_PER_PAGE);
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setVisibleCount(ARTICLES_PER_PAGE);
   };
 
-  // Filter articles by category, country, and search
+  // Filter articles by category, country, time range, video, and search
+  // Each filter is applied in sequence, all filters work together
   const filteredByCategory = filterByCategory(articles, activeCategory, locale);
 
   const filteredByCountry = activeCountry
@@ -68,12 +93,29 @@ export default function FrontlinePage() {
       )
     : filteredByCategory;
 
+  const filteredByTime = (() => {
+    const range = TIME_RANGES.find(r => r.key === activeTimeRange);
+    if (!range || range.days === null) return filteredByCountry;
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - range.days);
+
+    return filteredByCountry.filter(article => {
+      const articleDate = new Date(article.date);
+      return articleDate >= cutoffDate;
+    });
+  })();
+
+  const filteredByVideo = videoOnly
+    ? filteredByTime.filter(article => article.videoUrl)
+    : filteredByTime;
+
   const filteredArticles = searchQuery
-    ? filteredByCountry.filter(article =>
+    ? filteredByVideo.filter(article =>
         article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : filteredByCountry;
+    : filteredByVideo;
 
   // Transform filtered articles
   const newsArticles = filteredArticles.map((article) => ({
@@ -212,6 +254,50 @@ export default function FrontlinePage() {
                 </button>
               ))}
             </div>
+          </div>
+          {/* Time range and Video toggle */}
+          <div className="flex flex-wrap items-center gap-6 mt-3">
+            {/* Time range */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 shrink-0">
+                <Calendar className="h-4 w-4 text-slate-dark" />
+                <span className="text-sm text-slate-dark">{isArabic ? 'الفترة:' : 'Time:'}</span>
+              </div>
+              <div className="flex gap-1">
+                {TIME_RANGES.map((range) => (
+                  <button
+                    key={range.key}
+                    onClick={() => handleTimeRangeChange(range.key)}
+                    className={`rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
+                      activeTimeRange === range.key
+                        ? "bg-tactical-amber text-midnight-900"
+                        : "border border-midnight-600 text-slate-medium hover:border-tactical-amber hover:text-tactical-amber"
+                    }`}
+                  >
+                    {range.key === 'all'
+                      ? (isArabic ? 'الكل' : 'All')
+                      : range.key === '7d'
+                      ? (isArabic ? '٧ أيام' : '7d')
+                      : range.key === '30d'
+                      ? (isArabic ? '٣٠ يوم' : '30d')
+                      : (isArabic ? '٩٠ يوم' : '90d')
+                    }
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Video toggle */}
+            <button
+              onClick={handleVideoToggle}
+              className={`flex items-center gap-2 rounded-full px-3 py-1 font-heading text-xs font-medium uppercase tracking-wider transition-all ${
+                videoOnly
+                  ? "bg-green-600 text-white"
+                  : "border border-midnight-600 text-slate-medium hover:border-green-600 hover:text-green-500"
+              }`}
+            >
+              <Video className="h-3.5 w-3.5" />
+              {isArabic ? 'فيديو فقط' : 'Video Only'}
+            </button>
           </div>
         </div>
       </section>
