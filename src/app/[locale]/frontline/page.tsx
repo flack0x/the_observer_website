@@ -147,8 +147,8 @@ export default function FrontlinePage() {
     );
   }
 
-  // Show error state
-  if (error || newsArticles.length === 0) {
+  // Show error state only for actual errors (not empty search results)
+  if (error) {
     return (
       <div className="min-h-screen bg-midnight-900 flex items-center justify-center">
         <div className="text-center">
@@ -285,6 +285,17 @@ export default function FrontlinePage() {
               .replace('{current}', String(Math.min(visibleCount, newsArticles.length)))
               .replace('{total}', String(newsArticles.length))}
           </p>
+
+          {/* No results message */}
+          {newsArticles.length === 0 && (
+            <div className="py-16 text-center">
+              <AlertTriangle className="h-12 w-12 text-tactical-amber mx-auto mb-4" />
+              <p className="text-slate-medium text-lg mb-2">{dict.common.noArticles}</p>
+              <p className="text-slate-dark text-sm">
+                {isArabic ? 'جرب تغيير معايير البحث أو الفلاتر' : 'Try adjusting your search or filters'}
+              </p>
+            </div>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             {newsArticles.slice(0, visibleCount).map((article, index) => (
