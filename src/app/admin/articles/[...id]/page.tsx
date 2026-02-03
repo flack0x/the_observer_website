@@ -25,6 +25,8 @@ import {
   AlertCircle,
   Copy,
   Calendar,
+  History,
+  RotateCcw,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
 import { ArticlePreviewModal } from '@/components/admin/articles';
@@ -82,6 +84,12 @@ export default function EditArticlePage({ params }: PageProps) {
   const [showCountries, setShowCountries] = useState(true);
   const [showOrganizations, setShowOrganizations] = useState(true);
   const [isDuplicating, setIsDuplicating] = useState(false);
+
+  // Version history
+  const [showHistory, setShowHistory] = useState(false);
+  const [revisions, setRevisions] = useState<any[]>([]);
+  const [isLoadingRevisions, setIsLoadingRevisions] = useState(false);
+  const [isRestoring, setIsRestoring] = useState<string | null>(null);
 
   // Autosave state
   const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
@@ -557,6 +565,93 @@ export default function EditArticlePage({ params }: PageProps) {
 
   const removeOrganization = (org: string) => {
     setOrganizations(prev => prev.filter(o => o !== org));
+  };
+
+  // Fetch revisions when history panel is opened
+  const fetchRevisions = async () => {
+    if (!enArticle && !arArticle) return;
+
+    const articleId = enArticle?.telegram_id || arArticle?.telegram_id;
+    if (!articleId) return;
+
+    setIsLoadingRevisions(true);
+    try {
+      const response = await fetch(`/api/admin/articles/${encodeURIComponent(articleId)}/revisions`);
+      const result = await response.json();
+      if (response.ok) {
+        setRevisions(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching revisions:', error);
+    } finally {
+      setIsLoadingRevisions(false);
+    }
+  };
+
+  // Toggle history panel
+  const handleToggleHistory = () => {
+    const newState = !showHistory;
+    setShowHistory(newState);
+    if (newState && revisions.length === 0) {
+      fetchRevisions();
+    }
+  };
+
+  // Restore a revision
+  const handleRestore = async (revision: any) => {
+    if (!confirm('Restore this version? Current content will be saved as a new revision.')) return;
+
+    setIsRestoring(revision.id);
+    try {
+      // Determine which article we're restoring
+      const articleId = enArticle?.telegram_id || arArticle?.telegram_id;
+      if (!articleId) return;
+
+      // Update the article with the revision content
+      const response = await fetch(`/api/admin/articles/${encodeURIComponent(articleId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: revision.title,
+          content: revision.content,
+        }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        if (enArticle) {
+          setTitleEn(revision.title);
+          setContentEn(revision.content);
+        } else if (arArticle) {
+          setTitleAr(revision.title);
+          setContentAr(revision.content);
+        }
+
+        // Update original data reference
+        if (originalDataRef.current) {
+          if (enArticle) {
+            originalDataRef.current.titleEn = revision.title;
+            originalDataRef.current.contentEn = revision.content;
+          } else {
+            originalDataRef.current.titleAr = revision.title;
+            originalDataRef.current.contentAr = revision.content;
+          }
+        }
+
+        // Refresh revisions list
+        fetchRevisions();
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to restore revision');
+      }
+    } catch (error) {
+      console.error('Error restoring revision:', error);
+      setError('Failed to restore revision');
+    } finally {
+      setIsRestoring(null);
+    }
   };
 
   if (isLoading) {
@@ -1128,6 +1223,74 @@ export default function EditArticlePage({ params }: PageProps) {
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Version History Card */}
+            <div className="bg-midnight-800 rounded-xl border border-midnight-700 overflow-hidden">
+              <button
+                onClick={handleToggleHistory}
+                className="w-full px-4 py-3 bg-midnight-700/30 border-b border-midnight-700 flex items-center justify-between hover:bg-midnight-700/50 transition-colors"
+              >
+                <h3 className="font-heading text-xs font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
+                  <History className="h-3.5 w-3.5 text-blue-400" />
+                  Version History
+                </h3>
+                {showHistory ? <ChevronUp className="h-4 w-4 text-slate-dark" /> : <ChevronDown className="h-4 w-4 text-slate-dark" />}
+              </button>
+
+              {showHistory && (
+                <div className="p-4">
+                  {isLoadingRevisions ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-dark" />
+                    </div>
+                  ) : revisions.length === 0 ? (
+                    <p className="text-xs text-slate-dark text-center py-2">No previous versions</p>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {revisions.map((revision) => (
+                        <div
+                          key={revision.id}
+                          className="p-2 bg-midnight-700/50 rounded-lg"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-slate-light truncate" title={revision.title}>
+                                {revision.title}
+                              </p>
+                              <p className="text-xs text-slate-dark mt-0.5">
+                                {new Date(revision.created_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                              {revision.user_profiles && (
+                                <p className="text-xs text-slate-dark">
+                                  by {revision.user_profiles.full_name || revision.user_profiles.email}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleRestore(revision)}
+                              disabled={isRestoring !== null}
+                              className="p-1.5 rounded hover:bg-midnight-600 text-slate-dark hover:text-blue-400 transition-colors disabled:opacity-50"
+                              title="Restore this version"
+                            >
+                              {isRestoring === revision.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <RotateCcw className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -20,6 +20,9 @@ import {
   CheckCircle2,
   CircleOff,
   Calendar,
+  Square,
+  CheckSquare,
+  MinusSquare,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { CATEGORIES } from '@/lib/categories';
@@ -69,6 +72,10 @@ export default function AdminArticlesPage() {
   // Action menu
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  // Bulk selection
+  const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null);
 
   // Debounce search
   const handleSearchChange = (value: string) => {
@@ -160,6 +167,95 @@ export default function AdminArticlesPage() {
       alert('Failed to update status');
     } finally {
       setUpdatingStatus(null);
+    }
+  };
+
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectedArticles.size === articles.length) {
+      setSelectedArticles(new Set());
+    } else {
+      setSelectedArticles(new Set(articles.map(a => a.telegram_id)));
+    }
+  };
+
+  const handleSelectArticle = (telegramId: string) => {
+    const newSelected = new Set(selectedArticles);
+    if (newSelected.has(telegramId)) {
+      newSelected.delete(telegramId);
+    } else {
+      newSelected.add(telegramId);
+    }
+    setSelectedArticles(newSelected);
+  };
+
+  const handleBulkPublish = async () => {
+    if (selectedArticles.size === 0) return;
+    if (!confirm(`Publish ${selectedArticles.size} article(s)?`)) return;
+
+    setBulkActionLoading('publish');
+    try {
+      const promises = Array.from(selectedArticles).map(telegramId =>
+        fetch(`/api/admin/articles/${encodeURIComponent(telegramId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'published' }),
+        })
+      );
+      await Promise.all(promises);
+      setSelectedArticles(new Set());
+      mutate();
+    } catch (error) {
+      console.error('Bulk publish error:', error);
+      alert('Some articles failed to publish');
+    } finally {
+      setBulkActionLoading(null);
+    }
+  };
+
+  const handleBulkUnpublish = async () => {
+    if (selectedArticles.size === 0) return;
+    if (!confirm(`Unpublish ${selectedArticles.size} article(s)?`)) return;
+
+    setBulkActionLoading('unpublish');
+    try {
+      const promises = Array.from(selectedArticles).map(telegramId =>
+        fetch(`/api/admin/articles/${encodeURIComponent(telegramId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'draft' }),
+        })
+      );
+      await Promise.all(promises);
+      setSelectedArticles(new Set());
+      mutate();
+    } catch (error) {
+      console.error('Bulk unpublish error:', error);
+      alert('Some articles failed to unpublish');
+    } finally {
+      setBulkActionLoading(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedArticles.size === 0) return;
+    if (!confirm(`Delete ${selectedArticles.size} article(s)? This cannot be undone.`)) return;
+
+    setBulkActionLoading('delete');
+    try {
+      const promises = Array.from(selectedArticles).map(telegramId =>
+        fetch(`/api/admin/articles/${encodeURIComponent(telegramId)}`, {
+          method: 'DELETE',
+        })
+      );
+      await Promise.all(promises);
+      setSelectedArticles(new Set());
+      mutate();
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      alert('Some articles failed to delete');
+    } finally {
+      setBulkActionLoading(null);
     }
   };
 
@@ -270,6 +366,61 @@ export default function AdminArticlesPage() {
         </div>
       </div>
 
+      {/* Bulk actions bar */}
+      {selectedArticles.size > 0 && (
+        <div className="bg-midnight-800 rounded-xl border border-tactical-red/50 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <p className="text-slate-light text-sm">
+            <span className="font-bold text-tactical-red">{selectedArticles.size}</span> article{selectedArticles.size !== 1 ? 's' : ''} selected
+          </p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleBulkPublish}
+              disabled={bulkActionLoading !== null}
+              className="flex items-center gap-2 px-3 py-1.5 bg-earth-olive/20 text-earth-olive rounded-lg hover:bg-earth-olive/30 transition-colors text-sm disabled:opacity-50"
+            >
+              {bulkActionLoading === 'publish' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              Publish Selected
+            </button>
+            <button
+              onClick={handleBulkUnpublish}
+              disabled={bulkActionLoading !== null}
+              className="flex items-center gap-2 px-3 py-1.5 bg-tactical-amber/20 text-tactical-amber rounded-lg hover:bg-tactical-amber/30 transition-colors text-sm disabled:opacity-50"
+            >
+              {bulkActionLoading === 'unpublish' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CircleOff className="h-4 w-4" />
+              )}
+              Unpublish Selected
+            </button>
+            <ShowForAdmin>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkActionLoading !== null}
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm disabled:opacity-50"
+              >
+                {bulkActionLoading === 'delete' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Delete Selected
+              </button>
+            </ShowForAdmin>
+            <button
+              onClick={() => setSelectedArticles(new Set())}
+              className="px-3 py-1.5 text-slate-dark hover:text-slate-medium transition-colors text-sm"
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Articles table */}
       <div className="bg-midnight-800 rounded-xl border border-midnight-700 overflow-hidden">
         {isLoading && articles.length === 0 ? (
@@ -285,6 +436,20 @@ export default function AdminArticlesPage() {
             <table className="w-full">
               <thead className="bg-midnight-700/50">
                 <tr>
+                  <th className="w-10 px-4 py-3">
+                    <button
+                      onClick={handleSelectAll}
+                      className="text-slate-dark hover:text-slate-medium transition-colors"
+                    >
+                      {selectedArticles.size === 0 ? (
+                        <Square className="h-4 w-4" />
+                      ) : selectedArticles.size === articles.length ? (
+                        <CheckSquare className="h-4 w-4 text-tactical-red" />
+                      ) : (
+                        <MinusSquare className="h-4 w-4 text-tactical-red" />
+                      )}
+                    </button>
+                  </th>
                   <th className="text-left px-4 py-3 text-xs font-heading uppercase tracking-wider text-slate-dark">
                     Title
                   </th>
@@ -311,8 +476,22 @@ export default function AdminArticlesPage() {
                     key={article.telegram_id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="hover:bg-midnight-700/30 transition-colors"
+                    className={`hover:bg-midnight-700/30 transition-colors ${
+                      selectedArticles.has(article.telegram_id) ? 'bg-tactical-red/5' : ''
+                    }`}
                   >
+                    <td className="w-10 px-4 py-3">
+                      <button
+                        onClick={() => handleSelectArticle(article.telegram_id)}
+                        className="text-slate-dark hover:text-slate-medium transition-colors"
+                      >
+                        {selectedArticles.has(article.telegram_id) ? (
+                          <CheckSquare className="h-4 w-4 text-tactical-red" />
+                        ) : (
+                          <Square className="h-4 w-4" />
+                        )}
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/articles/${article.telegram_id}`}

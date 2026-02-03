@@ -15,6 +15,7 @@ import {
   X,
   LogOut,
   Activity,
+  Calendar,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { useState } from 'react';
@@ -29,6 +30,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { label: 'Articles', href: '/admin/articles', icon: FileText },
+  { label: 'Calendar', href: '/admin/calendar', icon: Calendar },
   { label: 'Books', href: '/admin/books', icon: BookOpen },
   { label: 'Media', href: '/admin/media', icon: Image },
   { label: 'Activity', href: '/admin/activity', icon: Activity },
