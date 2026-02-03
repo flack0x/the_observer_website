@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, MapPin, Globe } from 'lucide-react';
 import Image from 'next/image';
+import DOMPurify from 'dompurify';
 import { getCategoryDisplay } from '@/lib/categories';
 import { getCountryName } from '@/lib/i18n';
 
@@ -31,11 +32,15 @@ export default function ArticlePreviewModal({ isOpen, onClose, article }: Articl
   const title = isArabic ? article.titleAr : article.titleEn;
   const content = isArabic ? article.contentAr : article.contentEn;
 
-  // Format content into paragraphs
-  const paragraphs = content
-    .split('\n\n')
-    .filter((p) => p.trim().length > 0)
-    .map((p) => p.trim());
+  // Sanitize HTML content from TipTap editor
+  const sanitizedContent = useMemo(() => {
+    if (!content) return '';
+    // DOMPurify sanitizes the HTML to prevent XSS attacks
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'img'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class'],
+    });
+  }, [content]);
 
   if (!isOpen) return null;
 
@@ -169,33 +174,20 @@ export default function ArticlePreviewModal({ isOpen, onClose, article }: Articl
 
             {/* Article content */}
             <div className="prose prose-invert max-w-none">
-              {paragraphs.length > 0 ? (
-                paragraphs.map((paragraph, index) => {
-                  // Check if it's a section header
-                  const isHeader =
-                    /^[IVX]+\.\s/.test(paragraph) ||
-                    (paragraph.length < 100 && paragraph === paragraph.toUpperCase());
-
-                  if (isHeader) {
-                    return (
-                      <h2
-                        key={index}
-                        className="font-heading text-xl font-bold text-slate-light mt-8 mb-4 uppercase tracking-wider"
-                      >
-                        {paragraph}
-                      </h2>
-                    );
-                  }
-
-                  return (
-                    <p
-                      key={index}
-                      className="text-slate-medium leading-relaxed mb-4 text-base sm:text-lg"
-                    >
-                      {paragraph}
-                    </p>
-                  );
-                })
+              {sanitizedContent ? (
+                <div
+                  className="text-slate-medium leading-relaxed text-base sm:text-lg
+                           [&>p]:mb-4 [&>h1]:font-heading [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:text-slate-light [&>h1]:mt-8 [&>h1]:mb-4
+                           [&>h2]:font-heading [&>h2]:text-xl [&>h2]:font-bold [&>h2]:text-slate-light [&>h2]:mt-8 [&>h2]:mb-4
+                           [&>h3]:font-heading [&>h3]:text-lg [&>h3]:font-semibold [&>h3]:text-slate-light [&>h3]:mt-6 [&>h3]:mb-3
+                           [&_strong]:text-slate-light [&_strong]:font-semibold [&_b]:text-slate-light [&_b]:font-semibold
+                           [&_em]:italic [&_i]:italic [&_u]:underline [&_s]:line-through
+                           [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:mb-4 [&_li]:mb-2
+                           [&_blockquote]:border-l-4 [&_blockquote]:border-tactical-red [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-dark
+                           [&_a]:text-tactical-red [&_a]:underline [&_a:hover]:text-tactical-amber
+                           [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4"
+                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                />
               ) : (
                 <p className="text-slate-dark italic">
                   {isArabic ? 'لا يوجد محتوى للعرض' : 'No content to preview'}
