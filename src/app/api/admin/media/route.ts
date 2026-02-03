@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logActivity } from '@/lib/admin/logActivity';
 
 const MEDIA_BUCKET = 'article-media';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -124,6 +125,17 @@ export async function POST(request: NextRequest) {
       .from(MEDIA_BUCKET)
       .getPublicUrl(filename);
 
+    // Log activity
+    await logActivity(
+      supabase,
+      user.id,
+      'upload',
+      'media',
+      filename,
+      file.name,
+      { type: file.type, size: file.size }
+    );
+
     return NextResponse.json({
       data: {
         name: filename,
@@ -177,6 +189,17 @@ export async function DELETE(request: NextRequest) {
       console.error('Error deleting file:', error);
       return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 });
     }
+
+    // Log activity
+    await logActivity(
+      supabase,
+      user.id,
+      'delete',
+      'media',
+      filename,
+      filename,
+      {}
+    );
 
     return NextResponse.json({ message: 'File deleted successfully' });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logActivity } from '@/lib/admin/logActivity';
 
 // GET /api/admin/articles - List articles with filters
 export async function GET(request: NextRequest) {
@@ -177,6 +178,17 @@ export async function POST(request: NextRequest) {
       await supabase.from('articles').delete().eq('id', enData.id);
       return NextResponse.json({ error: 'Failed to create article' }, { status: 500 });
     }
+
+    // Log activity
+    await logActivity(
+      supabase,
+      user.id,
+      'create',
+      'article',
+      enData.telegram_id,
+      enData.title,
+      { channel: 'website', status: body.status || 'draft' }
+    );
 
     return NextResponse.json({
       data: {

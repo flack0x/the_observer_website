@@ -24,6 +24,7 @@ import {
   Check,
   AlertCircle,
   Copy,
+  Calendar,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
 import { ArticlePreviewModal } from '@/components/admin/articles';
@@ -63,6 +64,7 @@ export default function EditArticlePage({ params }: PageProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [status, setStatus] = useState<'draft' | 'published' | 'archived'>('draft');
+  const [scheduledAt, setScheduledAt] = useState<string>('');
 
   // Original article data
   const [enArticle, setEnArticle] = useState<any>(null);
@@ -143,6 +145,9 @@ export default function EditArticlePage({ params }: PageProps) {
             loadedImageUrl = enData.image_url || '';
             loadedVideoUrl = enData.video_url || '';
             setStatus(enData.status || 'draft');
+            if (enData.scheduled_at) {
+              setScheduledAt(enData.scheduled_at.slice(0, 16)); // Format for datetime-local input
+            }
           }
 
           if (arData) {
@@ -181,6 +186,9 @@ export default function EditArticlePage({ params }: PageProps) {
           loadedImageUrl = article.image_url || '';
           loadedVideoUrl = article.video_url || '';
           setStatus(article.status || 'published');
+          if (article.scheduled_at) {
+            setScheduledAt(article.scheduled_at.slice(0, 16)); // Format for datetime-local input
+          }
 
           setTitleEn(loadedTitleEn);
           setTitleAr(loadedTitleAr);
@@ -301,6 +309,7 @@ export default function EditArticlePage({ params }: PageProps) {
             image_url: imageUrl || null,
             video_url: videoUrl || null,
             status,
+            scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
           }),
         });
 
@@ -324,6 +333,7 @@ export default function EditArticlePage({ params }: PageProps) {
             image_url: imageUrl || null,
             video_url: videoUrl || null,
             status,
+            scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
           }),
         });
 
@@ -377,6 +387,7 @@ export default function EditArticlePage({ params }: PageProps) {
             image_url: imageUrl || null,
             video_url: videoUrl || null,
             status: newStatus || status,
+            scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
           }),
         });
 
@@ -400,6 +411,7 @@ export default function EditArticlePage({ params }: PageProps) {
             image_url: imageUrl || null,
             video_url: videoUrl || null,
             status: newStatus || status,
+            scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
           }),
         });
 
@@ -847,6 +859,48 @@ export default function EditArticlePage({ params }: PageProps) {
                     <option value="archived">Archived</option>
                   </select>
                 </div>
+
+                {/* Scheduled Publish Date - only show for drafts */}
+                {status === 'draft' && (
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium mb-1.5 uppercase tracking-wider">
+                      <Calendar className="h-3 w-3" />
+                      Schedule (optional)
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="datetime-local"
+                        value={scheduledAt}
+                        onChange={(e) => setScheduledAt(e.target.value)}
+                        className="w-full bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2
+                                 text-slate-light text-sm
+                                 focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none
+                                 [color-scheme:dark]"
+                      />
+                      {scheduledAt && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-dark">
+                            {new Date(scheduledAt) <= new Date() ? (
+                              <span className="text-tactical-amber">Ready to publish</span>
+                            ) : (
+                              `Scheduled for ${new Date(scheduledAt).toLocaleDateString()}`
+                            )}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setScheduledAt('')}
+                            className="text-xs text-slate-dark hover:text-tactical-red transition-colors"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-dark">
+                        Article remains draft until manually published.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

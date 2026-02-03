@@ -50,7 +50,9 @@
       "Bash(gh run list:*)",
       "Bash(gcloud --version:*)",
       "Bash(gcloud config:*)",
-      "Bash(gcloud projects list:*)"
+      "Bash(gcloud projects list:*)",
+      "Bash(dir \"%APPDATA%\\\\supabase\")",
+      "Bash(dir \"%USERPROFILE%\\\\.supabase\")"
     ]
   }
 }

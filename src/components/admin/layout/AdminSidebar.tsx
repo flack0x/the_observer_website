@@ -14,6 +14,7 @@ import {
   ChevronRight,
   X,
   LogOut,
+  Activity,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { useState } from 'react';
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
   { label: 'Articles', href: '/admin/articles', icon: FileText },
   { label: 'Books', href: '/admin/books', icon: BookOpen },
   { label: 'Media', href: '/admin/media', icon: Image },
+  { label: 'Activity', href: '/admin/activity', icon: Activity },
   { label: 'Users', href: '/admin/users', icon: Users, adminOnly: true },
   { label: 'Settings', href: '/admin/settings', icon: Settings, adminOnly: true },
 ];

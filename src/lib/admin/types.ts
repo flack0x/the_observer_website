@@ -32,6 +32,7 @@ export interface Article {
   author_id: string | null;
   status: ArticleStatus;
   published_at: string | null;
+  scheduled_at: string | null;
   last_edited_by: string | null;
   created_at: string;
   updated_at: string;
@@ -44,6 +45,27 @@ export interface ArticleRevision {
   content: string | null;
   edited_by: string | null;
   created_at: string;
+}
+
+// Activity Log Types
+export type ActivityAction = 'create' | 'update' | 'publish' | 'unpublish' | 'delete' | 'upload' | 'role_change';
+export type ActivityTargetType = 'article' | 'media' | 'user';
+
+export interface ActivityLog {
+  id: string;
+  user_id: string | null;
+  action: ActivityAction;
+  target_type: ActivityTargetType;
+  target_id: string | null;
+  target_title: string | null;
+  details: Record<string, unknown>;
+  created_at: string;
+  // Joined fields
+  user?: {
+    full_name: string | null;
+    email: string;
+    avatar_url: string | null;
+  };
 }
 
 // Form types for article editing

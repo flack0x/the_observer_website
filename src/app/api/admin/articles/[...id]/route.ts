@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logActivity } from '@/lib/admin/logActivity';
 
 interface RouteParams {
   params: Promise<{ id: string[] }>;
@@ -131,6 +132,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // Handle scheduled_at
+    if (body.scheduled_at !== undefined) {
+      updateData.scheduled_at = body.scheduled_at;
+    }
+
     // Save revision before updating
     await supabase.from('article_revisions').insert({
       article_id: existingArticle.id,
@@ -151,6 +157,28 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       console.error('Error updating article:', updateError);
       return NextResponse.json({ error: 'Failed to update article' }, { status: 500 });
     }
+
+    // Determine action type for activity log
+    let action: 'update' | 'publish' | 'unpublish' = 'update';
+    if (body.status === 'published' && existingArticle.status !== 'published') {
+      action = 'publish';
+    } else if (body.status !== 'published' && existingArticle.status === 'published') {
+      action = 'unpublish';
+    }
+
+    // Log activity
+    await logActivity(
+      supabase,
+      user.id,
+      action,
+      'article',
+      decodedId,
+      updatedArticle.title,
+      {
+        previousStatus: existingArticle.status,
+        newStatus: body.status || existingArticle.status,
+      }
+    );
 
     return NextResponse.json({
       data: updatedArticle,
@@ -188,6 +216,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Join array segments back into a single ID (handles slashes in telegram_id)
     const decodedId = id.join('/');
 
+    // Fetch article title before deleting for activity log
+    const { data: articleToDelete } = await supabase
+      .from('articles')
+      .select('title')
+      .eq('telegram_id', decodedId)
+      .single();
+
     // Delete article
     const { error: deleteError } = await supabase
       .from('articles')
@@ -207,6 +242,17 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
       await supabase.from('articles').delete().eq('telegram_id', otherId);
     }
+
+    // Log activity
+    await logActivity(
+      supabase,
+      user.id,
+      'delete',
+      'article',
+      decodedId,
+      articleToDelete?.title || 'Unknown',
+      { isWebsiteArticle: decodedId.startsWith('website/') }
+    );
 
     return NextResponse.json({
       message: 'Article deleted successfully',

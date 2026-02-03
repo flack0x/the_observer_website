@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import useSWR from 'swr';
@@ -12,6 +13,9 @@ import {
   ArrowRight,
   Clock,
   Eye,
+  Activity,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { getClient } from '@/lib/supabase/client';
@@ -21,6 +25,7 @@ interface DashboardStats {
   publishedArticles: number;
   draftArticles: number;
   totalMedia: number;
+  publishedThisWeek: number;
 }
 
 interface RecentArticle {
@@ -33,15 +38,36 @@ interface RecentArticle {
   channel: string;
 }
 
+interface RecentActivity {
+  id: string;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  target_title: string | null;
+  created_at: string;
+  user?: {
+    full_name: string | null;
+    email: string;
+  };
+}
+
 // Fetcher function for SWR
 const fetchDashboardStats = async (): Promise<DashboardStats> => {
   const supabase = getClient();
 
-  const [totalResult, publishedResult, draftResult, mediaResult] = await Promise.all([
+  // Calculate date 7 days ago
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const [totalResult, publishedResult, draftResult, mediaResult, publishedThisWeekResult] = await Promise.all([
     supabase.from('articles').select('*', { count: 'exact', head: true }),
     supabase.from('articles').select('*', { count: 'exact', head: true }).eq('status', 'published'),
     supabase.from('articles').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
     supabase.storage.from('article-media').list('', { limit: 1000 }),
+    supabase.from('articles')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .gte('published_at', weekAgo.toISOString()),
   ]);
 
   return {
@@ -49,6 +75,7 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
     publishedArticles: publishedResult.count || 0,
     draftArticles: draftResult.count || 0,
     totalMedia: mediaResult.data?.filter((f: { name: string }) => !f.name.startsWith('.')).length || 0,
+    publishedThisWeek: publishedThisWeekResult.count || 0,
   };
 };
 
@@ -58,6 +85,42 @@ const fetchRecentArticles = async (): Promise<RecentArticle[]> => {
   const { data } = await supabase
     .from('articles')
     .select('id, telegram_id, title, category, status, telegram_date, channel')
+    .order('telegram_date', { ascending: false })
+    .limit(5);
+
+  return data || [];
+};
+
+const fetchRecentActivity = async (): Promise<RecentActivity[]> => {
+  const supabase = getClient();
+
+  const { data } = await supabase
+    .from('activity_log')
+    .select(`
+      id,
+      action,
+      target_type,
+      target_id,
+      target_title,
+      created_at,
+      user:user_profiles!user_id (
+        full_name,
+        email
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  return (data as RecentActivity[]) || [];
+};
+
+const fetchDraftArticles = async (): Promise<RecentArticle[]> => {
+  const supabase = getClient();
+
+  const { data } = await supabase
+    .from('articles')
+    .select('id, telegram_id, title, category, status, telegram_date, channel')
+    .eq('status', 'draft')
     .order('telegram_date', { ascending: false })
     .limit(5);
 
@@ -81,6 +144,7 @@ export default function AdminDashboardPage() {
         publishedArticles: 0,
         draftArticles: 0,
         totalMedia: 0,
+        publishedThisWeek: 0,
       },
     }
   );
@@ -97,6 +161,51 @@ export default function AdminDashboardPage() {
     }
   );
 
+  const { data: recentActivity } = useSWR<RecentActivity[]>(
+    'dashboard-recent-activity',
+    fetchRecentActivity,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000, // Refresh more often for activity
+      fallbackData: [],
+    }
+  );
+
+  const { data: draftArticles, mutate: mutateDrafts } = useSWR<RecentArticle[]>(
+    'dashboard-draft-articles',
+    fetchDraftArticles,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000,
+      refreshInterval: 300000,
+      fallbackData: [],
+    }
+  );
+
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  const handleQuickPublish = async (telegramId: string) => {
+    setPublishingId(telegramId);
+    try {
+      const response = await fetch(`/api/admin/articles/${encodeURIComponent(telegramId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' }),
+      });
+
+      if (response.ok) {
+        mutateDrafts();
+      }
+    } catch (error) {
+      console.error('Error publishing article:', error);
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
   const isLoading = statsLoading && !stats?.totalArticles;
 
   const statCards = [
@@ -108,9 +217,9 @@ export default function AdminDashboardPage() {
       href: '/admin/articles',
     },
     {
-      label: 'Published',
-      value: stats?.publishedArticles || 0,
-      icon: Eye,
+      label: 'Published This Week',
+      value: stats?.publishedThisWeek || 0,
+      icon: TrendingUp,
       color: 'earth-olive',
       href: '/admin/articles?status=published',
     },
@@ -185,6 +294,141 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
+      {/* Two-column: Drafts Awaiting Publish + Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Drafts Awaiting Publish */}
+        <div className="bg-midnight-800 rounded-xl border border-midnight-700">
+          <div className="flex items-center justify-between p-5 border-b border-midnight-700">
+            <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
+              <Clock className="h-4 w-4 text-tactical-amber" />
+              Drafts Awaiting Publish
+            </h2>
+            <Link
+              href="/admin/articles?status=draft"
+              className="flex items-center gap-1 text-xs text-tactical-red hover:text-tactical-amber transition-colors"
+            >
+              View All
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="divide-y divide-midnight-700">
+            {draftArticles && draftArticles.length > 0 ? (
+              draftArticles.map((article) => (
+                <div
+                  key={article.id}
+                  className="flex items-center justify-between p-4 hover:bg-midnight-700/30 transition-colors"
+                >
+                  <Link
+                    href={`/admin/articles/${article.telegram_id}`}
+                    className="min-w-0 flex-1 mr-3"
+                  >
+                    <p className="text-slate-light text-sm font-medium truncate">
+                      {article.title}
+                    </p>
+                    <span className="text-xs text-slate-dark uppercase">{article.channel}</span>
+                  </Link>
+                  <button
+                    onClick={() => handleQuickPublish(article.telegram_id)}
+                    disabled={publishingId === article.telegram_id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                             bg-earth-olive/10 text-earth-olive hover:bg-earth-olive/20
+                             disabled:opacity-50 transition-colors flex-shrink-0"
+                  >
+                    {publishingId === article.telegram_id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="h-3 w-3" />
+                    )}
+                    Publish
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center text-slate-dark">
+                <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No drafts pending</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-midnight-800 rounded-xl border border-midnight-700">
+          <div className="flex items-center justify-between p-5 border-b border-midnight-700">
+            <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
+              <Activity className="h-4 w-4 text-blue-400" />
+              Recent Activity
+            </h2>
+            <Link
+              href="/admin/activity"
+              className="flex items-center gap-1 text-xs text-tactical-red hover:text-tactical-amber transition-colors"
+            >
+              View All
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="divide-y divide-midnight-700">
+            {recentActivity && recentActivity.length > 0 ? (
+              recentActivity.map((activity) => {
+                const timeAgo = (() => {
+                  const diffMs = Date.now() - new Date(activity.created_at).getTime();
+                  const diffMins = Math.floor(diffMs / 60000);
+                  const diffHours = Math.floor(diffMs / 3600000);
+                  const diffDays = Math.floor(diffMs / 86400000);
+                  if (diffMins < 1) return 'just now';
+                  if (diffMins < 60) return `${diffMins}m ago`;
+                  if (diffHours < 24) return `${diffHours}h ago`;
+                  return `${diffDays}d ago`;
+                })();
+
+                const actionLabel: Record<string, string> = {
+                  create: 'created',
+                  update: 'updated',
+                  publish: 'published',
+                  unpublish: 'unpublished',
+                  delete: 'deleted',
+                  upload: 'uploaded',
+                  role_change: 'changed role for',
+                };
+
+                return (
+                  <div key={activity.id} className="p-4 hover:bg-midnight-700/30 transition-colors">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-slate-light font-medium">
+                        {activity.user?.full_name || activity.user?.email || 'User'}
+                      </span>
+                      <span className="text-slate-dark">
+                        {actionLabel[activity.action] || activity.action}
+                      </span>
+                      {activity.target_id && activity.target_type === 'article' ? (
+                        <Link
+                          href={`/admin/articles/${activity.target_id}`}
+                          className="text-tactical-red hover:underline truncate max-w-[150px]"
+                        >
+                          {activity.target_title || 'article'}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-medium truncate max-w-[150px]">
+                          {activity.target_title || activity.target_type}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-dark mt-1 block">{timeAgo}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-8 text-center text-slate-dark">
+                <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No activity yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Recent articles */}
       <div className="bg-midnight-800 rounded-xl border border-midnight-700">
         <div className="flex items-center justify-between p-5 border-b border-midnight-700">
@@ -257,29 +501,6 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
-
-      {/* Quick tips for new users */}
-      <ShowForAdmin>
-        <div className="bg-midnight-800 rounded-xl border border-midnight-700 p-5">
-          <h3 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light mb-3">
-            Quick Tips
-          </h3>
-          <ul className="space-y-2 text-sm text-slate-medium">
-            <li className="flex items-start gap-2">
-              <span className="text-tactical-red">•</span>
-              Create articles in both English and Arabic using the bilingual editor
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-tactical-red">•</span>
-              Upload images and videos to the Media Library, or paste external URLs
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-tactical-red">•</span>
-              Articles start as drafts. Publish them when ready for the public site
-            </li>
-          </ul>
-        </div>
-      </ShowForAdmin>
     </div>
   );
 }

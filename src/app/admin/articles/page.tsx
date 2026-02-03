@@ -19,6 +19,7 @@ import {
   Loader2,
   CheckCircle2,
   CircleOff,
+  Calendar,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { CATEGORIES } from '@/lib/categories';
@@ -32,6 +33,7 @@ interface Article {
   status: string;
   telegram_date: string;
   image_url: string | null;
+  scheduled_at: string | null;
 }
 
 interface ArticlesResponse {
@@ -330,9 +332,24 @@ export default function AdminArticlesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeClass(article.status)}`}>
-                        {article.status}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-xs px-2 py-1 rounded-full w-fit ${getStatusBadgeClass(article.status)}`}>
+                          {article.status}
+                        </span>
+                        {article.scheduled_at && article.status === 'draft' && (
+                          <span className={`text-xs flex items-center gap-1 ${
+                            new Date(article.scheduled_at) <= new Date()
+                              ? 'text-tactical-amber'
+                              : 'text-slate-dark'
+                          }`}>
+                            <Calendar className="h-3 w-3" />
+                            {new Date(article.scheduled_at) <= new Date()
+                              ? 'Ready'
+                              : new Date(article.scheduled_at).toLocaleDateString()
+                            }
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-dark">
                       {new Date(article.telegram_date).toLocaleDateString()}
