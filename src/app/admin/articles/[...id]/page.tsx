@@ -27,9 +27,10 @@ import {
   Calendar,
   History,
   RotateCcw,
+  GitCompare,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
-import { ArticlePreviewModal } from '@/components/admin/articles';
+import { ArticlePreviewModal, ArticleComparisonModal } from '@/components/admin/articles';
 import { CATEGORIES } from '@/lib/categories';
 import { ShowForAdmin } from '@/lib/auth';
 import { normalizeContent } from '@/lib/content';
@@ -77,6 +78,7 @@ export default function EditArticlePage({ params }: PageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
   const [customCountry, setCustomCountry] = useState('');
   const [customOrganization, setCustomOrganization] = useState('');
 
@@ -741,6 +743,18 @@ export default function EditArticlePage({ params }: PageProps) {
               <Monitor className="h-4 w-4" />
             </button>
 
+            {/* Compare EN/AR - only for website articles with both languages */}
+            {isWebsiteArticle && enArticle && arArticle && (
+              <button
+                onClick={() => setShowComparison(true)}
+                className="p-2 rounded-lg bg-midnight-700 border border-midnight-600 text-slate-light
+                         hover:border-blue-400 hover:text-blue-400 transition-colors"
+                title="Compare EN/AR"
+              >
+                <GitCompare className="h-4 w-4" />
+              </button>
+            )}
+
             {/* Save Status Indicator */}
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-midnight-700/50 text-sm">
               {saveStatus === 'unsaved' && (
@@ -1314,6 +1328,16 @@ export default function EditArticlePage({ params }: PageProps) {
           imageUrl,
           videoUrl,
         }}
+      />
+
+      {/* Comparison Modal */}
+      <ArticleComparisonModal
+        isOpen={showComparison}
+        onClose={() => setShowComparison(false)}
+        titleEn={titleEn}
+        titleAr={titleAr}
+        contentEn={contentEn}
+        contentAr={contentAr}
       />
     </div>
   );

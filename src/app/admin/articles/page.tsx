@@ -23,9 +23,11 @@ import {
   Square,
   CheckSquare,
   MinusSquare,
+  Smartphone,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { CATEGORIES } from '@/lib/categories';
+import { QuickEditModal } from '@/components/admin/articles';
 
 interface Article {
   id: number;
@@ -76,6 +78,9 @@ export default function AdminArticlesPage() {
   // Bulk selection
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null);
+
+  // Quick edit modal
+  const [quickEditArticleId, setQuickEditArticleId] = useState<string | null>(null);
 
   // Debounce search
   const handleSearchChange = (value: string) => {
@@ -544,12 +549,22 @@ export default function AdminArticlesPage() {
 
                         {activeMenu === article.telegram_id && (
                           <div className="absolute right-0 top-full mt-1 w-40 bg-midnight-800 border border-midnight-700 rounded-lg shadow-lg py-1 z-10">
+                            <button
+                              onClick={() => {
+                                setQuickEditArticleId(article.telegram_id);
+                                setActiveMenu(null);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-tactical-red hover:bg-midnight-700 transition-colors"
+                            >
+                              <Smartphone className="h-4 w-4" />
+                              Quick Edit
+                            </button>
                             <Link
                               href={`/admin/articles/${article.telegram_id}`}
                               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-medium hover:text-slate-light hover:bg-midnight-700 transition-colors"
                             >
                               <Edit2 className="h-4 w-4" />
-                              Edit
+                              Full Edit
                             </Link>
                             <Link
                               href={`/${article.channel}/frontline/${article.telegram_id}`}
@@ -635,6 +650,14 @@ export default function AdminArticlesPage() {
           onClick={() => setActiveMenu(null)}
         />
       )}
+
+      {/* Quick Edit Modal */}
+      <QuickEditModal
+        isOpen={quickEditArticleId !== null}
+        onClose={() => setQuickEditArticleId(null)}
+        articleId={quickEditArticleId}
+        onSaved={() => mutate()}
+      />
     </div>
   );
 }
