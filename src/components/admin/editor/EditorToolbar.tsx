@@ -20,7 +20,9 @@ import {
   Undo,
   Redo,
   Unlink,
+  FolderOpen,
 } from 'lucide-react';
+import { MediaPickerModal } from './MediaPickerModal';
 
 interface EditorToolbarProps {
   editor: Editor;
@@ -31,6 +33,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [linkUrl, setLinkUrl] = useState('');
   const [showImageInput, setShowImageInput] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const addLink = () => {
     if (linkUrl) {
@@ -50,6 +53,10 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       setImageUrl('');
       setShowImageInput(false);
     }
+  };
+
+  const insertImageFromPicker = (url: string) => {
+    editor.chain().focus().setImage({ src: url }).run();
   };
 
   const ToolbarButton = ({
@@ -254,11 +261,11 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           )}
         </div>
 
-        {/* Image */}
+        {/* Image - URL input */}
         <div className="relative">
           <ToolbarButton
             onClick={() => setShowImageInput(!showImageInput)}
-            title="Add Image"
+            title="Add Image URL"
           >
             <ImageIcon className="h-4 w-4" />
           </ToolbarButton>
@@ -288,6 +295,14 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             </div>
           )}
         </div>
+
+        {/* Image - Media Library */}
+        <ToolbarButton
+          onClick={() => setShowMediaPicker(true)}
+          title="Browse Media Library"
+        >
+          <FolderOpen className="h-4 w-4" />
+        </ToolbarButton>
       </div>
 
       {/* Click outside to close popups */}
@@ -300,6 +315,13 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           }}
         />
       )}
+
+      {/* Media Picker Modal */}
+      <MediaPickerModal
+        isOpen={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={insertImageFromPicker}
+      />
     </div>
   );
 }

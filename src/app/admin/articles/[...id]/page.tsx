@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -21,6 +21,9 @@ import {
   Globe,
   ChevronDown,
   ChevronUp,
+  Check,
+  AlertCircle,
+  Copy,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
 import { ArticlePreviewModal } from '@/components/admin/articles';
@@ -76,6 +79,28 @@ export default function EditArticlePage({ params }: PageProps) {
   // Collapsible sections for mobile
   const [showCountries, setShowCountries] = useState(true);
   const [showOrganizations, setShowOrganizations] = useState(true);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+
+  // Autosave state
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
+  const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const savedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialLoadRef = useRef(true);
+
+  // Store original loaded data for comparison
+  const originalDataRef = useRef<{
+    titleEn: string;
+    titleAr: string;
+    excerptEn: string;
+    excerptAr: string;
+    contentEn: string;
+    contentAr: string;
+    category: string;
+    countries: string[];
+    organizations: string[];
+    imageUrl: string;
+    videoUrl: string;
+  } | null>(null);
 
   const isWebsiteArticle = decodedId.startsWith('website/');
 
@@ -90,6 +115,18 @@ export default function EditArticlePage({ params }: PageProps) {
           throw new Error(result.error || 'Failed to fetch article');
         }
 
+        let loadedTitleEn = '';
+        let loadedTitleAr = '';
+        let loadedExcerptEn = '';
+        let loadedExcerptAr = '';
+        let loadedContentEn = '';
+        let loadedContentAr = '';
+        let loadedCategory = 'Analysis';
+        let loadedCountries: string[] = [];
+        let loadedOrganizations: string[] = [];
+        let loadedImageUrl = '';
+        let loadedVideoUrl = '';
+
         if (isWebsiteArticle) {
           const enData = result.data.en;
           const arData = result.data.ar;
@@ -97,42 +134,86 @@ export default function EditArticlePage({ params }: PageProps) {
           setArArticle(arData);
 
           if (enData) {
-            setTitleEn(enData.title || '');
-            setExcerptEn(enData.excerpt || '');
-            setContentEn(normalizeContent(enData.content || ''));
-            setCategory(enData.category || 'Analysis');
-            setCountries(enData.countries || []);
-            setOrganizations(enData.organizations || []);
-            setImageUrl(enData.image_url || '');
-            setVideoUrl(enData.video_url || '');
+            loadedTitleEn = enData.title || '';
+            loadedExcerptEn = enData.excerpt || '';
+            loadedContentEn = normalizeContent(enData.content || '');
+            loadedCategory = enData.category || 'Analysis';
+            loadedCountries = enData.countries || [];
+            loadedOrganizations = enData.organizations || [];
+            loadedImageUrl = enData.image_url || '';
+            loadedVideoUrl = enData.video_url || '';
             setStatus(enData.status || 'draft');
           }
 
           if (arData) {
-            setTitleAr(arData.title || '');
-            setExcerptAr(arData.excerpt || '');
-            setContentAr(normalizeContent(arData.content || ''));
+            loadedTitleAr = arData.title || '';
+            loadedExcerptAr = arData.excerpt || '';
+            loadedContentAr = normalizeContent(arData.content || '');
           }
+
+          setTitleEn(loadedTitleEn);
+          setTitleAr(loadedTitleAr);
+          setExcerptEn(loadedExcerptEn);
+          setExcerptAr(loadedExcerptAr);
+          setContentEn(loadedContentEn);
+          setContentAr(loadedContentAr);
+          setCategory(loadedCategory);
+          setCountries(loadedCountries);
+          setOrganizations(loadedOrganizations);
+          setImageUrl(loadedImageUrl);
+          setVideoUrl(loadedVideoUrl);
         } else {
           const article = result.data;
           if (article.channel === 'en') {
             setEnArticle(article);
-            setTitleEn(article.title || '');
-            setExcerptEn(article.excerpt || '');
-            setContentEn(normalizeContent(article.content || ''));
+            loadedTitleEn = article.title || '';
+            loadedExcerptEn = article.excerpt || '';
+            loadedContentEn = normalizeContent(article.content || '');
           } else {
             setArArticle(article);
-            setTitleAr(article.title || '');
-            setExcerptAr(article.excerpt || '');
-            setContentAr(normalizeContent(article.content || ''));
+            loadedTitleAr = article.title || '';
+            loadedExcerptAr = article.excerpt || '';
+            loadedContentAr = normalizeContent(article.content || '');
           }
-          setCategory(article.category || 'Analysis');
-          setCountries(article.countries || []);
-          setOrganizations(article.organizations || []);
-          setImageUrl(article.image_url || '');
-          setVideoUrl(article.video_url || '');
+          loadedCategory = article.category || 'Analysis';
+          loadedCountries = article.countries || [];
+          loadedOrganizations = article.organizations || [];
+          loadedImageUrl = article.image_url || '';
+          loadedVideoUrl = article.video_url || '';
           setStatus(article.status || 'published');
+
+          setTitleEn(loadedTitleEn);
+          setTitleAr(loadedTitleAr);
+          setExcerptEn(loadedExcerptEn);
+          setExcerptAr(loadedExcerptAr);
+          setContentEn(loadedContentEn);
+          setContentAr(loadedContentAr);
+          setCategory(loadedCategory);
+          setCountries(loadedCountries);
+          setOrganizations(loadedOrganizations);
+          setImageUrl(loadedImageUrl);
+          setVideoUrl(loadedVideoUrl);
         }
+
+        // Store original data for change detection
+        originalDataRef.current = {
+          titleEn: loadedTitleEn,
+          titleAr: loadedTitleAr,
+          excerptEn: loadedExcerptEn,
+          excerptAr: loadedExcerptAr,
+          contentEn: loadedContentEn,
+          contentAr: loadedContentAr,
+          category: loadedCategory,
+          countries: loadedCountries,
+          organizations: loadedOrganizations,
+          imageUrl: loadedImageUrl,
+          videoUrl: loadedVideoUrl,
+        };
+
+        // Mark initial load complete after a short delay
+        setTimeout(() => {
+          isInitialLoadRef.current = false;
+        }, 500);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -143,9 +224,143 @@ export default function EditArticlePage({ params }: PageProps) {
     fetchArticle();
   }, [decodedId, isWebsiteArticle]);
 
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = useCallback(() => {
+    if (!originalDataRef.current) return false;
+    const orig = originalDataRef.current;
+    return (
+      titleEn !== orig.titleEn ||
+      titleAr !== orig.titleAr ||
+      excerptEn !== orig.excerptEn ||
+      excerptAr !== orig.excerptAr ||
+      contentEn !== orig.contentEn ||
+      contentAr !== orig.contentAr ||
+      category !== orig.category ||
+      imageUrl !== orig.imageUrl ||
+      videoUrl !== orig.videoUrl ||
+      JSON.stringify(countries) !== JSON.stringify(orig.countries) ||
+      JSON.stringify(organizations) !== JSON.stringify(orig.organizations)
+    );
+  }, [titleEn, titleAr, excerptEn, excerptAr, contentEn, contentAr, category, countries, organizations, imageUrl, videoUrl]);
+
+  // Autosave effect - triggers 3 seconds after changes stop
+  useEffect(() => {
+    // Skip during initial load or while submitting
+    if (isInitialLoadRef.current || isLoading || isSubmitting) return;
+
+    // Clear existing timeout
+    if (autosaveTimeoutRef.current) {
+      clearTimeout(autosaveTimeoutRef.current);
+    }
+
+    // Check for changes
+    if (hasUnsavedChanges()) {
+      setSaveStatus('unsaved');
+
+      // Set up autosave after 3 seconds of no changes
+      autosaveTimeoutRef.current = setTimeout(() => {
+        handleAutosave();
+      }, 3000);
+    }
+
+    return () => {
+      if (autosaveTimeoutRef.current) {
+        clearTimeout(autosaveTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [titleEn, titleAr, excerptEn, excerptAr, contentEn, contentAr, category, countries, organizations, imageUrl, videoUrl, hasUnsavedChanges, isLoading, isSubmitting]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    };
+  }, []);
+
+  // Autosave function (called automatically)
+  const handleAutosave = async () => {
+    if (isSubmitting) return;
+
+    setSaveStatus('saving');
+    setError(null);
+
+    try {
+      if (enArticle) {
+        const enResponse = await fetch(`/api/admin/articles/${encodeURIComponent(enArticle.telegram_id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: titleEn,
+            excerpt: excerptEn,
+            content: contentEn,
+            category,
+            countries,
+            organizations,
+            image_url: imageUrl || null,
+            video_url: videoUrl || null,
+            status,
+          }),
+        });
+
+        if (!enResponse.ok) {
+          const data = await enResponse.json();
+          throw new Error(data.error || 'Failed to autosave English article');
+        }
+      }
+
+      if (arArticle) {
+        const arResponse = await fetch(`/api/admin/articles/${encodeURIComponent(arArticle.telegram_id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: titleAr,
+            excerpt: excerptAr,
+            content: contentAr,
+            category,
+            countries,
+            organizations,
+            image_url: imageUrl || null,
+            video_url: videoUrl || null,
+            status,
+          }),
+        });
+
+        if (!arResponse.ok) {
+          const data = await arResponse.json();
+          throw new Error(data.error || 'Failed to autosave Arabic article');
+        }
+      }
+
+      // Update original data reference after successful save
+      originalDataRef.current = {
+        titleEn, titleAr, excerptEn, excerptAr, contentEn, contentAr,
+        category, countries, organizations, imageUrl, videoUrl,
+      };
+
+      setSaveStatus('saved');
+
+      // Reset to idle after 2 seconds
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      savedTimeoutRef.current = setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message);
+      setSaveStatus('unsaved');
+    }
+  };
+
   const handleSave = async (newStatus?: 'draft' | 'published' | 'archived') => {
+    // Clear autosave timeout if manual save is triggered
+    if (autosaveTimeoutRef.current) {
+      clearTimeout(autosaveTimeoutRef.current);
+    }
+
     setError(null);
     setIsSubmitting(true);
+    setSaveStatus('saving');
 
     try {
       if (enArticle) {
@@ -198,9 +413,22 @@ export default function EditArticlePage({ params }: PageProps) {
         setStatus(newStatus);
       }
 
-      alert('Article saved successfully!');
+      // Update original data reference after successful save
+      originalDataRef.current = {
+        titleEn, titleAr, excerptEn, excerptAr, contentEn, contentAr,
+        category, countries, organizations, imageUrl, videoUrl,
+      };
+
+      setSaveStatus('saved');
+
+      // Reset to idle after 2 seconds
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      savedTimeoutRef.current = setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2000);
     } catch (err: any) {
       setError(err.message);
+      setSaveStatus('unsaved');
     } finally {
       setIsSubmitting(false);
     }
@@ -226,6 +454,56 @@ export default function EditArticlePage({ params }: PageProps) {
     } catch (err: any) {
       setError(err.message);
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDuplicate = async () => {
+    // Determine current channel and target channel
+    const currentChannel = enArticle ? 'en' : 'ar';
+    const targetChannel = currentChannel === 'en' ? 'ar' : 'en';
+
+    setIsDuplicating(true);
+    setError(null);
+
+    try {
+      // Create new article with swapped channel, copy only metadata
+      const response = await fetch('/api/admin/articles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // Empty content fields - user will translate
+          title_en: targetChannel === 'en' ? '' : undefined,
+          title_ar: targetChannel === 'ar' ? '' : undefined,
+          excerpt_en: targetChannel === 'en' ? '' : undefined,
+          excerpt_ar: targetChannel === 'ar' ? '' : undefined,
+          content_en: targetChannel === 'en' ? '' : undefined,
+          content_ar: targetChannel === 'ar' ? '' : undefined,
+          // Copy metadata
+          category,
+          countries,
+          organizations,
+          image_url: imageUrl || null,
+          video_url: videoUrl || null,
+          status: 'draft',
+          channel: targetChannel,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to duplicate article');
+      }
+
+      // Navigate to the new article
+      if (data.data?.telegram_id) {
+        router.push(`/admin/articles/${data.data.telegram_id}`);
+      } else {
+        router.push('/admin/articles');
+      }
+    } catch (err: any) {
+      setError(err.message);
+      setIsDuplicating(false);
     }
   };
 
@@ -328,6 +606,25 @@ export default function EditArticlePage({ params }: PageProps) {
               </button>
             </ShowForAdmin>
 
+            {/* Duplicate for Translation - only for single-channel articles */}
+            {!isWebsiteArticle && (enArticle || arArticle) && (
+              <button
+                onClick={handleDuplicate}
+                disabled={isDuplicating || isSubmitting}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-midnight-700 border border-midnight-600
+                         text-slate-light hover:border-blue-400 hover:text-blue-400
+                         disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                title={`Duplicate as ${enArticle ? 'Arabic' : 'English'}`}
+              >
+                {isDuplicating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                <span>Duplicate as {enArticle ? 'AR' : 'EN'}</span>
+              </button>
+            )}
+
             <button
               onClick={() => setShowPreview(true)}
               className="p-2 rounded-lg bg-midnight-700 border border-midnight-600 text-slate-light
@@ -336,6 +633,28 @@ export default function EditArticlePage({ params }: PageProps) {
             >
               <Monitor className="h-4 w-4" />
             </button>
+
+            {/* Save Status Indicator */}
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-midnight-700/50 text-sm">
+              {saveStatus === 'unsaved' && (
+                <>
+                  <AlertCircle className="h-3.5 w-3.5 text-tactical-amber" />
+                  <span className="text-tactical-amber">Unsaved</span>
+                </>
+              )}
+              {saveStatus === 'saving' && (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 text-slate-medium animate-spin" />
+                  <span className="text-slate-medium">Saving...</span>
+                </>
+              )}
+              {saveStatus === 'saved' && (
+                <>
+                  <Check className="h-3.5 w-3.5 text-earth-olive" />
+                  <span className="text-earth-olive">Saved</span>
+                </>
+              )}
+            </div>
 
             <button
               onClick={() => handleSave()}

@@ -17,6 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  CheckCircle2,
+  CircleOff,
 } from 'lucide-react';
 import { useAuth, ShowForAdmin } from '@/lib/auth';
 import { CATEGORIES } from '@/lib/categories';
@@ -64,6 +66,7 @@ export default function AdminArticlesPage() {
 
   // Action menu
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   // Debounce search
   const handleSearchChange = (value: string) => {
@@ -129,6 +132,33 @@ export default function AdminArticlesPage() {
     }
 
     setActiveMenu(null);
+  };
+
+  const handleStatusToggle = async (telegramId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+
+    setUpdatingStatus(telegramId);
+    setActiveMenu(null);
+
+    try {
+      const response = await fetch(`/api/admin/articles/${encodeURIComponent(telegramId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        mutate();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
+    } finally {
+      setUpdatingStatus(null);
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -333,6 +363,26 @@ export default function AdminArticlesPage() {
                               <ExternalLink className="h-4 w-4" />
                               View on Site
                             </Link>
+                            {article.status !== 'archived' && (
+                              <button
+                                onClick={() => handleStatusToggle(article.telegram_id, article.status)}
+                                disabled={updatingStatus === article.telegram_id}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                                  article.status === 'published'
+                                    ? 'text-tactical-amber hover:text-tactical-amber hover:bg-midnight-700'
+                                    : 'text-earth-olive hover:text-earth-olive hover:bg-midnight-700'
+                                } disabled:opacity-50`}
+                              >
+                                {updatingStatus === article.telegram_id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : article.status === 'published' ? (
+                                  <CircleOff className="h-4 w-4" />
+                                ) : (
+                                  <CheckCircle2 className="h-4 w-4" />
+                                )}
+                                {article.status === 'published' ? 'Unpublish' : 'Publish'}
+                              </button>
+                            )}
                             <ShowForAdmin>
                               <button
                                 onClick={() => handleDelete(article.telegram_id)}

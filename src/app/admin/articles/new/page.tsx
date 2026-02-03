@@ -12,6 +12,8 @@ import {
   Video,
   X,
   Monitor,
+  AlertCircle,
+  Check,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/admin/editor';
 import { ArticlePreviewModal } from '@/components/admin/articles';
@@ -49,10 +51,15 @@ export default function NewArticlePage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'en' | 'ar'>('en');
   const [showPreview, setShowPreview] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  // Check if there's any content to save
+  const hasContent = titleEn || titleAr || excerptEn || excerptAr || contentEn || contentAr;
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     setError(null);
     setIsSubmitting(true);
+    setSaveStatus('saving');
 
     try {
       const response = await fetch('/api/admin/articles', {
@@ -80,9 +87,11 @@ export default function NewArticlePage() {
         throw new Error(data.error || 'Failed to create article');
       }
 
+      setSaveStatus('saved');
       router.push('/admin/articles');
     } catch (err: any) {
       setError(err.message);
+      setSaveStatus('idle');
     } finally {
       setIsSubmitting(false);
     }
@@ -130,6 +139,29 @@ export default function NewArticlePage() {
             <Monitor className="h-4 w-4" />
             Preview
           </button>
+
+          {/* Save Status Indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-midnight-700/50 text-sm">
+            {hasContent && saveStatus === 'idle' && (
+              <>
+                <AlertCircle className="h-3.5 w-3.5 text-tactical-amber" />
+                <span className="text-tactical-amber">Unsaved</span>
+              </>
+            )}
+            {saveStatus === 'saving' && (
+              <>
+                <Loader2 className="h-3.5 w-3.5 text-slate-medium animate-spin" />
+                <span className="text-slate-medium">Saving...</span>
+              </>
+            )}
+            {saveStatus === 'saved' && (
+              <>
+                <Check className="h-3.5 w-3.5 text-earth-olive" />
+                <span className="text-earth-olive">Saved</span>
+              </>
+            )}
+          </div>
+
           <button
             onClick={() => handleSubmit('draft')}
             disabled={isSubmitting || !titleEn}
