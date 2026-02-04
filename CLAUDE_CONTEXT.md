@@ -1520,4 +1520,4 @@ for r in result.data:
 - **Status**: Verified, sitemap submitted Jan 17, 2026
 - **Indexing Status** (Feb 1): `site:al-muraqeb.com` returns 0 results - not yet indexed
 - **SEO Health**: robots.txt OK, no noindex tags, canonical URLs present, JSON-LD structured data present
-- **Known Issues**: URL slugs use Telegram IDs (`/observer_5/447`) instead of descriptive slugs
+- **SEO Slugs**: Implemented Feb 5 — all URLs now use descriptive slugs, old Telegram ID URLs redirect
