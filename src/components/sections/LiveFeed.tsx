@@ -212,7 +212,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                         dislikes={article.dislikes} 
                       />
                       <Link
-                        href={`/${locale}/frontline/${article.id}`}
+                        href={`/${locale}/frontline/${article.slug}`}
                         className="flex items-center gap-1 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:text-tactical-amber transition-colors"
                       >
                         {dict.common.readMore}

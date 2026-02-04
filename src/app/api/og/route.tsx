@@ -1,17 +1,25 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
-import { fetchArticleById } from "@/lib/supabase";
+import { fetchArticleById, fetchArticleBySlug } from "@/lib/supabase";
 
 export const runtime = "edge";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const articleId = searchParams.get("id");
+  const slug = searchParams.get("slug");
+  const channel = (searchParams.get("channel") || "en") as "en" | "ar";
+  const articleId = searchParams.get("id"); // backward compat
 
   let title = "The Observer";
   let category = "Intelligence";
 
-  if (articleId) {
+  if (slug) {
+    const article = await fetchArticleBySlug(slug, channel);
+    if (article) {
+      title = article.title;
+      category = article.category;
+    }
+  } else if (articleId) {
     const article = await fetchArticleById(articleId);
     if (article) {
       title = article.title;

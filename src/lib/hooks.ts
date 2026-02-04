@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 // Note: Use getRelativeTime(date, locale) from time.ts for display
 export interface Article {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   content: string;

@@ -120,6 +120,7 @@ export default function FrontlinePage() {
   // Transform filtered articles
   const newsArticles = filteredArticles.map((article) => ({
     id: article.id,
+    slug: article.slug,
     category: article.category,
     categoryDisplay: getCategoryDisplay(article.category, locale),
     title: article.title,
@@ -392,7 +393,7 @@ export default function FrontlinePage() {
                       dislikes={article.dislikes} 
                     />
                     <Link
-                      href={`/${locale}/frontline/${article.id}`}
+                      href={`/${locale}/frontline/${article.slug}`}
                       className="flex items-center gap-1 font-heading text-xs font-medium uppercase tracking-wider text-tactical-red transition-colors hover:text-tactical-amber"
                     >
                       {dict.frontline.fullReport}

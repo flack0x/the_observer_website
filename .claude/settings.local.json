@@ -53,7 +53,10 @@
       "Bash(gcloud projects list:*)",
       "Bash(dir \"%APPDATA%\\\\supabase\")",
       "Bash(dir \"%USERPROFILE%\\\\.supabase\")",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" stash)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" diff --stat)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\nfeat: SEO-friendly URL slugs for articles\n\nReplace Telegram IDs in URLs \\(e.g. /observer_5/447\\) with descriptive\nslugs \\(e.g. /iran-nuclear-deal-analysis\\). Old URLs auto-redirect.\n\n- Add slug column to articles table with unique index per channel\n- Backfill all 609 existing articles with generated slugs\n- Public routes resolve by slug; admin routes keep telegram_id\n- Update sitemap, OG images, bookmarks, live feed links\n- Add slug generation to admin article creation and Telegram pipeline\n- Fix pre-existing build error: move revisions API out of catch-all route\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

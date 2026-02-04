@@ -36,7 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Article pages for English
   const enArticleEntries: MetadataRoute.Sitemap = enArticles.map((article) => ({
-    url: `${baseUrl}/en/frontline/${article.telegram_id}`,
+    url: `${baseUrl}/en/frontline/${article.slug}`,
     lastModified: new Date(article.telegram_date),
     changeFrequency: 'weekly' as const,
     priority: 0.6,
@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Article pages for Arabic
   const arArticleEntries: MetadataRoute.Sitemap = arArticles.map((article) => ({
-    url: `${baseUrl}/ar/frontline/${article.telegram_id}`,
+    url: `${baseUrl}/ar/frontline/${article.slug}`,
     lastModified: new Date(article.telegram_date),
     changeFrequency: 'weekly' as const,
     priority: 0.6,

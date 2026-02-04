@@ -1,42 +1,50 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { fetchArticleById, dbArticleToFrontend } from "@/lib/supabase";
+import { fetchArticleById, fetchArticleBySlug, dbArticleToFrontend } from "@/lib/supabase";
 import ArticleContent from "./ArticleContent";
-import { getDictionary, type Locale, locales } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string[] }>;
 }
 
-// Fetch article data (used by both generateMetadata and page)
-async function getArticle(slug: string[]) {
-  const articleId = slug.join("/");
-  const dbArticle = await fetchArticleById(articleId);
+// Fetch article: single segment = slug lookup, multi-segment = old telegram_id lookup
+async function getArticle(slugSegments: string[], locale: string) {
+  if (slugSegments.length === 1) {
+    // New slug URL: /en/frontline/iran-nuclear-deal-analysis
+    const channel = (locale === 'ar' ? 'ar' : 'en') as 'en' | 'ar';
+    const dbArticle = await fetchArticleBySlug(slugSegments[0], channel);
+    if (!dbArticle) return null;
+    return { article: dbArticleToFrontend(dbArticle), isOldUrl: false };
+  }
 
+  // Old URL: /en/frontline/observer_5/447 → fetch by telegram_id, then redirect
+  const telegramId = slugSegments.join("/");
+  const dbArticle = await fetchArticleById(telegramId);
   if (!dbArticle) return null;
-
-  return dbArticleToFrontend(dbArticle);
+  return { article: dbArticleToFrontend(dbArticle), isOldUrl: true };
 }
 
 // Generate dynamic metadata for each article
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale, slug } = await params;
-  const article = await getArticle(slug);
-  const articleId = slug.join("/");
+  const result = await getArticle(slug, locale);
   const isArabic = locale === 'ar';
 
-  if (!article) {
+  if (!result) {
     return {
       title: isArabic ? "المقال غير موجود | المُراقِب" : "Article Not Found | The Observer",
       description: isArabic ? "لم يتم العثور على المقال المطلوب." : "The requested article could not be found.",
     };
   }
 
+  const { article } = result;
   const siteName = isArabic ? "المُراقِب" : "The Observer";
   const title = `${article.title} | ${siteName}`;
   const description = article.excerpt.slice(0, 160);
-  const ogImageUrl = `/api/og?id=${encodeURIComponent(articleId)}`;
+  const ogImageUrl = `/api/og?slug=${encodeURIComponent(article.slug)}&channel=${article.channel}`;
 
   return {
     title,
@@ -68,11 +76,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [ogImageUrl],
     },
     alternates: {
-      canonical: `https://al-muraqeb.com/${locale}/frontline/${slug.join("/")}`,
+      canonical: `https://al-muraqeb.com/${locale}/frontline/${article.slug}`,
       languages: {
-        'en': `https://al-muraqeb.com/en/frontline/${slug.join("/")}`,
-        'ar': `https://al-muraqeb.com/ar/frontline/${slug.join("/")}`,
-        'x-default': `https://al-muraqeb.com/en/frontline/${slug.join("/")}`,
+        'en': `https://al-muraqeb.com/en/frontline/${article.slug}`,
+        'ar': `https://al-muraqeb.com/ar/frontline/${article.slug}`,
+        'x-default': `https://al-muraqeb.com/en/frontline/${article.slug}`,
       },
     },
   };
@@ -104,7 +112,7 @@ function generateJsonLd(article: ReturnType<typeof dbArticleToFrontend>, locale:
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${baseUrl}/${locale}/frontline/${article.id}`,
+      "@id": `${baseUrl}/${locale}/frontline/${article.slug}`,
     },
     articleSection: article.category,
     inLanguage: locale === "ar" ? "ar" : "en",
@@ -115,10 +123,10 @@ export default async function ArticlePage({ params }: PageProps) {
   const { locale, slug } = await params;
   const validLocale = locale as Locale;
   const dict = getDictionary(validLocale);
-  const article = await getArticle(slug);
+  const result = await getArticle(slug, locale);
   const isArabic = locale === 'ar';
 
-  if (!article) {
+  if (!result) {
     return (
       <div className="min-h-screen bg-midnight-900 py-20">
         <div className="mx-auto max-w-3xl px-4 text-center">
@@ -140,6 +148,13 @@ export default async function ArticlePage({ params }: PageProps) {
         </div>
       </div>
     );
+  }
+
+  const { article, isOldUrl } = result;
+
+  // Redirect old multi-segment URLs to new slug URLs
+  if (isOldUrl) {
+    redirect(`/${locale}/frontline/${article.slug}`);
   }
 
   const jsonLd = generateJsonLd(article, locale);

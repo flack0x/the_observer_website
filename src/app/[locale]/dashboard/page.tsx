@@ -32,6 +32,7 @@ export default async function DashboardPage({
       article:articles (
         id,
         telegram_id,
+        slug,
         title,
         category
       )
@@ -86,7 +87,7 @@ export default async function DashboardPage({
           {recentBookmarks && recentBookmarks.length > 0 ? (
             recentBookmarks.map((item: any) => (
               <div key={item.created_at} className="p-6 hover:bg-midnight-700/50 transition-colors">
-                <Link href={`/${locale}/frontline/${item.article.telegram_id}`} className="block group">
+                <Link href={`/${locale}/frontline/${item.article.slug}`} className="block group">
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <span className="inline-block px-2 py-1 mb-2 text-xs font-medium uppercase tracking-wider rounded bg-midnight-700 text-slate-medium">

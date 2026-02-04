@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/admin/logActivity';
+import { generateSlug } from '@/lib/slugify';
 
 // GET /api/admin/articles - List articles with filters
 export async function GET(request: NextRequest) {
@@ -106,16 +107,29 @@ export async function POST(request: NextRequest) {
 
     // Generate unique telegram_id for website articles
     const timestamp = Date.now();
-    const slug = body.title_en
+    const idSlug = body.title_en
       ?.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 50) || 'untitled';
 
+    // Generate SEO-friendly slug and ensure uniqueness
+    let articleSlug = generateSlug(body.title_en || 'Untitled', String(timestamp));
+    // Check for existing slug in either channel
+    const { data: existing } = await supabase
+      .from('articles')
+      .select('slug')
+      .eq('slug', articleSlug)
+      .limit(1);
+    if (existing && existing.length > 0) {
+      articleSlug = `${articleSlug}-${timestamp.toString(36).slice(-4)}`;
+    }
+
     // Create English article
     const enArticle = {
-      telegram_id: `website/${timestamp}-${slug}-en`,
+      telegram_id: `website/${timestamp}-${idSlug}-en`,
       channel: 'en',
+      slug: articleSlug,
       title: body.title_en || 'Untitled',
       excerpt: body.excerpt_en || '',
       content: body.content_en || '',
@@ -123,7 +137,7 @@ export async function POST(request: NextRequest) {
       countries: body.countries || [],
       organizations: body.organizations || [],
       is_structured: true,
-      telegram_link: `https://al-muraqeb.com/en/frontline/website/${timestamp}-${slug}-en`,
+      telegram_link: `https://al-muraqeb.com/en/frontline/${articleSlug}`,
       telegram_date: new Date().toISOString(),
       image_url: body.image_url || null,
       video_url: body.video_url || null,
@@ -135,8 +149,9 @@ export async function POST(request: NextRequest) {
 
     // Create Arabic article
     const arArticle = {
-      telegram_id: `website/${timestamp}-${slug}-ar`,
+      telegram_id: `website/${timestamp}-${idSlug}-ar`,
       channel: 'ar',
+      slug: articleSlug,
       title: body.title_ar || body.title_en || 'Untitled',
       excerpt: body.excerpt_ar || body.excerpt_en || '',
       content: body.content_ar || body.content_en || '',
@@ -144,7 +159,7 @@ export async function POST(request: NextRequest) {
       countries: body.countries || [],
       organizations: body.organizations || [],
       is_structured: true,
-      telegram_link: `https://al-muraqeb.com/ar/frontline/website/${timestamp}-${slug}-ar`,
+      telegram_link: `https://al-muraqeb.com/ar/frontline/${articleSlug}`,
       telegram_date: new Date().toISOString(),
       image_url: body.image_url || null,
       video_url: body.video_url || null,

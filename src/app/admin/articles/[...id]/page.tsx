@@ -581,7 +581,7 @@ export default function EditArticlePage({ params }: PageProps) {
 
     setIsLoadingRevisions(true);
     try {
-      const response = await fetch(`/api/admin/articles/${encodeURIComponent(articleId)}/revisions`);
+      const response = await fetch(`/api/admin/article-revisions/${encodeURIComponent(articleId)}`);
       const result = await response.json();
       if (response.ok) {
         setRevisions(result.data || []);
@@ -693,7 +693,7 @@ export default function EditArticlePage({ params }: PageProps) {
                 </span>
                 {enArticle && (
                   <Link
-                    href={`/en/frontline/${enArticle.telegram_id}`}
+                    href={`/en/frontline/${enArticle.slug}`}
                     target="_blank"
                     className="text-xs text-slate-dark hover:text-tactical-red flex items-center gap-1"
                   >

@@ -32,6 +32,7 @@ import { QuickEditModal } from '@/components/admin/articles';
 interface Article {
   id: number;
   telegram_id: string;
+  slug: string;
   channel: 'en' | 'ar';
   title: string;
   category: string;
@@ -567,7 +568,7 @@ export default function AdminArticlesPage() {
                               Full Edit
                             </Link>
                             <Link
-                              href={`/${article.channel}/frontline/${article.telegram_id}`}
+                              href={`/${article.channel}/frontline/${article.slug}`}
                               target="_blank"
                               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-medium hover:text-slate-light hover:bg-midnight-700 transition-colors"
                             >

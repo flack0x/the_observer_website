@@ -20,6 +20,7 @@ export default async function BookmarksPage({
       article:articles (
         id,
         telegram_id,
+        slug,
         title,
         excerpt,
         category,
@@ -46,7 +47,7 @@ export default async function BookmarksPage({
         {bookmarks && bookmarks.length > 0 ? (
           bookmarks.map((item: any) => (
             <div key={item.created_at} className="bg-midnight-800 rounded-xl border border-midnight-700 p-6 hover:border-tactical-red/50 transition-colors group">
-              <Link href={`/${locale}/frontline/${item.article.telegram_id}`} className="flex flex-col sm:flex-row gap-6">
+              <Link href={`/${locale}/frontline/${item.article.slug}`} className="flex flex-col sm:flex-row gap-6">
                 {/* Image */}
                 <div className="relative w-full sm:w-48 aspect-video sm:aspect-[4/3] bg-midnight-700 rounded-lg overflow-hidden flex-shrink-0">
                   {item.article.image_url ? (

@@ -10,6 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface DBArticle {
   id: number;
   telegram_id: string;
+  slug: string;
   channel: 'en' | 'ar';
   title: string;
   excerpt: string;
@@ -114,6 +115,7 @@ export function dbArticleToFrontend(article: DBArticle) {
   return {
     id: article.telegram_id,
     dbId: article.id,
+    slug: article.slug,
     title: sanitizeTitle(article.title),
     excerpt: sanitizeExcerpt(article.excerpt),
     content: article.content,
@@ -143,6 +145,23 @@ export async function fetchArticleById(telegramId: string): Promise<DBArticle | 
 
   if (error) {
     console.error('Error fetching article:', error);
+    return null;
+  }
+
+  return data;
+}
+
+// Fetch a single article by slug and channel (for SEO-friendly URLs)
+export async function fetchArticleBySlug(slug: string, channel: 'en' | 'ar'): Promise<DBArticle | null> {
+  const { data, error } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', slug)
+    .eq('channel', channel)
+    .single();
+
+  if (error) {
+    console.error('Error fetching article by slug:', error);
     return null;
   }
 

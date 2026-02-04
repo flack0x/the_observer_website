@@ -166,6 +166,33 @@ def hash_article_content(article: dict) -> str:
 
 
 # =============================================================================
+# SLUG GENERATION (mirrors src/lib/slugify.ts)
+# =============================================================================
+
+def generate_slug(title: str, fallback_id: str = '') -> str:
+    """Generate a URL-friendly slug from an article title."""
+    import unicodedata
+    text = re.sub(r'<[^>]*>', '', title)
+    text = unicodedata.normalize('NFKD', text)
+    # Remove combining marks (diacritics)
+    text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
+    text = text.lower()
+    # Keep only latin alphanumeric, spaces, hyphens
+    slug = re.sub(r'[^a-z0-9\s-]', '', text)
+    slug = re.sub(r'[\s-]+', '-', slug).strip('-')
+    slug = slug[:80].rstrip('-')
+
+    if len(slug) < 5:
+        source = fallback_id or title
+        h = 0
+        for ch in source:
+            h = ((h << 5) - h + ord(ch)) & 0xFFFFFFFF
+        slug = f"article-{h:08x}"
+
+    return slug
+
+
+# =============================================================================
 # TEXT PROCESSING
 # =============================================================================
 
@@ -704,9 +731,11 @@ def parse_message(message: Message, channel: str, channel_username: str) -> dict
 
     excerpt = extract_excerpt(text, title, content_start)
 
+    telegram_id = f"{channel_username}/{message.id}"
     return {
-        'telegram_id': f"{channel_username}/{message.id}",
+        'telegram_id': telegram_id,
         'channel': channel,
+        'slug': generate_slug(title, telegram_id),
         'title': title,
         'excerpt': excerpt,
         'content': text,
@@ -794,9 +823,11 @@ def combine_message_group(messages: list[Message], channel: str, channel_usernam
 
     excerpt = extract_excerpt(combined_text, title, content_start)
 
+    telegram_id = f"{channel_username}/{first_message.id}"
     return {
-        'telegram_id': f"{channel_username}/{first_message.id}",
+        'telegram_id': telegram_id,
         'channel': channel,
+        'slug': generate_slug(title, telegram_id),
         'title': title,
         'excerpt': excerpt,
         'content': combined_text,
@@ -977,11 +1008,14 @@ def smart_upsert_articles(
     # Fetch existing data if not provided
     if existing_data is None:
         try:
-            existing = supabase.table('articles').select('telegram_id, content, title, category, image_url, video_url').eq('channel', channel).execute()
+            existing = supabase.table('articles').select('telegram_id, content, title, category, image_url, video_url, slug').eq('channel', channel).execute()
             existing_data = {row['telegram_id']: row for row in existing.data}
         except Exception as e:
             print(f"  Warning: Could not fetch existing data: {e}")
             existing_data = {}
+
+    # Build set of used slugs for collision detection
+    used_slugs = {row.get('slug') for row in existing_data.values() if row.get('slug')}
 
     for article in articles:
         try:
@@ -1000,6 +1034,9 @@ def smart_upsert_articles(
                     stats['skipped'] += 1
                     continue
                 else:
+                    # Keep existing slug on update (don't change URLs)
+                    if existing.get('slug'):
+                        article_data['slug'] = existing['slug']
                     # Content changed, update
                     supabase.table('articles').upsert(
                         article_data,
@@ -1007,7 +1044,16 @@ def smart_upsert_articles(
                     ).execute()
                     stats['updated'] += 1
             else:
-                # New article, insert
+                # New article — ensure slug uniqueness
+                base_slug = article_data.get('slug', '')
+                slug = base_slug
+                counter = 2
+                while slug in used_slugs:
+                    slug = f"{base_slug}-{counter}"
+                    counter += 1
+                article_data['slug'] = slug
+                used_slugs.add(slug)
+
                 supabase.table('articles').upsert(
                     article_data,
                     on_conflict='telegram_id'
