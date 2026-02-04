@@ -13,6 +13,7 @@ Bilingual (EN/AR) geopolitical intelligence news platform. Aggregates content fr
 - **Plan**: Pro
 - **Project ID**: `prj_vvFQWbJG5LkNE9Naswunx0X3JrK7`
 - **CLI Version**: 50.1.3
+- **CLI Auth**: `npx vercel login` (OAuth, stored in `~/.vercel/auth.json`)
 
 ### Supabase
 - **Project**: `TheObserver`
@@ -199,9 +200,9 @@ src/
 │   │   └── admin/
 │   │       ├── articles/
 │   │       │   ├── route.ts         # GET/POST admin articles
-│   │       │   └── [...id]/
-│   │       │       ├── route.ts     # GET/PUT/DELETE single article
-│   │       │       └── revisions/route.ts # GET article version history
+│   │       │   └── [...id]/route.ts # GET/PUT/DELETE single article
+│   │       ├── article-revisions/
+│   │       │   └── [...id]/route.ts # GET article version history
 │   │       ├── books/
 │   │       │   ├── route.ts         # GET/POST admin books
 │   │       │   └── [...id]/route.ts # GET/PUT/DELETE single book
@@ -239,6 +240,7 @@ src/
 │       └── ThemeToggle.tsx
 │
 ├── lib/
+│   ├── slugify.ts                   # URL slug generation (generateSlug)
 │   ├── supabase.ts                  # Supabase client + converters
 │   ├── supabase/
 │   │   └── server.ts                # Server-side Supabase client
@@ -281,6 +283,7 @@ src/
 ```typescript
 interface Article {
   id: string;              // telegram_id (e.g., "observer_5/425")
+  slug: string;            // SEO slug (e.g., "iran-nuclear-deal-analysis")
   title: string;
   excerpt: string;
   content: string;
@@ -741,12 +744,15 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260128130000_allow_guest_comments.sql` | Guest comment RPC functions (guest_comment, guest_delete_comment) |
 | `20260203120000_create_activity_log.sql` | Activity log table for admin actions |
 | `20260203130000_add_scheduled_at.sql` | Scheduled publishing field on articles |
+| `20260205120000_add_article_slugs.sql` | Add slug column to articles |
+| `20260205130000_enforce_article_slugs.sql` | NOT NULL + unique index on slug per channel |
 
 ### articles
 | Column | Type | Notes |
 |--------|------|-------|
 | id | serial | Auto-increment PK |
 | telegram_id | text | Unique (e.g., "observer_5/336") |
+| slug | text | SEO URL slug, NOT NULL, unique per channel |
 | channel | text | 'en' or 'ar' |
 | title | text | Extracted/generated |
 | excerpt | text | First ~200 chars |
@@ -1143,6 +1149,7 @@ npm run lint     # ESLint
 | `publish_article.py` | Publish draft articles |
 | `upload_image.py` | Upload image to Supabase Storage |
 | `create_admin_user.js` | Create admin user in Supabase |
+| `backfill_slugs.js` | Backfill SEO slugs for existing articles |
 | `schema.sql` | Database schema reference |
 
 **Python Dependencies** (`scripts/requirements.txt`):
@@ -1275,11 +1282,11 @@ for r in result.data:
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Feb 4, 2026)
+## Database Stats (Feb 5, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (total) | 577+ | EN + AR combined |
+| Articles (total) | 609 | EN + AR combined, all with SEO slugs |
 | Book Reviews | 14 | 7 EN, 7 AR published |
 | News Headlines | 200+ | Active from RSS feeds |
 | Activity Log | Active | Tracks admin actions |
@@ -1288,6 +1295,18 @@ for r in result.data:
 | Comments | 0 | Feature ready |
 
 ## Recent Changes (Feb 2026)
+
+- **SEO-Friendly URL Slugs** (Feb 5):
+  - Replaced Telegram IDs in URLs (`/observer_5/447`) with descriptive slugs (`/iran-nuclear-deal-analysis`)
+  - Added `slug` column to articles table (NOT NULL, unique per channel via `idx_articles_slug_channel`)
+  - Backfilled all 609 existing articles with generated slugs
+  - `src/lib/slugify.ts`: `generateSlug(title, fallbackId?)` — Latin extraction, Arabic fallback via hash
+  - Public routes resolve by slug; admin routes still use telegram_id internally
+  - Old multi-segment URLs (e.g. `/observer_5/447`) auto-redirect (307) to new slug URL
+  - Updated: sitemap, OG images, bookmarks, live feed, admin "View on Site" links
+  - Slug generation added to admin article creation (`POST /api/admin/articles`) and Telegram pipeline
+  - Fix: Moved revisions API from `/api/admin/articles/[...id]/revisions` to `/api/admin/article-revisions/[...id]` (Next.js 16 catch-all constraint)
+  - Fix: Vercel CLI auth restored via `npx vercel login` (removed expired OIDC token from .env.local)
 
 - **Media Upload Buttons + Publish Button Fix** (Feb 4):
   - Replaced URL-only image/video fields with "Upload or browse" buttons on New Article and Edit Article pages
