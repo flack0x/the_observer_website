@@ -19,12 +19,15 @@ const CHANNEL_META = {
   },
 } as const;
 
-// Strip emojis, U+FFFD, and special Unicode that cause RSS XML validation warnings
-function stripEmoji(str: string): string {
-  return str
-    .replace(/\uFFFD/g, '')
-    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}]+/gu, '')
-    .trim();
+// Clean text for RSS XML: strip emojis, replacement chars, and non-XML-safe Unicode
+function cleanForRss(str: string): string {
+  // Remove U+FFFD replacement characters (appear as ? in some encodings)
+  let clean = str.split('').filter(ch => ch.codePointAt(0) !== 0xFFFD).join('');
+  // Remove emojis and other supplementary plane characters (U+10000+)
+  clean = clean.replace(/[\u{10000}-\u{10FFFF}]/gu, '');
+  // Remove variation selectors and zero-width joiners
+  clean = clean.replace(/[\u{FE00}-\u{FE0F}\u{200D}]/gu, '');
+  return clean.trim();
 }
 
 function escapeXml(str: string): string {
@@ -74,10 +77,10 @@ export async function GET(
         ? `\n      <enclosure url="${escapeXml(a.imageUrl)}" type="image/jpeg" length="0" />`
         : "";
       return `    <item>
-      <title>${escapeXml(stripEmoji(a.title))}</title>
+      <title>${escapeXml(cleanForRss(a.title))}</title>
       <link>${link}</link>
       <guid isPermaLink="true">${link}</guid>
-      <description><![CDATA[${stripEmoji(a.excerpt)}]]></description>
+      <description><![CDATA[${cleanForRss(a.excerpt)}]]></description>
       <pubDate>${toRFC2822(a.date)}</pubDate>
       <category>${escapeXml(a.category)}</category>${enclosure}
     </item>`;
