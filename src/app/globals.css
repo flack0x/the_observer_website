@@ -41,11 +41,11 @@
   --color-card-text-muted: #4a4a4a;
   --color-card-text-subtle: #6b6b6b;
 
-  /* Fonts */
-  --font-heading: "Montserrat", system-ui, sans-serif;
-  --font-body: "Lora", Georgia, serif;
+  /* Fonts (self-hosted via next/font, CSS vars set on <html>) */
+  --font-heading: var(--font-montserrat), system-ui, sans-serif;
+  --font-body: var(--font-lora), Georgia, serif;
   --font-mono: "Geist Mono", monospace;
-  --font-arabic: "Noto Sans Arabic", "Montserrat", system-ui, sans-serif;
+  --font-arabic: var(--font-noto-arabic), var(--font-montserrat), system-ui, sans-serif;
 
   /* Custom animations */
   --animate-ticker: ticker 40s linear infinite;

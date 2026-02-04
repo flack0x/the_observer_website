@@ -175,6 +175,7 @@ export default function LiveFeed({ locale, dict }: LiveFeedProps) {
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      {...(index === 0 ? { priority: true } : {})}
                     />
                   ) : (
                     <CategoryPlaceholder category={article.category} />

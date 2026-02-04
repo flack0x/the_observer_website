@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Script from "next/script";
+import { Montserrat, Lora } from "next/font/google";
+import { Noto_Sans_Arabic } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -9,6 +11,24 @@ import { getDictionary } from "@/lib/i18n";
 import { fetchArticlesFromDB, dbArticleToFrontend, fetchNewsHeadlines, dbHeadlineToTicker } from "@/lib/supabase";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/lib/auth";
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  variable: "--font-lora",
+  display: "swap",
+});
+
+const notoArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-noto-arabic",
+  display: "swap",
+});
 
 // Revalidate every 30 minutes (1800 seconds) to fetch fresh headlines
 export const revalidate = 1800;
@@ -124,24 +144,19 @@ export default async function LocaleLayout({ children, params }: Props) {
   const breakingNews = await getBreakingNews(validLocale);
 
   return (
-    <html lang={validLocale} dir={direction} suppressHydrationWarning>
+    <html lang={validLocale} dir={direction} suppressHydrationWarning className={`${montserrat.variable} ${lora.variable} ${notoArabic.variable}`}>
       <head>
         <meta name="google-site-verification" content="6GZxTpIryls2s95Zkl3jkPxpPsYlvW3LGnEe4L6Qm2k" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
+        <link rel="preconnect" href="https://gbqvivmfivsuvvdkoiuc.supabase.co" />
       </head>
       <body className={`min-h-screen bg-midnight-900 text-slate-light antialiased overflow-x-hidden ${direction === 'rtl' ? 'font-arabic' : ''}`}>
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-0Z0P2B5QT8"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}

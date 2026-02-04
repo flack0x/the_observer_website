@@ -78,6 +78,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                   src="/images/observer-silhouette.png"
                   alt="The Observer"
                   fill
+                  priority
                   className="object-contain opacity-90 group-hover:opacity-100 transition-opacity logo-gold"
                 />
               </div>

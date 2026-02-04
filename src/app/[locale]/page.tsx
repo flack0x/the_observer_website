@@ -1,10 +1,12 @@
+import dynamic from "next/dynamic";
 import HeroSection from "@/components/sections/HeroSection";
 import LiveFeed from "@/components/sections/LiveFeed";
 import SituationRoomPreview from "@/components/sections/SituationRoomPreview";
-import IntelDashboard from "@/components/sections/IntelDashboard";
 import FeaturedVoices from "@/components/sections/FeaturedVoices";
-import Community from "@/components/sections/Community";
 import { getDictionary, type Locale } from "@/lib/i18n";
+
+const IntelDashboard = dynamic(() => import("@/components/sections/IntelDashboard"));
+const Community = dynamic(() => import("@/components/sections/Community"));
 
 type Props = {
   params: Promise<{ locale: string }>;

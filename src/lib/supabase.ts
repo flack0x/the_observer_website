@@ -30,14 +30,14 @@ export interface DBArticle {
   dislikes_count: number;
 }
 
-// Fetch articles from Supabase
+// Fetch articles from Supabase (list queries — excludes content for performance)
 export async function fetchArticlesFromDB(
   channel: 'en' | 'ar' = 'en',
   limit: number = 500
 ): Promise<DBArticle[]> {
   const { data, error } = await supabase
     .from('articles')
-    .select('*')
+    .select('id, telegram_id, slug, channel, title, excerpt, category, countries, organizations, is_structured, telegram_link, telegram_date, image_url, video_url, created_at, updated_at, views, likes_count, dislikes_count')
     .eq('channel', channel)
     .order('telegram_date', { ascending: false })
     .limit(limit);
@@ -47,7 +47,7 @@ export async function fetchArticlesFromDB(
     return [];
   }
 
-  return data || [];
+  return (data || []) as DBArticle[];
 }
 
 // Sanitize title to remove prefixes and handle malformed titles

@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Clock, ExternalLink, Share2, Check, MapPin, Eye } from "lucide-react";
 import Image from "next/image";
 import DOMPurify from "dompurify";
+import dynamic from "next/dynamic";
 import ArticleInteractions from "@/components/articles/ArticleInteractions";
-import CommentSection from "@/components/comments/CommentSection";
+
+const CommentSection = dynamic(() => import("@/components/comments/CommentSection"), { ssr: false });
 import { getCountryName, type Locale, type Dictionary } from "@/lib/i18n";
 import { getRelativeTime, formatDate } from "@/lib/time";
 import { getCategoryDisplay } from "@/lib/categories";
