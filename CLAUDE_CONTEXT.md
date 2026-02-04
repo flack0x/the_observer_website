@@ -1296,6 +1296,16 @@ for r in result.data:
 
 ## Recent Changes (Feb 2026)
 
+- **Core Web Vitals Optimization** (Feb 5):
+  - Migrated Google Fonts to `next/font` (self-hosted, no render-blocking CSS requests)
+  - Fonts: Montserrat (`--font-montserrat`), Lora (`--font-lora`), Noto Sans Arabic (`--font-noto-arabic`)
+  - Dynamic import `IntelDashboard` (recharts) and `Community` on homepage via `next/dynamic`
+  - Dynamic import `CommentSection` on article pages (`ssr: false`)
+  - Added `priority` to Header logo and first LiveFeed thumbnail (LCP optimization)
+  - Changed Google Analytics from `afterInteractive` to `lazyOnload`
+  - Added `<link rel="preconnect">` for Supabase image CDN
+  - Optimized `fetchArticlesFromDB()`: excludes `content` column from list queries (saves KBs x 500 articles)
+
 - **SEO-Friendly URL Slugs** (Feb 5):
   - Replaced Telegram IDs in URLs (`/observer_5/447`) with descriptive slugs (`/iran-nuclear-deal-analysis`)
   - Added `slug` column to articles table (NOT NULL, unique per channel via `idx_articles_slug_channel`)
@@ -1352,7 +1362,7 @@ for r in result.data:
   - Measurement ID: `G-0Z0P2B5QT8`
   - Stream ID: 13395111011
   - Added to both `[locale]/layout.tsx` and `admin/layout.tsx`
-  - Uses `next/script` with `afterInteractive` strategy
+  - Uses `next/script` with `lazyOnload` strategy (changed from `afterInteractive` Feb 5)
   - Property URL: https://analytics.google.com (search "Al Muraqeb")
   - Status: Active and receiving data
 
