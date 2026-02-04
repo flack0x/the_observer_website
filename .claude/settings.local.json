@@ -52,7 +52,8 @@
       "Bash(gcloud config:*)",
       "Bash(gcloud projects list:*)",
       "Bash(dir \"%APPDATA%\\\\supabase\")",
-      "Bash(dir \"%USERPROFILE%\\\\.supabase\")"
+      "Bash(dir \"%USERPROFILE%\\\\.supabase\")",
+      "Bash(git show:*)"
     ]
   }
 }

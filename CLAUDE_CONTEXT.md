@@ -171,19 +171,21 @@ src/
 │   │   └── layout.tsx               # Locale layout + Header/Footer
 │   │
 │   ├── admin/                       # Admin Dashboard
-│   │   ├── page.tsx                 # Dashboard home
+│   │   ├── page.tsx                 # Dashboard home (stats, drafts, activity feed)
 │   │   ├── layout.tsx               # Admin layout with sidebar
 │   │   ├── AdminLayoutClient.tsx    # Client-side admin wrapper
 │   │   ├── login/page.tsx           # Admin login
 │   │   ├── signup/page.tsx          # Admin signup
 │   │   ├── articles/                # Article management
-│   │   │   ├── page.tsx             # List articles
-│   │   │   ├── new/page.tsx         # Create article
-│   │   │   └── [...id]/page.tsx     # Edit article
+│   │   │   ├── page.tsx             # List articles (bulk actions, quick edit)
+│   │   │   ├── new/page.tsx         # Create article (media upload, publish)
+│   │   │   └── [...id]/page.tsx     # Edit article (autosave, version history)
 │   │   ├── books/                   # Book review management
 │   │   │   ├── page.tsx             # List books
 │   │   │   ├── new/page.tsx         # Create book review
 │   │   │   └── [...id]/page.tsx     # Edit book review
+│   │   ├── activity/page.tsx        # Activity log with filters
+│   │   ├── calendar/page.tsx        # Content calendar (month grid)
 │   │   ├── media/page.tsx           # Media library
 │   │   ├── users/page.tsx           # User management
 │   │   └── settings/page.tsx        # Site settings
@@ -197,11 +199,14 @@ src/
 │   │   └── admin/
 │   │       ├── articles/
 │   │       │   ├── route.ts         # GET/POST admin articles
-│   │       │   └── [...id]/route.ts # GET/PUT/DELETE single article
+│   │       │   └── [...id]/
+│   │       │       ├── route.ts     # GET/PUT/DELETE single article
+│   │       │       └── revisions/route.ts # GET article version history
 │   │       ├── books/
 │   │       │   ├── route.ts         # GET/POST admin books
 │   │       │   └── [...id]/route.ts # GET/PUT/DELETE single book
-│   │       ├── media/route.ts       # Media upload
+│   │       ├── activity/route.ts    # GET activity log
+│   │       ├── media/route.ts       # GET/POST/DELETE media files
 │   │       └── users/route.ts       # User management
 │   │
 │   └── globals.css                  # Tailwind theme + utilities
@@ -223,9 +228,12 @@ src/
 │   │   │   └── AdminHeader.tsx      # Admin top bar
 │   │   ├── editor/
 │   │   │   ├── TipTapEditor.tsx     # Rich text editor
-│   │   │   └── EditorToolbar.tsx    # Editor toolbar
+│   │   │   ├── EditorToolbar.tsx    # Editor toolbar
+│   │   │   └── MediaPickerModal.tsx # Upload/browse media (image + video)
 │   │   └── articles/
-│   │       └── ArticlePreviewModal.tsx
+│   │       ├── ArticlePreviewModal.tsx
+│   │       ├── ArticleComparisonModal.tsx  # EN/AR side-by-side diff
+│   │       └── QuickEditModal.tsx   # Mobile-friendly quick editor
 │   └── ui/
 │       ├── BreakingNewsTicker.tsx
 │       └── ThemeToggle.tsx
@@ -241,6 +249,9 @@ src/
 │   ├── hooks.ts                     # useArticles, useMetrics, useBreakingNews, useBookReviews
 │   ├── voices.ts                    # External voices data and helpers
 │   ├── rate-limit.ts                # Rate limiting
+│   ├── admin/
+│   │   ├── logActivity.ts           # Activity logging helper
+│   │   └── types.ts                 # Admin type definitions
 │   ├── theme/                       # Theme system
 │   │   ├── index.ts                 # Exports useTheme
 │   │   └── ThemeContext.tsx         # Theme provider
@@ -728,6 +739,8 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260128120000_create_comments_table.sql` | Article comments with threading |
 | `20260128120000_allow_guest_comments.sql` | Guest commenting: nullable user_id, guest_name, session_id |
 | `20260128130000_allow_guest_comments.sql` | Guest comment RPC functions (guest_comment, guest_delete_comment) |
+| `20260203120000_create_activity_log.sql` | Activity log table for admin actions |
+| `20260203130000_add_scheduled_at.sql` | Scheduled publishing field on articles |
 
 ### articles
 | Column | Type | Notes |
@@ -1028,9 +1041,11 @@ Admin sidebar:
 1. Dashboard (`/admin`)
 2. Articles (`/admin/articles`)
 3. Books (`/admin/books`)
-4. Media (`/admin/media`)
-5. Users (`/admin/users`)
-6. Settings (`/admin/settings`)
+4. Calendar (`/admin/calendar`)
+5. Activity (`/admin/activity`)
+6. Media (`/admin/media`)
+7. Users (`/admin/users`)
+8. Settings (`/admin/settings`)
 
 ## Image Configuration
 
@@ -1260,18 +1275,59 @@ for r in result.data:
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Feb 1, 2026)
+## Database Stats (Feb 4, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (total) | 572 | EN + AR combined |
+| Articles (total) | 577+ | EN + AR combined |
 | Book Reviews | 14 | 7 EN, 7 AR published |
 | News Headlines | 200+ | Active from RSS feeds |
+| Activity Log | Active | Tracks admin actions |
 | User Profiles | 1 | Admin configured |
 | Subscribers | 0 | Table ready |
 | Comments | 0 | Feature ready |
 
 ## Recent Changes (Feb 2026)
+
+- **Media Upload Buttons + Publish Button Fix** (Feb 4):
+  - Replaced URL-only image/video fields with "Upload or browse" buttons on New Article and Edit Article pages
+  - Buttons open existing `MediaPickerModal` — users can upload from device or pick from library
+  - Extended `MediaPickerModal` with `mediaType` prop ('image' | 'video') for video support
+  - Image preview shown when set, with X to remove; URL input kept as secondary option
+  - Reorganized New Article header: buttons wrap on mobile, Publish always visible
+  - Changed Publish icon from Eye to Send for clarity
+
+- **Frontline No-Results Fix** (Feb 4):
+  - Fixed page going blank when search/filters returned zero results
+  - Error page only triggers for actual API errors now
+  - No results shows inline message within page layout (header, filters stay visible)
+
+- **Mobile Quick-Edit + Article Comparison** (Feb 3):
+  - `QuickEditModal`: Slide-up mobile editor with title + plain-text content editing
+  - Quick Edit button in articles list dropdown
+  - `ArticleComparisonModal`: EN/AR side-by-side paragraph comparison with issue detection
+  - Highlights missing paragraphs and length mismatches
+  - Compare button in edit page header (website articles with both languages only)
+
+- **Admin Dashboard Phase 3** (Feb 3):
+  - Bulk Actions: Checkbox select in articles list with Publish/Unpublish/Delete
+  - Content Calendar: `/admin/calendar` with month grid showing articles by date
+  - Version History: View and restore previous article versions from edit sidebar
+  - API: `/api/admin/articles/[...id]/revisions` for version history
+
+- **Admin Dashboard Phase 2** (Feb 3):
+  - Activity Log: Track all admin actions (create, edit, publish, delete, upload)
+  - New `/admin/activity` page with filters and pagination
+  - `logActivity()` helper integrated into article and media API routes
+  - Scheduled publishing: date/time picker for draft articles
+  - Enhanced dashboard home: "Published This Week" stat, "Drafts Awaiting Publish" widget, "Recent Activity" feed
+  - New migration: `20260203120000_create_activity_log.sql`, `20260203130000_add_scheduled_at.sql`
+
+- **Admin Dashboard Phase 1** (Feb 2):
+  - Autosave: Auto-saves 3s after changes stop on edit page, shows Unsaved/Saving/Saved status
+  - Quick publish/unpublish from articles list dropdown menu
+  - `MediaPickerModal`: Browse and select from media library when inserting images in editor
+  - Duplicate for Translation: One-click button to create AR/EN version with copied metadata
 
 - **Google Analytics 4** (Feb 1):
   - Measurement ID: `G-0Z0P2B5QT8`
@@ -1403,17 +1459,19 @@ for r in result.data:
   - Recommendation levels (essential/recommended/optional)
   - Local book cover images
 - **Admin Dashboard**: Complete content management system
-  - Article management (create, edit, delete)
+  - Article management (create, edit, delete, bulk actions, quick edit)
   - Book review management
-  - Media library
+  - Media library with upload/browse picker
   - User management
+  - Activity log, content calendar, version history
+  - Autosave, scheduled publishing, duplicate for translation
 - **Theme System**: Light/dark mode toggle
 - **Navigation**: Shortened names (Frontline, Library, Dossier)
 - **Mobile Optimization**: Improved book detail page mobile layout
 - **Multi-part Telegram post combining** (180s grouping window)
 - **Country tags** with AR translations on Frontline
 - **Accessibility**: skip-to-content, focus-visible styles
-- **Database**: 11 migrations, PostgreSQL 17
+- **Database**: 20+ migrations, PostgreSQL 17
 - **RLS Policies**: Optimized for performance, role-based access
 - **SEO Overhaul** (Jan 17): Critical fixes for Google indexing
   - Changed all URLs from `the-observer-website.vercel.app` to `al-muraqeb.com`
