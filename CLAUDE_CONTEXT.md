@@ -210,6 +210,10 @@ src/
 │   │       ├── media/route.ts       # GET/POST/DELETE media files
 │   │       └── users/route.ts       # User management
 │   │
+│   ├── feed/
+│   │   ├── route.ts                 # Redirect /feed → /feed/en
+│   │   └── [lang]/route.ts          # RSS 2.0 XML feed (en/ar)
+│   │
 │   └── globals.css                  # Tailwind theme + utilities
 │
 ├── components/
@@ -1014,6 +1018,11 @@ Theme toggle in Header (desktop + mobile).
 - Query: `language` ('en' | 'ar'), `limit`, `format` ('full' | 'ticker')
 - Returns: `NewsHeadline[]` or `string[]` (ticker format)
 
+**GET /feed/en** and **GET /feed/ar**
+- Returns: RSS 2.0 XML with latest 50 articles
+- `Cache-Control: public, max-age=900` (15 min)
+- `/feed` redirects to `/feed/en`
+
 **POST /api/subscribe**
 - Body: `{ email, locale? }`
 - Rate limited: 5 req/min
@@ -1299,6 +1308,15 @@ for r in result.data:
 | Comments | 0 | Feature ready |
 
 ## Recent Changes (Feb 2026)
+
+- **RSS Feeds** (Feb 5):
+  - `/feed/en` and `/feed/ar` serve RSS 2.0 XML with latest 50 articles
+  - `/feed` redirects to `/feed/en`
+  - RSS autodiscovery `<link>` tag in locale layout `<head>`
+  - Added `/feed` to middleware public paths (skip locale redirect)
+  - Rate limited (100 req/min), 15-min cache (`Cache-Control: public, max-age=900`)
+  - Items include: title, slug link, excerpt (CDATA), pubDate, category, image enclosure
+  - Route: `src/app/feed/[lang]/route.ts`
 
 - **Full-Text Article Search** (Feb 5):
   - Replaced client-side `.includes()` search with PostgreSQL full-text search on Frontline page
