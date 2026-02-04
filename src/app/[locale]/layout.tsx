@@ -149,6 +149,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <meta name="google-site-verification" content="6GZxTpIryls2s95Zkl3jkPxpPsYlvW3LGnEe4L6Qm2k" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://gbqvivmfivsuvvdkoiuc.supabase.co" />
+        <link rel="alternate" type="application/rss+xml" title={validLocale === 'ar' ? 'المُراقِب — RSS' : 'The Observer — RSS'} href={`/feed/${validLocale}`} />
       </head>
       <body className={`min-h-screen bg-midnight-900 text-slate-light antialiased overflow-x-hidden ${direction === 'rtl' ? 'font-arabic' : ''}`}>
         {/* Google Analytics */}

@@ -11,6 +11,7 @@ const publicPaths = [
   '/robots.txt',
   '/sitemap.xml',
   '/manifest.json',
+  '/feed',
   '/admin', // Admin routes handle their own routing
 ];
 
