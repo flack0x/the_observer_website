@@ -168,6 +168,29 @@ export async function fetchArticleBySlug(slug: string, channel: 'en' | 'ar'): Pr
   return data;
 }
 
+// Full-text search articles (uses tsvector + GIN index)
+export async function searchArticles(
+  query: string,
+  channel: 'en' | 'ar' = 'en',
+  limit: number = 50
+): Promise<DBArticle[]> {
+  const config = channel === 'ar' ? 'simple' : 'english';
+  const { data, error } = await supabase
+    .from('articles')
+    .select('id, telegram_id, slug, channel, title, excerpt, category, countries, organizations, is_structured, telegram_link, telegram_date, image_url, video_url, created_at, updated_at, views, likes_count, dislikes_count')
+    .eq('channel', channel)
+    .textSearch('search_vector', query, { type: 'websearch', config })
+    .order('telegram_date', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error searching articles:', error);
+    return [];
+  }
+
+  return (data || []) as DBArticle[];
+}
+
 // ============================================
 // Book Reviews
 // ============================================

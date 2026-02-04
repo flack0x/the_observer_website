@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Clock,
@@ -19,7 +19,7 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import CategoryPlaceholder from "@/components/ui/CategoryPlaceholder";
 import ArticleStats from "@/components/articles/ArticleStats";
-import { useArticles } from "@/lib/hooks";
+import { useArticles, type Article } from "@/lib/hooks";
 import { getDictionary, getCountryName, type Locale } from "@/lib/i18n";
 import { getCategoryList, filterByCategory, getCategoryDisplay } from "@/lib/categories";
 import { getRelativeTime } from "@/lib/time";
@@ -53,9 +53,42 @@ export default function FrontlinePage() {
   const [activeTimeRange, setActiveTimeRange] = useState<TimeRangeKey>('all');
   const [videoOnly, setVideoOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Article[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE);
 
   const { articles, loading, error } = useArticles(locale);
+
+  // Debounced server-side full-text search
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const channel = locale === 'ar' ? 'ar' : 'en';
+        const res = await fetch(`/api/articles?channel=${channel}&search=${encodeURIComponent(searchQuery)}&t=${Date.now()}`);
+        if (!res.ok) throw new Error('Search failed');
+        const data = await res.json();
+        // Parse date strings into Date objects
+        const parsed: Article[] = (data as Record<string, unknown>[]).map((a) => ({
+          ...a,
+          date: new Date(a.date as string),
+        })) as Article[];
+        setSearchResults(parsed);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, locale]);
 
   // Reset visible count when filters change
   const handleCategoryChange = (category: string) => {
@@ -83,9 +116,10 @@ export default function FrontlinePage() {
     setVisibleCount(ARTICLES_PER_PAGE);
   };
 
-  // Filter articles by category, country, time range, video, and search
-  // Each filter is applied in sequence, all filters work together
-  const filteredByCategory = filterByCategory(articles, activeCategory, locale);
+  // Filter articles: use server-side search results when available, otherwise all articles
+  const baseArticles = searchResults ?? articles;
+
+  const filteredByCategory = filterByCategory(baseArticles, activeCategory, locale);
 
   const filteredByCountry = activeCountry
     ? filteredByCategory.filter(article =>
@@ -106,16 +140,9 @@ export default function FrontlinePage() {
     });
   })();
 
-  const filteredByVideo = videoOnly
+  const filteredArticles = videoOnly
     ? filteredByTime.filter(article => article.videoUrl)
     : filteredByTime;
-
-  const filteredArticles = searchQuery
-    ? filteredByVideo.filter(article =>
-        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : filteredByVideo;
 
   // Transform filtered articles
   const newsArticles = filteredArticles.map((article) => ({
@@ -281,11 +308,20 @@ export default function FrontlinePage() {
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Results count */}
-          <p className="text-sm text-slate-dark mb-6">
-            {dict.frontline.showingOf
-              .replace('{current}', String(Math.min(visibleCount, newsArticles.length)))
-              .replace('{total}', String(newsArticles.length))}
-          </p>
+          <div className="flex items-center gap-3 mb-6">
+            <p className="text-sm text-slate-dark">
+              {searchResults !== null
+                ? (isArabic
+                    ? `${newsArticles.length} نتيجة بحث`
+                    : `${newsArticles.length} search result${newsArticles.length !== 1 ? 's' : ''}`)
+                : dict.frontline.showingOf
+                    .replace('{current}', String(Math.min(visibleCount, newsArticles.length)))
+                    .replace('{total}', String(newsArticles.length))}
+            </p>
+            {searchLoading && (
+              <Loader2 className="h-4 w-4 animate-spin text-tactical-red" />
+            )}
+          </div>
 
           {/* No results message */}
           {newsArticles.length === 0 && (

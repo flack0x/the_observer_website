@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchArticlesFromDB, dbArticleToFrontend } from "@/lib/supabase";
+import { fetchArticlesFromDB, searchArticles, dbArticleToFrontend } from "@/lib/supabase";
 import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 // Always fetch fresh from database
@@ -23,8 +23,15 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const channel = searchParams.get("channel") as "en" | "ar" | "all" | null;
   const limit = parseInt(searchParams.get("limit") || "500");
+  const search = searchParams.get("search")?.trim();
 
   try {
+    // Full-text search mode
+    if (search && search.length >= 2 && channel && channel !== "all") {
+      const dbArticles = await searchArticles(search, channel, Math.min(limit, 50));
+      return NextResponse.json(dbArticles.map(dbArticleToFrontend));
+    }
+
     if (channel === "all" || !channel) {
       // Fetch both channels
       const [enArticles, arArticles] = await Promise.all([
