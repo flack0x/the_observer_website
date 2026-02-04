@@ -746,6 +746,7 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260203130000_add_scheduled_at.sql` | Scheduled publishing field on articles |
 | `20260205120000_add_article_slugs.sql` | Add slug column to articles |
 | `20260205130000_enforce_article_slugs.sql` | NOT NULL + unique index on slug per channel |
+| `20260205140000_add_fulltext_search.sql` | tsvector column + GIN index + trigger for full-text search |
 
 ### articles
 | Column | Type | Notes |
@@ -773,6 +774,7 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | likes_count | integer | Total likes (cached) |
 | dislikes_count | integer | Total dislikes (cached) |
 | comment_count | integer | Total comments (cached via trigger) |
+| search_vector | tsvector | Full-text search (weighted: A=title, B=excerpt, C=content) |
 | created_at | timestamptz | DB insert time |
 | updated_at | timestamptz | Last update time |
 
@@ -996,7 +998,9 @@ Theme toggle in Header (desktop + mobile).
 ### Public APIs
 
 **GET /api/articles**
-- Query: `channel` ('en' | 'ar' | 'all'), `limit`
+- Query: `channel` ('en' | 'ar' | 'all'), `limit`, `search` (full-text, min 2 chars)
+- Without `search`: Returns all articles (paginated)
+- With `search`: Returns full-text search results (max 50) using tsvector + GIN index
 - Returns: `Article[]`
 
 **GET /api/books**
@@ -1296,6 +1300,18 @@ for r in result.data:
 
 ## Recent Changes (Feb 2026)
 
+- **Full-Text Article Search** (Feb 5):
+  - Replaced client-side `.includes()` search with PostgreSQL full-text search on Frontline page
+  - Added `search_vector` tsvector column to articles table with weighted fields (A=title, B=excerpt, C=content)
+  - GIN index (`idx_articles_search`) for fast search queries
+  - Auto-update trigger keeps search_vector in sync on insert/update
+  - English articles use `english` regconfig (stemming), Arabic use `simple` (tokenize only)
+  - `searchArticles()` function in `supabase.ts` using `websearch` type (natural language queries)
+  - `/api/articles?search=...` endpoint for server-side search (max 50 results)
+  - Frontline page: debounced 300ms API search, loading spinner, "N search results" count
+  - Category/country/time/video filters still apply on top of search results
+  - Migration: `20260205140000_add_fulltext_search.sql`
+
 - **Core Web Vitals Optimization** (Feb 5):
   - Migrated Google Fonts to `next/font` (self-hosted, no render-blocking CSS requests)
   - Fonts: Montserrat (`--font-montserrat`), Lora (`--font-lora`), Noto Sans Arabic (`--font-noto-arabic`)
@@ -1374,7 +1390,7 @@ for r in result.data:
   - Time range filter: All, 7 days, 30 days, 90 days (amber color)
   - Video only toggle: Shows only articles with video (125 total) - green color
   - Color scheme: Categories (red), Countries (blue), Time (amber), Video (green)
-  - All filters chain: Category → Country → Time → Video → Search (no conflicts)
+  - All filters chain: Search (server-side) → Category → Country → Time → Video (no conflicts)
 
 - **Frontline Filter UI** (Feb 1):
   - Compact 3-row layout: Search+Video+Time | Categories | Countries
