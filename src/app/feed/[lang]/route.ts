@@ -19,6 +19,11 @@ const CHANNEL_META = {
   },
 } as const;
 
+// Strip emojis and special Unicode that cause RSS XML validation warnings
+function stripEmoji(str: string): string {
+  return str.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}\u{FFFD}]+/gu, '').trim();
+}
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -66,10 +71,10 @@ export async function GET(
         ? `\n      <enclosure url="${escapeXml(a.imageUrl)}" type="image/jpeg" length="0" />`
         : "";
       return `    <item>
-      <title>${escapeXml(a.title)}</title>
+      <title>${escapeXml(stripEmoji(a.title))}</title>
       <link>${link}</link>
       <guid isPermaLink="true">${link}</guid>
-      <description><![CDATA[${a.excerpt}]]></description>
+      <description><![CDATA[${stripEmoji(a.excerpt)}]]></description>
       <pubDate>${toRFC2822(a.date)}</pubDate>
       <category>${escapeXml(a.category)}</category>${enclosure}
     </item>`;
@@ -85,6 +90,11 @@ export async function GET(
     <language>${lang}</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
     <atom:link href="${feedUrl}" rel="self" type="application/rss+xml" />
+    <image>
+      <url>${BASE_URL}/images/observer-silhouette.png</url>
+      <title>${escapeXml(meta.title)}</title>
+      <link>${siteUrl}</link>
+    </image>
 ${items}
   </channel>
 </rss>`;
