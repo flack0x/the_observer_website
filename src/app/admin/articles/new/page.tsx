@@ -14,8 +14,10 @@ import {
   Monitor,
   AlertCircle,
   Check,
+  Upload,
+  Send,
 } from 'lucide-react';
-import { TipTapEditor } from '@/components/admin/editor';
+import { TipTapEditor, MediaPickerModal } from '@/components/admin/editor';
 import { ArticlePreviewModal } from '@/components/admin/articles';
 import { CATEGORIES } from '@/lib/categories';
 
@@ -51,6 +53,8 @@ export default function NewArticlePage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'en' | 'ar'>('en');
   const [showPreview, setShowPreview] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showVideoPicker, setShowVideoPicker] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   // Check if there's any content to save
@@ -116,31 +120,21 @@ export default function NewArticlePage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/articles"
-            className="p-2 rounded-lg hover:bg-midnight-700 text-slate-medium hover:text-slate-light transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
-            New Article
-          </h1>
-        </div>
+      <div className="space-y-3 sm:space-y-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin/articles"
+              className="p-2 rounded-lg hover:bg-midnight-700 text-slate-medium hover:text-slate-light transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="font-heading text-2xl font-bold uppercase tracking-wider text-slate-light">
+              New Article
+            </h1>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowPreview(true)}
-            className="flex items-center gap-2 bg-midnight-700 border border-midnight-500 text-slate-light
-                     px-4 py-2 rounded-lg hover:border-tactical-amber hover:text-tactical-amber
-                     transition-colors text-sm font-medium"
-          >
-            <Monitor className="h-4 w-4" />
-            Preview
-          </button>
-
-          {/* Save Status Indicator */}
+          {/* Save Status Indicator - desktop */}
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-midnight-700/50 text-sm">
             {hasContent && saveStatus === 'idle' && (
               <>
@@ -161,28 +155,43 @@ export default function NewArticlePage() {
               </>
             )}
           </div>
+        </div>
+
+        {/* Action buttons - always visible, wraps on mobile */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button
+            onClick={() => setShowPreview(true)}
+            className="flex items-center gap-2 bg-midnight-700 border border-midnight-500 text-slate-light
+                     px-3 sm:px-4 py-2 rounded-lg hover:border-tactical-amber hover:text-tactical-amber
+                     transition-colors text-sm font-medium"
+          >
+            <Monitor className="h-4 w-4" />
+            <span className="hidden sm:inline">Preview</span>
+          </button>
 
           <button
             onClick={() => handleSubmit('draft')}
             disabled={isSubmitting || !titleEn}
             className="flex items-center gap-2 bg-midnight-700 border border-midnight-500 text-slate-light
-                     px-4 py-2 rounded-lg hover:border-tactical-red hover:text-tactical-red
+                     px-3 sm:px-4 py-2 rounded-lg hover:border-tactical-red hover:text-tactical-red
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
           >
             <Save className="h-4 w-4" />
-            Save Draft
+            <span className="hidden sm:inline">Save Draft</span>
+            <span className="sm:hidden">Draft</span>
           </button>
+
           <button
             onClick={() => handleSubmit('published')}
             disabled={isSubmitting || !titleEn || !contentEn}
             className="flex items-center gap-2 bg-tactical-red text-white font-heading font-bold uppercase tracking-wider
-                     px-4 py-2 rounded-lg hover:bg-tactical-red-hover
-                     disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                     px-4 sm:px-5 py-2 rounded-lg hover:bg-tactical-red-hover
+                     disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm ml-auto"
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Eye className="h-4 w-4" />
+              <Send className="h-4 w-4" />
             )}
             Publish
           </button>
@@ -324,15 +333,38 @@ export default function NewArticlePage() {
           <div>
             <label className="block text-sm text-slate-medium mb-2">
               <ImageIcon className="h-4 w-4 inline mr-1" />
-              Featured Image URL
+              Featured Image
             </label>
+            {imageUrl ? (
+              <div className="relative rounded-lg overflow-hidden border border-midnight-500 bg-midnight-700">
+                <img src={imageUrl} alt="Featured" className="w-full h-32 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImageUrl('')}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowImagePicker(true)}
+                className="w-full flex items-center justify-center gap-2 bg-midnight-700 border-2 border-dashed border-midnight-500
+                         rounded-lg px-4 py-6 text-slate-medium hover:border-tactical-red hover:text-tactical-red
+                         transition-colors cursor-pointer"
+              >
+                <Upload className="h-5 w-5" />
+                <span className="text-sm">Upload or browse images</span>
+              </button>
+            )}
             <input
               type="url"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="w-full bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-3
-                       text-slate-light placeholder:text-slate-dark
+              placeholder="Or paste image URL here"
+              className="w-full mt-2 bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-2
+                       text-slate-light placeholder:text-slate-dark text-sm
                        focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
             />
           </div>
@@ -341,15 +373,39 @@ export default function NewArticlePage() {
           <div>
             <label className="block text-sm text-slate-medium mb-2">
               <Video className="h-4 w-4 inline mr-1" />
-              Video URL (optional)
+              Video (optional)
             </label>
+            {videoUrl ? (
+              <div className="relative rounded-lg overflow-hidden border border-midnight-500 bg-midnight-700 px-4 py-3 flex items-center gap-3">
+                <Video className="h-5 w-5 text-slate-medium flex-shrink-0" />
+                <span className="text-sm text-slate-light truncate flex-1">{videoUrl}</span>
+                <button
+                  type="button"
+                  onClick={() => setVideoUrl('')}
+                  className="p-1 rounded-full hover:bg-midnight-600 text-slate-medium hover:text-white transition-colors flex-shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowVideoPicker(true)}
+                className="w-full flex items-center justify-center gap-2 bg-midnight-700 border-2 border-dashed border-midnight-500
+                         rounded-lg px-4 py-6 text-slate-medium hover:border-tactical-red hover:text-tactical-red
+                         transition-colors cursor-pointer"
+              >
+                <Upload className="h-5 w-5" />
+                <span className="text-sm">Upload or browse videos</span>
+              </button>
+            )}
             <input
               type="url"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://example.com/video.mp4"
-              className="w-full bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-3
-                       text-slate-light placeholder:text-slate-dark
+              placeholder="Or paste video URL here"
+              className="w-full mt-2 bg-midnight-700 border border-midnight-500 rounded-lg px-4 py-2
+                       text-slate-light placeholder:text-slate-dark text-sm
                        focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
             />
           </div>
@@ -424,6 +480,20 @@ export default function NewArticlePage() {
           imageUrl,
           videoUrl,
         }}
+      />
+
+      {/* Media Picker Modals */}
+      <MediaPickerModal
+        isOpen={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onSelect={(url) => setImageUrl(url)}
+        mediaType="image"
+      />
+      <MediaPickerModal
+        isOpen={showVideoPicker}
+        onClose={() => setShowVideoPicker(false)}
+        onSelect={(url) => setVideoUrl(url)}
+        mediaType="video"
       />
     </div>
   );

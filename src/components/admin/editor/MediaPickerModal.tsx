@@ -16,9 +16,10 @@ interface MediaPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (url: string) => void;
+  mediaType?: 'image' | 'video';
 }
 
-export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModalProps) {
+export function MediaPickerModal({ isOpen, onClose, onSelect, mediaType = 'image' }: MediaPickerModalProps) {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,11 +42,11 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
       if (!response.ok) throw new Error('Failed to fetch media');
 
       const result = await response.json();
-      // Filter to only show images
-      const imageFiles = (result.data || []).filter((file: MediaFile) =>
-        file.type.startsWith('image/')
+      // Filter by media type
+      const filteredFiles = (result.data || []).filter((file: MediaFile) =>
+        file.type.startsWith(`${mediaType}/`)
       );
-      setFiles(imageFiles);
+      setFiles(filteredFiles);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -58,8 +59,8 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
+    if (!file.type.startsWith(`${mediaType}/`)) {
+      setError(`Please select ${mediaType === 'video' ? 'a video' : 'an image'} file`);
       return;
     }
 
@@ -133,7 +134,7 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 bg-midnight-800 border-b border-midnight-700">
             <h2 className="font-heading text-lg font-bold uppercase tracking-wider text-slate-light">
-              Select Image
+              Select {mediaType === 'video' ? 'Video' : 'Image'}
             </h2>
             <button
               onClick={onClose}
@@ -149,7 +150,7 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
                            hover:border-tactical-red cursor-pointer transition-colors bg-midnight-800/50">
               <input
                 type="file"
-                accept="image/*"
+                accept={mediaType === 'video' ? 'video/*' : 'image/*'}
                 onChange={handleFileUpload}
                 className="hidden"
                 disabled={isUploading}
@@ -162,7 +163,7 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
               ) : (
                 <>
                   <Upload className="h-5 w-5 text-slate-dark" />
-                  <span className="text-sm text-slate-medium">Upload new image</span>
+                  <span className="text-sm text-slate-medium">Upload new {mediaType === 'video' ? 'video' : 'image'}</span>
                 </>
               )}
             </label>
@@ -183,9 +184,13 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
               </div>
             ) : files.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-dark">
-                <ImageIcon className="h-12 w-12 mb-3 opacity-50" />
-                <p>No images uploaded yet</p>
-                <p className="text-sm mt-1">Upload an image to get started</p>
+                {mediaType === 'video' ? (
+                  <Video className="h-12 w-12 mb-3 opacity-50" />
+                ) : (
+                  <ImageIcon className="h-12 w-12 mb-3 opacity-50" />
+                )}
+                <p>No {mediaType === 'video' ? 'videos' : 'images'} uploaded yet</p>
+                <p className="text-sm mt-1">Upload {mediaType === 'video' ? 'a video' : 'an image'} to get started</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -199,11 +204,17 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
                                 : 'border-midnight-700 hover:border-midnight-500'
                               }`}
                   >
-                    <img
-                      src={file.url}
-                      alt={file.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {mediaType === 'video' ? (
+                      <div className="w-full h-full flex items-center justify-center bg-midnight-700">
+                        <Video className="h-10 w-10 text-slate-dark" />
+                      </div>
+                    ) : (
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
 
                     {/* Selection indicator */}
                     {selectedUrl === file.url && (
@@ -241,7 +252,7 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
                        hover:bg-tactical-red-hover disabled:opacity-50 disabled:cursor-not-allowed
                        transition-colors text-sm"
             >
-              Insert Image
+              Select {mediaType === 'video' ? 'Video' : 'Image'}
             </button>
           </div>
         </motion.div>

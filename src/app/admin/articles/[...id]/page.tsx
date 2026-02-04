@@ -28,8 +28,9 @@ import {
   History,
   RotateCcw,
   GitCompare,
+  Upload,
 } from 'lucide-react';
-import { TipTapEditor } from '@/components/admin/editor';
+import { TipTapEditor, MediaPickerModal } from '@/components/admin/editor';
 import { ArticlePreviewModal, ArticleComparisonModal } from '@/components/admin/articles';
 import { CATEGORIES } from '@/lib/categories';
 import { ShowForAdmin } from '@/lib/auth';
@@ -79,6 +80,8 @@ export default function EditArticlePage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showVideoPicker, setShowVideoPicker] = useState(false);
   const [customCountry, setCustomCountry] = useState('');
   const [customOrganization, setCustomOrganization] = useState('');
 
@@ -1026,15 +1029,43 @@ export default function EditArticlePage({ params }: PageProps) {
                 <div>
                   <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium mb-1.5 uppercase tracking-wider">
                     <ImageIcon className="h-3 w-3" />
-                    Image URL
+                    Featured Image
                   </label>
+                  {imageUrl ? (
+                    <div className="relative rounded-lg overflow-hidden border border-midnight-600 bg-midnight-700">
+                      <img
+                        src={imageUrl}
+                        alt="Featured"
+                        className="w-full h-28 object-cover"
+                        onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl('')}
+                        className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowImagePicker(true)}
+                      className="w-full flex items-center justify-center gap-2 bg-midnight-700 border-2 border-dashed border-midnight-600
+                               rounded-lg px-3 py-4 text-slate-medium hover:border-tactical-red hover:text-tactical-red
+                               transition-colors cursor-pointer"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span className="text-xs">Upload or browse</span>
+                    </button>
+                  )}
                   <input
                     type="url"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2
-                             text-slate-light placeholder:text-slate-dark text-sm
+                    placeholder="Or paste URL"
+                    className="w-full mt-1.5 bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-1.5
+                             text-slate-light placeholder:text-slate-dark text-xs
                              focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
                   />
                 </div>
@@ -1042,30 +1073,42 @@ export default function EditArticlePage({ params }: PageProps) {
                 <div>
                   <label className="flex items-center gap-1.5 text-xs font-medium text-slate-medium mb-1.5 uppercase tracking-wider">
                     <Video className="h-3 w-3" />
-                    Video URL
+                    Video
                   </label>
+                  {videoUrl ? (
+                    <div className="relative rounded-lg overflow-hidden border border-midnight-600 bg-midnight-700 px-3 py-2 flex items-center gap-2">
+                      <Video className="h-4 w-4 text-slate-medium flex-shrink-0" />
+                      <span className="text-xs text-slate-light truncate flex-1">{videoUrl}</span>
+                      <button
+                        type="button"
+                        onClick={() => setVideoUrl('')}
+                        className="p-0.5 rounded-full hover:bg-midnight-600 text-slate-medium hover:text-white transition-colors flex-shrink-0"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowVideoPicker(true)}
+                      className="w-full flex items-center justify-center gap-2 bg-midnight-700 border-2 border-dashed border-midnight-600
+                               rounded-lg px-3 py-4 text-slate-medium hover:border-tactical-red hover:text-tactical-red
+                               transition-colors cursor-pointer"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span className="text-xs">Upload or browse</span>
+                    </button>
+                  )}
                   <input
                     type="url"
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-2
-                             text-slate-light placeholder:text-slate-dark text-sm
+                    placeholder="Or paste URL"
+                    className="w-full mt-1.5 bg-midnight-700 border border-midnight-600 rounded-lg px-3 py-1.5
+                             text-slate-light placeholder:text-slate-dark text-xs
                              focus:border-tactical-red focus:ring-1 focus:ring-tactical-red focus:outline-none"
                   />
                 </div>
-
-                {/* Image Preview */}
-                {imageUrl && (
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-midnight-700">
-                    <img
-                      src={imageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
@@ -1338,6 +1381,20 @@ export default function EditArticlePage({ params }: PageProps) {
         titleAr={titleAr}
         contentEn={contentEn}
         contentAr={contentAr}
+      />
+
+      {/* Media Picker Modals */}
+      <MediaPickerModal
+        isOpen={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onSelect={(url) => setImageUrl(url)}
+        mediaType="image"
+      />
+      <MediaPickerModal
+        isOpen={showVideoPicker}
+        onClose={() => setShowVideoPicker(false)}
+        onSelect={(url) => setVideoUrl(url)}
+        mediaType="video"
       />
     </div>
   );
