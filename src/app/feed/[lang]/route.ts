@@ -101,7 +101,7 @@ export async function GET(
     <language>${lang}</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
     <atom:link href="${feedUrl}" rel="self" type="application/rss+xml" />
-    <generator>al-muraqeb.com RSS v2</generator>
+    <generator>al-muraqeb.com</generator>
     <image>
       <url>${BASE_URL}/images/observer-silhouette.png</url>
       <title>${escapeXml(meta.title)}</title>
