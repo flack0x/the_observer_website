@@ -21,13 +21,18 @@ const CHANNEL_META = {
 
 // Clean text for RSS XML: strip emojis, replacement chars, and non-XML-safe Unicode
 function cleanForRss(str: string): string {
-  // Remove U+FFFD replacement characters (appear as ? in some encodings)
-  let clean = str.split('').filter(ch => ch.codePointAt(0) !== 0xFFFD).join('');
-  // Remove emojis and other supplementary plane characters (U+10000+)
-  clean = clean.replace(/[\u{10000}-\u{10FFFF}]/gu, '');
-  // Remove variation selectors and zero-width joiners
-  clean = clean.replace(/[\u{FE00}-\u{FE0F}\u{200D}]/gu, '');
-  return clean.trim();
+  // Use Array.from for proper Unicode handling, filter out problematic chars
+  const chars = Array.from(str);
+  const filtered = chars.filter(ch => {
+    const cp = ch.codePointAt(0) || 0;
+    // Remove: U+FFFD, emojis (U+1F000+), variation selectors, zero-width chars
+    if (cp === 0xFFFD) return false;
+    if (cp >= 0x10000) return false; // Supplementary planes (emojis etc)
+    if (cp >= 0xFE00 && cp <= 0xFE0F) return false; // Variation selectors
+    if (cp === 0x200D) return false; // Zero-width joiner
+    return true;
+  });
+  return filtered.join('').trim();
 }
 
 function escapeXml(str: string): string {
