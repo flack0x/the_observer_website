@@ -27,8 +27,8 @@ export default defineConfig({
   /* Retry failed tests */
   retries: process.env.CI ? 2 : 1,
 
-  /* Limit workers on CI */
-  workers: process.env.CI ? 1 : undefined,
+  /* Limit workers to reduce RAM usage */
+  workers: process.env.CI ? 1 : 2,
 
   /* Reporter - HTML for local, GitHub Actions compatible for CI */
   reporter: process.env.CI
