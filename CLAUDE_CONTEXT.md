@@ -1188,20 +1188,28 @@ Located in `tests/` directory with Playwright configuration in `playwright.confi
 ### Test Structure
 ```
 tests/
-├── api/                    # API endpoint tests (100% pass rate)
+├── api/                    # API endpoint tests
 │   ├── articles.spec.ts    # /api/articles (filters, search, pagination)
 │   ├── books.spec.ts       # /api/books endpoint
 │   ├── metrics.spec.ts     # /api/metrics endpoint
 │   ├── headlines.spec.ts   # /api/headlines endpoint
 │   ├── subscribe.spec.ts   # /api/subscribe validation
-│   └── rss.spec.ts         # RSS feed XML validation
-├── admin/                  # Admin dashboard tests (87% pass rate)
+│   ├── rss.spec.ts         # RSS feed XML validation
+│   └── health-check.spec.ts # Quick API health verification
+├── admin/                  # Admin dashboard tests
 │   ├── login.spec.ts       # Login page, validation, redirects
 │   └── article-create.spec.ts  # Article creation, editor, media picker
-├── public/                 # Public page tests (83% pass rate)
+├── public/                 # Public page tests
 │   ├── homepage.spec.ts    # Homepage sections, SEO
 │   ├── navigation.spec.ts  # Nav links, language switching
-│   └── frontline.spec.ts   # Article listing, search, filters
+│   ├── frontline.spec.ts   # Article listing, search, filters
+│   ├── article-detail.spec.ts  # Article page content, images, interactions
+│   ├── mobile.spec.ts      # Mobile navigation, layout, touch targets
+│   ├── search-filters.spec.ts  # Search and filter functionality
+│   └── interactions.spec.ts    # Like/dislike, comments, share UI (read-only)
+├── seo/                    # SEO validation tests
+│   ├── sitemap.spec.ts     # Sitemap URLs, robots.txt
+│   └── meta-tags.spec.ts   # OG tags, hreflang, canonical URLs
 └── setup/
     └── auth.setup.ts       # Admin authentication setup
 ```
@@ -1233,15 +1241,20 @@ npx playwright test --headed                  # Watch browser
 ### Test Results (Feb 6, 2026)
 | Category | Passed | Total | Notes |
 |----------|--------|-------|-------|
-| API | 23 | 23 | All endpoints tested |
-| Admin | 20 | 23 | 3 modal timing tests flaky on mobile |
-| Public | 35 | 42 | Some network timeout issues |
-| **Total** | **78** | **88** | **89% pass rate** |
+| API | 35 | 37 | Health checks + full validation |
+| Admin | 20 | 23 | 3 modal timing tests flaky |
+| Public | 80 | 110 | Comprehensive coverage |
+| SEO | 26 | 30 | Sitemap, meta tags, robots.txt |
+| **Total** | **161** | **200** | **80% pass rate** |
 
 ### What's Tested
-- **API**: All public endpoints, filters, search, RSS XML validation, error handling
-- **Admin**: Login flow, auth redirects, article creation page, editor components, media picker
-- **Public**: Homepage load, SEO meta tags, navigation, language switching, article listing
+- **API**: All endpoints, response shapes, health checks, error handling
+- **Admin**: Login flow, auth redirects, article creation, editor, media picker
+- **Public**: Homepage, article detail, mobile layout, search/filters, interactions UI
+- **SEO**: Sitemap validation, meta tags, OG tags, hreflang, robots.txt
+
+### Read-Only Testing
+All tests are **read-only** — they verify UI exists and pages load correctly but **never modify data**. Safe to run against production.
 
 ## Git Conventions
 
@@ -1379,15 +1392,16 @@ for r in result.data:
 ## Recent Changes (Feb 2026)
 
 - **Playwright E2E Test Suite** (Feb 6):
-  - Added comprehensive end-to-end test suite using Playwright
-  - 88 tests across API, Admin, and Public categories (89% pass rate)
-  - API tests: 23/23 passing — articles, books, metrics, headlines, subscribe, RSS
-  - Admin tests: 20/23 passing — login, auth flow, article creation, editor, media picker
-  - Public tests: 35/42 passing — homepage, navigation, SEO, frontline listing
+  - Comprehensive end-to-end test suite with 200+ tests (161 passing, 80%)
+  - **API tests**: Health checks, response validation, all endpoints
+  - **Admin tests**: Login, auth flow, article creation, editor, media picker
+  - **Public tests**: Homepage, article detail, mobile layout, search/filters
+  - **SEO tests**: Sitemap validation, meta tags, OG tags, hreflang, robots.txt
+  - **Interaction UI tests**: Verify like/dislike, comments, share buttons exist (read-only)
+  - All tests are read-only — safe to run against production
   - Auth setup for admin tests via `tests/setup/auth.setup.ts`
   - Configuration in `playwright.config.ts` targeting production site
   - NPM scripts: `test:api`, `test:admin`, `test:public`, `test:ui`
-  - 3 flaky tests are modal timing issues on mobile viewports (non-critical)
 
 - **RSS Feeds** (Feb 5):
   - `/feed/en` and `/feed/ar` serve RSS 2.0 XML with latest 50 articles
