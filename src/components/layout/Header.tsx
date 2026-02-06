@@ -350,6 +350,19 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                         </div>
                       </div>
                     </Link>
+                    {/* Admin Panel - only for admins */}
+                    {profile?.role === 'admin' && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 w-full rounded-lg px-4 py-2 mt-1 text-tactical-red hover:bg-midnight-700 transition-colors"
+                      >
+                        <Shield className="h-4 w-4 ml-1" />
+                        <span className="font-heading text-xs font-medium uppercase tracking-wider">
+                          {locale === "en" ? "Admin Panel" : "لوحة الإدارة"}
+                        </span>
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         signOut();
