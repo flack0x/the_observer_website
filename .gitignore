@@ -47,3 +47,16 @@ __pycache__/
 
 .vercel
 .env*.local
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+.env.test
