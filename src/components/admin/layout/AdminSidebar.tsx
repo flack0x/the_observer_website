@@ -62,6 +62,7 @@ export function AdminSidebar({ collapsed = false, onToggle, onClose, isMobile = 
         ${isMobile ? 'relative' : 'fixed left-0 top-0'} h-screen bg-midnight-800 border-r border-midnight-700
         flex flex-col transition-all duration-300 z-40
         ${collapsed ? 'w-16' : 'w-64'}
+        ${!isMobile ? 'pt-[104px]' : ''}
       `}
     >
       {/* Logo */}
