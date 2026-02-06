@@ -1,6 +1,6 @@
 // Admin System Types
 
-export type UserRole = 'admin' | 'editor' | 'viewer';
+export type UserRole = 'admin' | 'viewer';
 
 export interface UserProfile {
   id: string;
@@ -101,7 +101,6 @@ export interface PaginatedResponse<T> {
 // Permission helpers
 export const ROLE_PERMISSIONS = {
   admin: ['read', 'create', 'edit', 'delete', 'publish', 'manage_users'],
-  editor: ['read', 'create', 'edit', 'publish'],
   viewer: ['read'],
 } as const;
 
@@ -116,7 +115,7 @@ export function canManageUsers(role: UserRole): boolean {
 }
 
 export function canEditArticles(role: UserRole): boolean {
-  return role === 'admin' || role === 'editor';
+  return role === 'admin';
 }
 
 export function canDeleteArticles(role: UserRole): boolean {

@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Bookmark, History, Settings, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, Bookmark, History, Settings, LogOut, User, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import Image from 'next/image';
 
@@ -12,7 +12,9 @@ interface SidebarProps {
 
 export default function UserSidebar({ locale }: SidebarProps) {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
+
+  const isAdmin = profile?.role === 'admin';
 
   const navigation = [
     { name: 'Overview', href: `/${locale}/dashboard`, icon: LayoutDashboard },
@@ -59,6 +61,20 @@ export default function UserSidebar({ locale }: SidebarProps) {
             </Link>
           );
         })}
+
+        {/* Admin Panel Link - only for admins */}
+        {isAdmin && (
+          <>
+            <div className="my-3 border-t border-midnight-700" />
+            <Link
+              href="/admin"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors bg-tactical-red/5 text-tactical-red hover:bg-tactical-red/15 border border-tactical-red/20"
+            >
+              <Shield className="h-5 w-5" />
+              Admin Panel
+            </Link>
+          </>
+        )}
       </nav>
 
       {/* Footer */}

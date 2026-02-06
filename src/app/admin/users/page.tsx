@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import {
   Users,
   Shield,
-  Edit2,
   UserCog,
   Loader2,
   Check,
@@ -84,9 +83,9 @@ export default function UserManagementPage() {
     switch (role) {
       case 'admin':
         return 'bg-tactical-red/10 text-tactical-red border-tactical-red/20';
-      case 'editor':
-        return 'bg-tactical-amber/10 text-tactical-amber border-tactical-amber/20';
       case 'viewer':
+        return 'bg-slate-dark/10 text-slate-dark border-slate-dark/20';
+      default:
         return 'bg-slate-dark/10 text-slate-dark border-slate-dark/20';
     }
   };
@@ -95,8 +94,6 @@ export default function UserManagementPage() {
     switch (role) {
       case 'admin':
         return Shield;
-      case 'editor':
-        return Edit2;
       case 'viewer':
         return Users;
     }
@@ -137,15 +134,6 @@ export default function UserManagementPage() {
             <div>
               <p className="text-sm font-medium text-slate-light">Admin</p>
               <p className="text-xs text-slate-dark">Full access, user management, delete articles</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-tactical-amber/10">
-              <Edit2 className="h-4 w-4 text-tactical-amber" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-light">Editor</p>
-              <p className="text-xs text-slate-dark">Create, edit, publish articles</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
@@ -235,7 +223,6 @@ export default function UserManagementPage() {
                                      focus:border-tactical-red focus:outline-none"
                           >
                             <option value="admin">Admin</option>
-                            <option value="editor">Editor</option>
                             <option value="viewer">Viewer</option>
                           </select>
                         ) : (

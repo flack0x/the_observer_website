@@ -57,9 +57,6 @@ export function RequireRole({ children, requiredRole, fallback }: RoleGuardProps
   const hasAccess = () => {
     if (!profile) return false;
     if (profile.role === 'admin') return true;
-    if (profile.role === 'editor' && (requiredRole === 'editor' || requiredRole === 'viewer')) {
-      return true;
-    }
     return profile.role === requiredRole;
   };
 
@@ -93,10 +90,10 @@ export function RequireAdmin({ children, fallback }: AuthGuardProps) {
   );
 }
 
-// Editor or Admin guard
+// Admin guard (alias for RequireAdmin)
 export function RequireEditor({ children, fallback }: AuthGuardProps) {
   return (
-    <RequireRole requiredRole="editor" fallback={fallback}>
+    <RequireRole requiredRole="admin" fallback={fallback}>
       {children}
     </RequireRole>
   );
@@ -116,11 +113,6 @@ export function ShowForRole({ role, children }: ShowForRoleProps) {
   // Admin sees everything
   if (profile.role === 'admin') return <>{children}</>;
 
-  // Editor sees editor and viewer content
-  if (profile.role === 'editor' && (role === 'editor' || role === 'viewer')) {
-    return <>{children}</>;
-  }
-
   // Exact match
   if (profile.role === role) return <>{children}</>;
 
@@ -132,7 +124,7 @@ export function ShowForAdmin({ children }: { children: React.ReactNode }) {
   return <ShowForRole role="admin">{children}</ShowForRole>;
 }
 
-// Show for editors and admins
+// Show for admins (kept for backwards compatibility)
 export function ShowForEditor({ children }: { children: React.ReactNode }) {
-  return <ShowForRole role="editor">{children}</ShowForRole>;
+  return <ShowForRole role="admin">{children}</ShowForRole>;
 }

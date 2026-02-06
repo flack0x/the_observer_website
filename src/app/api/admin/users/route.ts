@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'userId and role required' }, { status: 400 });
     }
 
-    if (!['admin', 'editor', 'viewer'].includes(role)) {
+    if (!['admin', 'viewer'].includes(role)) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
 

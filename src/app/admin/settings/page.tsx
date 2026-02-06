@@ -86,9 +86,7 @@ export default function SettingsPage() {
             <label className="block text-sm text-slate-medium mb-2">Role</label>
             <div className="px-4 py-3 bg-midnight-700/50 border border-midnight-600 rounded-lg">
               <span className={`inline-flex items-center gap-1.5 text-sm capitalize ${
-                profile?.role === 'admin' ? 'text-tactical-red' :
-                profile?.role === 'editor' ? 'text-tactical-amber' :
-                'text-slate-medium'
+                profile?.role === 'admin' ? 'text-tactical-red' : 'text-slate-medium'
               }`}>
                 {profile?.role || 'viewer'}
               </span>

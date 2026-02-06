@@ -27,11 +27,6 @@ export function useHasRole(requiredRole: UserRole): boolean {
   // Admin has access to everything
   if (role === 'admin') return true;
 
-  // Editor has access to editor and viewer roles
-  if (role === 'editor' && (requiredRole === 'editor' || requiredRole === 'viewer')) {
-    return true;
-  }
-
   // Viewer only has viewer access
   return role === requiredRole;
 }

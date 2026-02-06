@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .eq('id', user.id)
       .single();
 
-    if (!profile || !['admin', 'editor'].includes(profile.role)) {
+    if (!profile || profile.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       .eq('id', user.id)
       .single();
 
-    if (!profile || !['admin', 'editor'].includes(profile.role)) {
+    if (!profile || profile.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
