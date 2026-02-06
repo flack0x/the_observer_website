@@ -1391,17 +1391,28 @@ for r in result.data:
 
 ## Recent Changes (Feb 2026)
 
+- **Critical Bug Fix: Null Content Crash** (Feb 6):
+  - **Issue**: Site crashed with "Cannot read properties of undefined (reading 'trim')"
+  - **Root cause**: Core Web Vitals optimization (Feb 5) excluded `content` from API list responses, but `LiveFeed.tsx` still called `calculateReadTime(article.content)` which crashed on undefined
+  - **Fix**: Added null safety in `LiveFeed.tsx:22`: `(content || '').trim()`
+  - **Additional hardening**:
+    - `frontline/page.tsx`: Optional chaining for `countries?.length`
+    - `layout.tsx`: Null fallbacks for `category` and `title` in ticker
+  - **Lesson**: When optimizing API responses by excluding fields, audit all consumers of that data
+
 - **Playwright E2E Test Suite** (Feb 6):
-  - Comprehensive end-to-end test suite with 200+ tests (161 passing, 80%)
+  - Comprehensive end-to-end test suite with 210+ tests (87% pass rate)
   - **API tests**: Health checks, response validation, all endpoints
   - **Admin tests**: Login, auth flow, article creation, editor, media picker
   - **Public tests**: Homepage, article detail, mobile layout, search/filters
   - **SEO tests**: Sitemap validation, meta tags, OG tags, hreflang, robots.txt
   - **Interaction UI tests**: Verify like/dislike, comments, share buttons exist (read-only)
+  - **Write operation tests**: Voting/comments with isolated test session IDs (`test-playwright-*`)
   - All tests are read-only — safe to run against production
   - Auth setup for admin tests via `tests/setup/auth.setup.ts`
-  - Configuration in `playwright.config.ts` targeting production site
+  - Configuration in `playwright.config.ts` targeting production site (2 workers to reduce RAM)
   - NPM scripts: `test:api`, `test:admin`, `test:public`, `test:ui`
+  - Cleanup script: `tests/cleanup-test-data.ts` for removing test data
 
 - **RSS Feeds** (Feb 5):
   - `/feed/en` and `/feed/ar` serve RSS 2.0 XML with latest 50 articles
@@ -1433,6 +1444,7 @@ for r in result.data:
   - Changed Google Analytics from `afterInteractive` to `lazyOnload`
   - Added `<link rel="preconnect">` for Supabase image CDN
   - Optimized `fetchArticlesFromDB()`: excludes `content` column from list queries (saves KBs x 500 articles)
+  - **⚠️ Breaking**: This caused crash in `LiveFeed.tsx` which expected `content` — fixed Feb 6 with null safety
 
 - **SEO-Friendly URL Slugs** (Feb 5):
   - Replaced Telegram IDs in URLs (`/observer_5/447`) with descriptive slugs (`/iran-nuclear-deal-analysis`)
