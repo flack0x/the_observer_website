@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AuthProvider, RequireAuth, useAuth } from '@/lib/auth';
 import { AdminSidebar } from '@/components/admin/layout';
 import { useTheme } from '@/lib/theme';
-import { Globe, Sun, Moon, LogOut, User, Menu } from 'lucide-react';
+import { Globe, Sun, Moon, LogOut, User, Menu, Send, LayoutDashboard, Bookmark, Shield } from 'lucide-react';
 import BreakingNewsTicker from '@/components/ui/BreakingNewsTicker';
 
 // English dictionary for admin header
@@ -39,7 +40,7 @@ const dict = {
   dashboard: {} as any,
 } as any;
 
-// Admin Header that matches main site header
+// Admin Header that matches main site header EXACTLY
 function AdminSiteHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -108,91 +109,150 @@ function AdminSiteHeader({ onMenuClick }: { onMenuClick: () => void }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+            <div className="hidden lg:flex items-center">
               {navigation.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = pathname.startsWith(item.href) || (item.href === '/en/dashboard' && pathname === '/admin');
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`px-2 xl:px-3 py-2 text-xs xl:text-sm font-heading font-medium uppercase tracking-wider transition-colors whitespace-nowrap ${
+                    className={`relative inline-flex items-center h-9 px-2.5 font-heading text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors ${
                       isActive
                         ? 'text-tactical-red'
-                        : 'text-slate-medium hover:text-slate-light'
+                        : 'text-slate-medium hover:text-tactical-red'
                     }`}
                   >
                     {item.name}
+                    {isActive && (
+                      <span className="absolute bottom-1 left-2.5 right-2.5 h-0.5 bg-tactical-red rounded-full" />
+                    )}
                   </Link>
                 );
               })}
             </div>
 
-            {/* Right side */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-2 shrink-0">
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-midnight-700 text-slate-medium hover:text-slate-light transition-colors"
+                className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full border border-midnight-500 text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
               >
-                {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {resolvedTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
 
-              {/* Language Switch */}
+              {/* Language Toggle */}
               <Link
                 href="/ar"
-                className="p-2 rounded-lg hover:bg-midnight-700 text-slate-medium hover:text-slate-light transition-colors flex items-center gap-1.5"
+                className="hidden sm:flex items-center gap-1.5 rounded-full border border-midnight-500 px-2.5 py-1 font-heading text-[10px] font-medium uppercase tracking-wider text-slate-medium transition-all hover:border-tactical-red hover:text-tactical-red"
               >
-                <Globe className="h-4 w-4" />
-                <span className="text-xs font-medium">AR</span>
+                <Globe className="h-3 w-3" />
+                AR
               </Link>
 
-              {/* User Menu */}
+              {/* Profile Button */}
               {user && (
-                <div className="relative">
+                <div className="relative hidden sm:block">
                   <button
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-midnight-700 transition-colors border border-midnight-600"
+                    className={`flex items-center gap-1.5 rounded-full border px-1.5 pr-3 py-1 font-heading text-[10px] font-medium uppercase tracking-wider transition-all group ${
+                      profileMenuOpen
+                        ? 'border-tactical-red text-tactical-red'
+                        : 'border-midnight-500 text-slate-medium hover:border-tactical-red hover:text-tactical-red'
+                    }`}
                   >
-                    <User className="h-4 w-4 text-slate-medium" />
-                    <span className="text-sm font-medium text-slate-light hidden sm:inline">
-                      {profile?.full_name?.split(' ')[0] || 'Admin'}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                      profileMenuOpen ? 'bg-tactical-red text-white' : 'bg-midnight-700 text-slate-light group-hover:bg-tactical-red group-hover:text-white'
+                    }`}>
+                      <User className="h-3 w-3" />
+                    </div>
+                    <span className="max-w-[100px] truncate">
+                      {user.user_metadata?.full_name || 'Admin User'}
                     </span>
                   </button>
 
-                  {profileMenuOpen && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
-                      <div className="absolute right-0 top-full mt-2 w-56 bg-midnight-800 border border-midnight-700 rounded-xl shadow-lg py-2 z-50">
-                        <div className="px-4 py-2 border-b border-midnight-700">
-                          <p className="text-sm font-medium text-slate-light truncate">
-                            {profile?.full_name || profile?.email}
-                          </p>
-                          <p className="text-xs text-slate-dark">{profile?.email}</p>
-                          <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-tactical-red/10 text-tactical-red capitalize">
-                            {profile?.role}
-                          </span>
-                        </div>
-                        <div className="py-1">
-                          <button
-                            onClick={() => { setProfileMenuOpen(false); router.push('/admin/settings'); }}
-                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-medium hover:text-slate-light hover:bg-midnight-700"
-                          >
-                            <User className="h-4 w-4" />
-                            Profile Settings
-                          </button>
-                          <button
-                            onClick={() => { signOut(); router.push('/admin/login'); }}
-                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-midnight-700"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <AnimatePresence>
+                    {profileMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.1 }}
+                          className="absolute right-0 mt-2 w-56 rounded-xl border border-midnight-600 bg-midnight-800 shadow-xl z-50 overflow-hidden"
+                        >
+                          {/* User Info */}
+                          <div className="px-4 py-3 border-b border-midnight-700">
+                            <p className="text-sm font-bold text-slate-light truncate">
+                              {user.user_metadata?.full_name || 'Admin User'}
+                            </p>
+                            <p className="text-xs text-slate-dark truncate mt-0.5">
+                              {user.email}
+                            </p>
+                          </div>
+
+                          {/* Links */}
+                          <div className="py-1">
+                            <Link
+                              href="/en/dashboard"
+                              className="flex items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
+                              onClick={() => setProfileMenuOpen(false)}
+                            >
+                              <LayoutDashboard className="h-4 w-4" />
+                              Dashboard
+                            </Link>
+                            <Link
+                              href="/en/dashboard/bookmarks"
+                              className="flex items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
+                              onClick={() => setProfileMenuOpen(false)}
+                            >
+                              <Bookmark className="h-4 w-4" />
+                              Bookmarks
+                            </Link>
+                            {profile?.role === 'admin' && (
+                              <Link
+                                href="/admin"
+                                className="flex items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:bg-midnight-700 transition-colors"
+                                onClick={() => setProfileMenuOpen(false)}
+                              >
+                                <Shield className="h-4 w-4" />
+                                Admin Panel
+                              </Link>
+                            )}
+                          </div>
+
+                          {/* Footer */}
+                          <div className="border-t border-midnight-700 py-1">
+                            <button
+                              onClick={() => {
+                                signOut();
+                                setProfileMenuOpen(false);
+                                router.push('/en/login');
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-slate-medium hover:bg-midnight-700 hover:text-tactical-red transition-colors"
+                            >
+                              <LogOut className="h-4 w-4" />
+                              Sign Out
+                            </button>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
+
+              {/* Telegram CTA */}
+              <a
+                href="https://t.me/TheObserverEN"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden lg:flex items-center gap-1.5 rounded-full bg-tactical-red px-3 py-1.5 font-heading text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover"
+              >
+                <Send className="h-3 w-3" />
+                Join Intel
+              </a>
             </div>
           </div>
         </nav>
