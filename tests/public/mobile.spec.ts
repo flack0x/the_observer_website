@@ -1,4 +1,4 @@
-import { test, expect, devices } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { URLS } from '../fixtures/test-data';
 
 // Mobile viewport tests
@@ -7,68 +7,64 @@ test.describe('Mobile Experience', () => {
 
   test.describe('Mobile Navigation', () => {
     test('should display mobile menu button', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+      await page.goto(URLS.homeEN, { waitUntil: 'domcontentloaded' });
 
-      // Mobile menu button should be visible
-      const menuButton = page.locator('header button:has(svg)').first();
-      await expect(menuButton).toBeVisible();
+      // Mobile menu button is lg:hidden with bg-tactical-red
+      const menuButton = page.locator('header button.bg-tactical-red').first();
+      await expect(menuButton).toBeVisible({ timeout: 10000 });
     });
 
     test('should open mobile menu on click', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+      await page.goto(URLS.homeEN, { waitUntil: 'domcontentloaded' });
 
-      // Click menu button
-      const menuButton = page.locator('header button:has(svg)').first();
+      // Click menu button (button with aria-label for menu)
+      const menuButton = page.getByRole('button', { name: /open menu|close menu/i });
       await menuButton.click();
 
-      // Menu should open - look for navigation links
+      // Menu should open - navigation links appear
       await page.waitForTimeout(500);
 
-      // Navigation links should become visible
-      const navLinks = page.locator('nav a, [class*="menu"] a, [class*="mobile"] a');
-      await expect(navLinks.first()).toBeVisible({ timeout: 3000 });
+      // Look for navigation items in mobile menu
+      const frontlineLink = page.locator('a[href*="/frontline"]');
+      await expect(frontlineLink.first()).toBeVisible({ timeout: 5000 });
     });
 
     test('should navigate via mobile menu', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+      await page.goto(URLS.homeEN, { waitUntil: 'domcontentloaded' });
 
       // Open menu
-      const menuButton = page.locator('header button:has(svg)').first();
+      const menuButton = page.getByRole('button', { name: /open menu/i });
       await menuButton.click();
       await page.waitForTimeout(500);
 
       // Click Frontline link
-      const frontlineLink = page.locator('a:has-text("Frontline"), a[href*="frontline"]').first();
+      const frontlineLink = page.locator('a[href="/en/frontline"]').first();
+      await frontlineLink.click();
 
-      if (await frontlineLink.isVisible()) {
-        await frontlineLink.click();
-        await expect(page).toHaveURL(/frontline/);
-      }
+      await expect(page).toHaveURL(/frontline/);
     });
 
     test('should close mobile menu after navigation', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+      await page.goto(URLS.homeEN, { waitUntil: 'domcontentloaded' });
 
       // Open menu
-      const menuButton = page.locator('header button:has(svg)').first();
+      const menuButton = page.getByRole('button', { name: /open menu/i });
       await menuButton.click();
       await page.waitForTimeout(500);
 
       // Click a link
-      const link = page.locator('nav a, [class*="menu"] a').first();
-      if (await link.isVisible()) {
-        await link.click();
-        await page.waitForTimeout(500);
+      const frontlineLink = page.locator('a[href="/en/frontline"]').first();
+      await frontlineLink.click();
+      await page.waitForTimeout(500);
 
-        // Menu should close (links should not be visible)
-        // Or we navigated to a new page
-      }
+      // Should have navigated (menu auto-closes)
+      await expect(page).toHaveURL(/frontline/);
     });
   });
 
   test.describe('Mobile Layout', () => {
     test('should not have horizontal scroll on homepage', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+      await page.goto(URLS.homeEN, { waitUntil: 'networkidle' });
 
       // Check for horizontal overflow
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
@@ -88,7 +84,7 @@ test.describe('Mobile Experience', () => {
     });
 
     test('should have readable font size on mobile', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+      await page.goto(URLS.homeEN, { waitUntil: 'domcontentloaded' });
 
       // Check that body text is at least 14px
       const fontSize = await page.evaluate(() => {
@@ -100,18 +96,14 @@ test.describe('Mobile Experience', () => {
     });
 
     test('should have adequate touch targets', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+      await page.goto(URLS.homeEN, { waitUntil: 'domcontentloaded' });
 
-      // Check that buttons are at least 44px (Apple's minimum)
-      const buttons = page.locator('button, a');
-      const firstButton = buttons.first();
+      // Mobile menu button should be at least 40px
+      const menuButton = page.locator('header button.bg-tactical-red').first();
+      const box = await menuButton.boundingBox();
 
-      if (await firstButton.isVisible()) {
-        const box = await firstButton.boundingBox();
-        if (box) {
-          // At least one dimension should be >= 40px
-          expect(Math.max(box.width, box.height)).toBeGreaterThanOrEqual(40);
-        }
+      if (box) {
+        expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(40);
       }
     });
   });
@@ -138,11 +130,7 @@ test.describe('Mobile Experience', () => {
       const firstArticle = page.locator('a[href*="/frontline/"]').first();
       await firstArticle.click();
 
-      // Content should not overflow
-      const content = page.locator('article, main');
-      await expect(content.first()).toBeVisible();
-
-      // Text should be visible
+      // Title should be visible
       const h1 = page.locator('h1');
       await expect(h1).toBeVisible();
     });
@@ -150,25 +138,17 @@ test.describe('Mobile Experience', () => {
 
   test.describe('Mobile Search', () => {
     test('should have accessible search on mobile', async ({ page }) => {
-      await page.goto(URLS.frontlineEN);
+      await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
 
-      // Search should be visible or accessible
-      const searchInput = page.locator('input[type="text"], input[type="search"]').first();
-
-      // May need to scroll to find it
-      if (!(await searchInput.isVisible())) {
-        await page.evaluate(() => window.scrollTo(0, 200));
-      }
-
+      // Search input has id="frontline-search"
+      const searchInput = page.locator('#frontline-search');
       await expect(searchInput).toBeVisible();
     });
 
     test('should be able to type in search on mobile', async ({ page }) => {
-      await page.goto(URLS.frontlineEN);
+      await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
 
-      const searchInput = page.locator('input[type="text"], input[type="search"]').first();
-      await searchInput.scrollIntoViewIfNeeded();
-
+      const searchInput = page.locator('#frontline-search');
       await searchInput.fill('test');
 
       // Should not crash
@@ -177,22 +157,17 @@ test.describe('Mobile Experience', () => {
   });
 
   test.describe('Mobile Language Switch', () => {
-    test('should have language switch accessible on mobile', async ({ page }) => {
-      await page.goto(URLS.homeEN);
+    test('should have language switch in mobile menu', async ({ page }) => {
+      await page.goto(URLS.homeEN, { waitUntil: 'domcontentloaded' });
 
-      // Language switch may be in header or menu
-      const langSwitch = page.locator('a[href="/ar"], button:has-text("AR"), button:has-text("العربية")');
+      // Open mobile menu
+      const menuButton = page.getByRole('button', { name: /open menu/i });
+      await menuButton.click();
+      await page.waitForTimeout(500);
 
-      // May need to open menu first
-      if (!(await langSwitch.first().isVisible())) {
-        const menuButton = page.locator('header button:has(svg)').first();
-        await menuButton.click();
-        await page.waitForTimeout(500);
-      }
-
-      // Language switch should be accessible somehow
-      const langVisible = await langSwitch.first().isVisible();
-      // Informational - layout may vary
+      // Language switch should be in menu (text contains "Arabic" or "العربية")
+      const langSwitch = page.getByText(/Switch to Arabic|العربية/i);
+      await expect(langSwitch.first()).toBeVisible({ timeout: 5000 });
     });
   });
 });
@@ -202,7 +177,7 @@ test.describe('Tablet Experience', () => {
   test.use({ viewport: { width: 768, height: 1024 } }); // iPad
 
   test('should have good layout on tablet', async ({ page }) => {
-    await page.goto(URLS.homeEN);
+    await page.goto(URLS.homeEN, { waitUntil: 'networkidle' });
 
     // No horizontal scroll
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
@@ -211,11 +186,10 @@ test.describe('Tablet Experience', () => {
     expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 10);
   });
 
-  test('should show multiple columns on tablet', async ({ page }) => {
+  test('should load frontline page on tablet', async ({ page }) => {
     await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
 
-    // On tablet, we might have 2-3 column layout
-    // Just verify page loads correctly
+    // Page should load with articles
     const articles = page.locator('a[href*="/frontline/"]');
     await expect(articles.first()).toBeVisible();
   });

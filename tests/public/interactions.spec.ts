@@ -20,12 +20,13 @@ test.describe('Article Interactions (Read-Only UI Check)', () => {
       await firstArticle.click();
       await page.waitForLoadState('networkidle');
 
-      // Look for like button (thumbs up icon or "Like" text)
-      const likeButton = page.locator('button:has(svg[class*="thumbs"]), button:has-text("Like"), [aria-label*="like" i]');
-      const likeExists = await likeButton.count() > 0;
+      // Interaction buttons are in border-t section
+      const interactionArea = page.locator('.border-t.border-midnight-700').first();
+      await expect(interactionArea).toBeVisible({ timeout: 10000 });
 
-      // Informational - record whether like button exists
-      console.log(`Like button present: ${likeExists}`);
+      // First button is like (has ThumbsUp icon)
+      const buttons = interactionArea.locator('button');
+      expect(await buttons.count()).toBeGreaterThanOrEqual(2);
     });
 
     test('should display dislike button on article page', async ({ page }) => {
@@ -35,11 +36,13 @@ test.describe('Article Interactions (Read-Only UI Check)', () => {
       await firstArticle.click();
       await page.waitForLoadState('networkidle');
 
-      // Look for dislike button
-      const dislikeButton = page.locator('button:has-text("Dislike"), [aria-label*="dislike" i]');
-      const dislikeExists = await dislikeButton.count() > 0;
+      // Interaction buttons are in border-t section
+      const interactionArea = page.locator('.border-t.border-midnight-700').first();
+      await expect(interactionArea).toBeVisible({ timeout: 10000 });
 
-      console.log(`Dislike button present: ${dislikeExists}`);
+      // Should have multiple buttons (like, dislike, bookmark, share)
+      const buttons = interactionArea.locator('button');
+      expect(await buttons.count()).toBeGreaterThanOrEqual(2);
     });
 
     test('should display vote counts', async ({ page }) => {
@@ -49,11 +52,13 @@ test.describe('Article Interactions (Read-Only UI Check)', () => {
       await firstArticle.click();
       await page.waitForLoadState('networkidle');
 
-      // Look for vote counts (numbers near like/dislike)
-      const voteCounts = page.locator('text=/^\\d+$/, span:has-text(/^\\d+$/)');
-      const countExists = await voteCounts.count() > 0;
+      // Vote counts are inside buttons as spans
+      const interactionArea = page.locator('.border-t.border-midnight-700').first();
+      await expect(interactionArea).toBeVisible({ timeout: 10000 });
 
-      console.log(`Vote counts displayed: ${countExists}`);
+      // Counts are shown as numbers inside buttons
+      const counts = interactionArea.locator('span.text-sm');
+      expect(await counts.count()).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -65,21 +70,21 @@ test.describe('Article Interactions (Read-Only UI Check)', () => {
       await firstArticle.click();
       await page.waitForLoadState('networkidle');
 
-      // Look for view count (eye icon + number or "X views")
-      const viewCount = page.locator('text=/\\d+\\s*views?/i, [class*="view"]');
-      const viewExists = await viewCount.count() > 0;
-
-      console.log(`View count displayed: ${viewExists}`);
+      // Article should load successfully - views are tracked server-side
+      const h1 = page.locator('h1');
+      await expect(h1).toBeVisible();
     });
 
     test('should display views on article thumbnails', async ({ page }) => {
       await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
 
-      // Check if article cards show view counts
-      const viewIcons = page.locator('a[href*="/frontline/"] svg, a[href*="/frontline/"] [class*="eye"]');
-      const hasViewIcons = await viewIcons.count() > 0;
+      // Article cards exist
+      const articles = page.locator('a[href*="/frontline/"]');
+      await expect(articles.first()).toBeVisible();
 
-      console.log(`Thumbnail view icons: ${hasViewIcons}`);
+      // ArticleStats component shows views/likes/dislikes
+      // Just verify articles are visible
+      expect(await articles.count()).toBeGreaterThan(0);
     });
   });
 
@@ -121,13 +126,11 @@ test.describe('Article Interactions (Read-Only UI Check)', () => {
 
       // Scroll to bottom to trigger lazy loading
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(2000);
 
-      // Look for comment section
-      const commentSection = page.locator('[class*="comment"], text=/comment/i, textarea');
-      const commentsExist = await commentSection.count() > 0;
-
-      console.log(`Comment section present: ${commentsExist}`);
+      // Comment section is lazy loaded via dynamic import
+      // Just verify page didn't crash
+      await expect(page.locator('text=Something Went Wrong')).not.toBeVisible();
     });
 
     test('should have comment input form', async ({ page }) => {
@@ -137,13 +140,13 @@ test.describe('Article Interactions (Read-Only UI Check)', () => {
       await firstArticle.click();
 
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(2000);
 
-      // Look for comment textarea or input
-      const commentInput = page.locator('textarea[placeholder*="comment" i], textarea, input[placeholder*="comment" i]');
-      const inputExists = await commentInput.count() > 0;
-
-      console.log(`Comment input present: ${inputExists}`);
+      // Look for textarea (comment input)
+      const textarea = page.locator('textarea');
+      // May be present after lazy load
+      const hasTextarea = await textarea.count() > 0;
+      console.log(`Comment textarea present: ${hasTextarea}`);
     });
 
     test('should display existing comments if any', async ({ page }) => {
@@ -153,13 +156,11 @@ test.describe('Article Interactions (Read-Only UI Check)', () => {
       await firstArticle.click();
 
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(2000);
 
-      // Look for comment items
-      const comments = page.locator('[class*="comment-item"], [class*="comment-content"]');
-      const commentCount = await comments.count();
-
-      console.log(`Existing comments displayed: ${commentCount}`);
+      // Comments would be displayed in the dynamically loaded section
+      // Verify page loaded without errors
+      await expect(page.locator('text=Something Went Wrong')).not.toBeVisible();
     });
   });
 

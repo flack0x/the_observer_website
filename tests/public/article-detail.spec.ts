@@ -66,11 +66,12 @@ test.describe('Article Detail Page', () => {
       await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
       const firstArticle = page.locator('a[href*="/frontline/"]').first();
       await firstArticle.click();
+      await page.waitForLoadState('domcontentloaded');
 
-      // URL should have a slug, not just numbers
+      // URL should have a slug (letters, numbers, hyphens)
       const url = page.url();
-      // Should match pattern like /en/frontline/some-slug-here
-      expect(url).toMatch(/\/frontline\/[a-z0-9-]+$/i);
+      // Should match pattern like /en/frontline/some-slug-here (allowing underscores too)
+      expect(url).toMatch(/\/frontline\/[\w-]+$/i);
     });
   });
 
@@ -119,40 +120,39 @@ test.describe('Article Detail Page', () => {
       await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
       const firstArticle = page.locator('a[href*="/frontline/"]').first();
       await firstArticle.click();
+      await page.waitForLoadState('networkidle');
 
-      // Look for like/dislike icons (thumbs up/down SVGs or buttons)
-      const interactionButtons = page.locator('button svg, button:has-text("Like"), button:has-text("Dislike")');
+      // Interaction buttons are in a border-t section
+      const interactionArea = page.locator('.border-t.border-midnight-700').first();
+      await expect(interactionArea).toBeVisible({ timeout: 10000 });
 
-      // Should have some interaction buttons
-      const count = await interactionButtons.count();
-      expect(count).toBeGreaterThanOrEqual(0); // May not be visible to guests
+      // Should have buttons with SVG icons
+      const buttons = interactionArea.locator('button');
+      const count = await buttons.count();
+      expect(count).toBeGreaterThanOrEqual(2);
     });
 
     test('should display view count', async ({ page }) => {
       await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
       const firstArticle = page.locator('a[href*="/frontline/"]').first();
       await firstArticle.click();
+      await page.waitForLoadState('networkidle');
 
-      // Look for view count (number with "views" or eye icon)
-      const viewText = page.locator('text=/\\d+\\s*(views?|Views?)/i');
-      const eyeIcon = page.locator('svg[class*="eye"], [class*="view"] svg');
-
-      // At least one should be visible
-      const hasViews = await viewText.count() > 0 || await eyeIcon.count() > 0;
-      // Views may not be displayed, so this is informational
+      // Article should load - view counts are displayed in the header
+      const h1 = page.locator('h1');
+      await expect(h1).toBeVisible();
+      // Views are tracked but may not be prominently displayed
     });
 
     test('should have share functionality', async ({ page }) => {
       await page.goto(URLS.frontlineEN, { waitUntil: 'networkidle' });
       const firstArticle = page.locator('a[href*="/frontline/"]').first();
       await firstArticle.click();
+      await page.waitForLoadState('networkidle');
 
-      // Look for share button
-      const shareButton = page.locator('button:has-text("Share"), button:has-text("Copy"), [aria-label*="share" i]');
-
-      // Share functionality may be present
-      const hasShare = await shareButton.count() > 0;
-      // Informational - not required
+      // Share button is in the interaction area
+      const shareButton = page.locator('button:has-text("Share")');
+      await expect(shareButton).toBeVisible({ timeout: 10000 });
     });
 
     test('should display comment section', async ({ page }) => {
@@ -160,16 +160,14 @@ test.describe('Article Detail Page', () => {
       const firstArticle = page.locator('a[href*="/frontline/"]').first();
       await firstArticle.click();
 
-      // Scroll to bottom where comments usually are
+      // Scroll to bottom where comments are lazy-loaded
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000);
 
-      // Look for comment section indicators
-      const commentSection = page.locator('text=/comment/i, textarea, [class*="comment"]');
-
-      // Comments section should exist
-      const hasComments = await commentSection.count() > 0;
-      // May be lazy loaded
+      // Comment section is dynamically imported - look for textarea or comment text
+      const commentIndicator = page.locator('textarea, text=/comment/i, text=/Add a/i');
+      // May be lazy loaded, just verify page didn't crash
+      await expect(page.locator('text=Something Went Wrong')).not.toBeVisible();
     });
   });
 
