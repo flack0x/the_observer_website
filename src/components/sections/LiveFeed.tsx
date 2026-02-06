@@ -18,8 +18,8 @@ interface LiveFeedProps {
 }
 
 // Calculate read time based on word count (average 200 words per minute)
-function calculateReadTime(content: string, locale: Locale): string {
-  const wordCount = content.trim().split(/\s+/).length;
+function calculateReadTime(content: string | undefined | null, locale: Locale): string {
+  const wordCount = (content || '').trim().split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.ceil(wordCount / 200));
 
   if (locale === 'ar') {
