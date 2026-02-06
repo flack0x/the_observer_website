@@ -266,7 +266,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -276,17 +276,17 @@ export default function AdminDashboardPage() {
           >
             <Link
               href={stat.href}
-              className="block bg-midnight-800 rounded-xl border border-midnight-700 p-5 hover:border-tactical-red/50 transition-colors"
+              className="block bg-midnight-800 rounded-xl border border-midnight-700 p-3 sm:p-5 hover:border-tactical-red/50 transition-colors"
             >
               <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-slate-dark text-sm">{stat.label}</p>
-                  <p className="text-3xl font-bold text-slate-light mt-1">
+                <div className="min-w-0 flex-1">
+                  <p className="text-slate-dark text-xs sm:text-sm truncate">{stat.label}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-slate-light mt-1">
                     {isLoading ? '-' : stat.value.toLocaleString()}
                   </p>
                 </div>
-                <div className={`p-2.5 rounded-lg bg-${stat.color}/10`}>
-                  <stat.icon className={`h-5 w-5 text-${stat.color}`} />
+                <div className={`p-2 sm:p-2.5 rounded-lg bg-${stat.color}/10 flex-shrink-0 ml-2`}>
+                  <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 text-${stat.color}`} />
                 </div>
               </div>
             </Link>
@@ -295,17 +295,17 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Two-column: Drafts Awaiting Publish + Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Drafts Awaiting Publish */}
-        <div className="bg-midnight-800 rounded-xl border border-midnight-700">
-          <div className="flex items-center justify-between p-5 border-b border-midnight-700">
-            <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
-              <Clock className="h-4 w-4 text-tactical-amber" />
-              Drafts Awaiting Publish
+        <div className="bg-midnight-800 rounded-xl border border-midnight-700 overflow-hidden">
+          <div className="flex items-center justify-between p-3 sm:p-5 border-b border-midnight-700">
+            <h2 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
+              <Clock className="h-4 w-4 text-tactical-amber flex-shrink-0" />
+              <span className="truncate">Drafts Awaiting Publish</span>
             </h2>
             <Link
               href="/admin/articles?status=draft"
-              className="flex items-center gap-1 text-xs text-tactical-red hover:text-tactical-amber transition-colors"
+              className="flex items-center gap-1 text-xs text-tactical-red hover:text-tactical-amber transition-colors flex-shrink-0 ml-2"
             >
               View All
               <ArrowRight className="h-3 w-3" />
@@ -317,13 +317,13 @@ export default function AdminDashboardPage() {
               draftArticles.map((article) => (
                 <div
                   key={article.id}
-                  className="flex items-center justify-between p-4 hover:bg-midnight-700/30 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 gap-2 hover:bg-midnight-700/30 transition-colors"
                 >
                   <Link
                     href={`/admin/articles/${article.telegram_id}`}
-                    className="min-w-0 flex-1 mr-3"
+                    className="min-w-0 flex-1"
                   >
-                    <p className="text-slate-light text-sm font-medium truncate">
+                    <p className="text-slate-light text-sm font-medium line-clamp-2 sm:truncate">
                       {article.title}
                     </p>
                     <span className="text-xs text-slate-dark uppercase">{article.channel}</span>
@@ -331,9 +331,9 @@ export default function AdminDashboardPage() {
                   <button
                     onClick={() => handleQuickPublish(article.telegram_id)}
                     disabled={publishingId === article.telegram_id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                              bg-earth-olive/10 text-earth-olive hover:bg-earth-olive/20
-                             disabled:opacity-50 transition-colors flex-shrink-0"
+                             disabled:opacity-50 transition-colors flex-shrink-0 w-full sm:w-auto"
                   >
                     {publishingId === article.telegram_id ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -345,7 +345,7 @@ export default function AdminDashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-slate-dark">
+              <div className="p-6 sm:p-8 text-center text-slate-dark">
                 <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No drafts pending</p>
               </div>
@@ -354,15 +354,15 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-midnight-800 rounded-xl border border-midnight-700">
-          <div className="flex items-center justify-between p-5 border-b border-midnight-700">
-            <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
-              <Activity className="h-4 w-4 text-blue-400" />
+        <div className="bg-midnight-800 rounded-xl border border-midnight-700 overflow-hidden">
+          <div className="flex items-center justify-between p-3 sm:p-5 border-b border-midnight-700">
+            <h2 className="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-light flex items-center gap-2">
+              <Activity className="h-4 w-4 text-blue-400 flex-shrink-0" />
               Recent Activity
             </h2>
             <Link
               href="/admin/activity"
-              className="flex items-center gap-1 text-xs text-tactical-red hover:text-tactical-amber transition-colors"
+              className="flex items-center gap-1 text-xs text-tactical-red hover:text-tactical-amber transition-colors flex-shrink-0 ml-2"
             >
               View All
               <ArrowRight className="h-3 w-3" />
@@ -394,8 +394,8 @@ export default function AdminDashboardPage() {
                 };
 
                 return (
-                  <div key={activity.id} className="p-4 hover:bg-midnight-700/30 transition-colors">
-                    <div className="flex items-center gap-2 text-sm">
+                  <div key={activity.id} className="p-3 sm:p-4 hover:bg-midnight-700/30 transition-colors">
+                    <div className="flex flex-wrap items-center gap-1 text-xs sm:text-sm">
                       <span className="text-slate-light font-medium">
                         {activity.user?.full_name || activity.user?.email || 'User'}
                       </span>
@@ -405,12 +405,12 @@ export default function AdminDashboardPage() {
                       {activity.target_id && activity.target_type === 'article' ? (
                         <Link
                           href={`/admin/articles/${activity.target_id}`}
-                          className="text-tactical-red hover:underline truncate max-w-[150px]"
+                          className="text-tactical-red hover:underline truncate max-w-[120px] sm:max-w-[150px]"
                         >
                           {activity.target_title || 'article'}
                         </Link>
                       ) : (
-                        <span className="text-slate-medium truncate max-w-[150px]">
+                        <span className="text-slate-medium truncate max-w-[120px] sm:max-w-[150px]">
                           {activity.target_title || activity.target_type}
                         </span>
                       )}
@@ -420,7 +420,7 @@ export default function AdminDashboardPage() {
                 );
               })
             ) : (
-              <div className="p-8 text-center text-slate-dark">
+              <div className="p-6 sm:p-8 text-center text-slate-dark">
                 <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No activity yet</p>
               </div>
@@ -430,17 +430,17 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent articles */}
-      <div className="bg-midnight-800 rounded-xl border border-midnight-700">
-        <div className="flex items-center justify-between p-5 border-b border-midnight-700">
-          <h2 className="font-heading text-lg font-bold uppercase tracking-wider text-slate-light">
+      <div className="bg-midnight-800 rounded-xl border border-midnight-700 overflow-hidden">
+        <div className="flex items-center justify-between p-3 sm:p-5 border-b border-midnight-700">
+          <h2 className="font-heading text-sm sm:text-lg font-bold uppercase tracking-wider text-slate-light">
             Recent Articles
           </h2>
           <Link
             href="/admin/articles"
-            className="flex items-center gap-1 text-sm text-tactical-red hover:text-tactical-amber transition-colors"
+            className="flex items-center gap-1 text-xs sm:text-sm text-tactical-red hover:text-tactical-amber transition-colors flex-shrink-0 ml-2"
           >
             View All
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
           </Link>
         </div>
 
@@ -448,7 +448,7 @@ export default function AdminDashboardPage() {
           {articlesLoading && (!recentArticles || recentArticles.length === 0) ? (
             // Skeleton loading
             Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 animate-pulse">
+              <div key={i} className="p-3 sm:p-4 animate-pulse">
                 <div className="h-4 bg-midnight-700 rounded w-3/4 mb-2" />
                 <div className="h-3 bg-midnight-700 rounded w-1/4" />
               </div>
@@ -458,13 +458,13 @@ export default function AdminDashboardPage() {
               <Link
                 key={article.id}
                 href={`/admin/articles/${article.telegram_id}`}
-                className="flex items-center justify-between p-4 hover:bg-midnight-700/50 transition-colors"
+                className="flex items-center justify-between p-3 sm:p-4 hover:bg-midnight-700/50 transition-colors"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-slate-light font-medium truncate">
+                  <p className="text-slate-light font-medium text-sm line-clamp-2 sm:truncate">
                     {article.title}
                   </p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                     <span className="text-xs text-slate-dark uppercase">
                       {article.channel}
                     </span>
@@ -484,11 +484,11 @@ export default function AdminDashboardPage() {
                     </span>
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-dark flex-shrink-0 ml-4" />
+                <ArrowRight className="h-4 w-4 text-slate-dark flex-shrink-0 ml-2 hidden sm:block" />
               </Link>
             ))
           ) : (
-            <div className="p-8 text-center text-slate-dark">
+            <div className="p-6 sm:p-8 text-center text-slate-dark">
               <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No articles yet</p>
               <Link
