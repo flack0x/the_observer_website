@@ -17,6 +17,7 @@ import {
   Moon,
   Bookmark,
   LayoutDashboard,
+  Shield,
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
 import type { Locale, Dictionary } from "@/lib/i18n";
@@ -37,7 +38,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
   const pathname = usePathname();
   const isRTL = locale === 'ar';
   const { resolvedTheme, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   const navigation = [
     { name: dict.nav.frontline, href: `/${locale}/frontline` },
@@ -194,7 +195,7 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                               onClick={() => setProfileMenuOpen(false)}
                             >
                               <LayoutDashboard className="h-4 w-4" />
-                              {locale === "en" ? "Overview" : "نظرة عامة"}
+                              {locale === "en" ? "Dashboard" : "لوحة التحكم"}
                             </Link>
                             <Link
                               href={`/${locale}/dashboard/bookmarks`}
@@ -204,6 +205,17 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                               <Bookmark className="h-4 w-4" />
                               {locale === "en" ? "Bookmarks" : "المحفوظات"}
                             </Link>
+                            {/* Admin Panel - only for admins */}
+                            {profile?.role === 'admin' && (
+                              <Link
+                                href="/admin"
+                                className="flex items-center gap-2 px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider text-tactical-red hover:bg-midnight-700 transition-colors"
+                                onClick={() => setProfileMenuOpen(false)}
+                              >
+                                <Shield className="h-4 w-4" />
+                                {locale === "en" ? "Admin Panel" : "لوحة الإدارة"}
+                              </Link>
+                            )}
                           </div>
 
                           {/* Footer */}
