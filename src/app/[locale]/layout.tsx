@@ -75,8 +75,8 @@ async function getBreakingNews(locale: Locale): Promise<string[]> {
     const articles = await fetchArticlesFromDB(language, 5);
     return articles.map((article) => {
       const a = dbArticleToFrontend(article);
-      const prefix = a.category.toUpperCase();
-      const title = a.title.length > 80 ? a.title.substring(0, 77) + "..." : a.title;
+      const prefix = (a.category || 'NEWS').toUpperCase();
+      const title = (a.title || '').length > 80 ? (a.title || '').substring(0, 77) + "..." : (a.title || '');
       return `${prefix}: ${title}`;
     });
   } catch {

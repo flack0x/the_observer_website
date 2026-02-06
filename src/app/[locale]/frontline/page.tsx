@@ -393,7 +393,7 @@ export default function FrontlinePage() {
                     <Clock className="h-3 w-3" aria-hidden="true" />
                     {article.timestamp}
                   </span>
-                  {article.countries.length > 0 && (
+                  {article.countries?.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <MapPin className="h-3 w-3 text-slate-dark" aria-hidden="true" />
                       {article.countries.slice(0, 3).map((country) => (
@@ -404,9 +404,9 @@ export default function FrontlinePage() {
                           {getCountryName(country, locale)}
                         </span>
                       ))}
-                      {article.countries.length > 3 && (
+                      {(article.countries?.length ?? 0) > 3 && (
                         <span className="text-[10px] text-slate-dark">
-                          +{article.countries.length - 3}
+                          +{(article.countries?.length ?? 0) - 3}
                         </span>
                       )}
                     </div>

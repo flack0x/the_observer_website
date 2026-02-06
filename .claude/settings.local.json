@@ -62,7 +62,19 @@
       "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" diff .claude/settings.local.json)",
       "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\ndocs: Update CLAUDE_CONTEXT.md with SEO slug implementation details\n\n- Add Vercel CLI auth method \\(npx vercel login via OAuth\\)\n- Document slug column, slugify.ts, backfill_slugs.js\n- Update API route tree \\(revisions moved to article-revisions\\)\n- Add Article.slug to interface docs and DB schema\n- Update database stats to 609 articles with SEO slugs\n- Add recent changes entry for full slug implementation\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\nperf: Core Web Vitals optimization\n\n- Migrate Google Fonts to next/font \\(self-hosted, no render-blocking CSS\\)\n- Dynamic import IntelDashboard \\(recharts\\) and Community on homepage\n- Dynamic import CommentSection on article pages\n- Add priority to Header logo and first LiveFeed thumbnail \\(LCP\\)\n- Change Google Analytics from afterInteractive to lazyOnload\n- Add preconnect for Supabase image CDN\n- Optimize article list query: exclude content column \\(saves KBs x 500 articles\\)\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\ndocs: Update CLAUDE_CONTEXT.md with Feb 5 performance changes\n\n- Add Core Web Vitals optimization entry to recent changes\n- Update GA strategy reference from afterInteractive to lazyOnload\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\ndocs: Update CLAUDE_CONTEXT.md with Feb 5 performance changes\n\n- Add Core Web Vitals optimization entry to recent changes\n- Update GA strategy reference from afterInteractive to lazyOnload\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "WebFetch(domain:validator.w3.org)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" add \"src/app/feed/[lang]/route.ts\")",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\nfix: Separate U+FFFD stripping in RSS feed emoji cleaner\n\nSplit FFFD removal into its own non-unicode-mode regex to ensure\nit runs even if the unicode character class doesn''t match.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit --amend -m \"debug: Add generator tag to verify deployment\")",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" push --force)",
+      "Bash(timeout /t 10 /nobreak)",
+      "Bash(npm init:*)",
+      "Bash(npx playwright test tests/public tests/api --project=chromium)",
+      "Bash(npx playwright test:*)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" add CLAUDE_CONTEXT.md)",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" commit -m \"$\\(cat <<''EOF''\ndocs: Add Playwright E2E test suite to CLAUDE_CONTEXT.md\n\n- Document test structure, configuration, and commands\n- Add test results summary \\(89% pass rate, 78/88 tests\\)\n- Add NPM scripts for test:api, test:admin, test:public\n- Add Feb 6 recent changes entry\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"C:\\\\Users\\\\PC\\\\Desktop\\\\TheObserver\" push origin main)"
     ]
   }
 }
