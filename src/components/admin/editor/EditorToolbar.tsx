@@ -20,7 +20,6 @@ import {
   Undo,
   Redo,
   Unlink,
-  FolderOpen,
 } from 'lucide-react';
 import { MediaPickerModal } from './MediaPickerModal';
 
@@ -31,8 +30,6 @@ interface EditorToolbarProps {
 export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
-  const [showImageInput, setShowImageInput] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const addLink = () => {
@@ -45,14 +42,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   const removeLink = () => {
     editor.chain().focus().unsetLink().run();
-  };
-
-  const addImage = () => {
-    if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
-      setImageUrl('');
-      setShowImageInput(false);
-    }
   };
 
   const insertImageFromPicker = (url: string) => {
@@ -261,58 +250,20 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           )}
         </div>
 
-        {/* Image - URL input */}
-        <div className="relative">
-          <ToolbarButton
-            onClick={() => setShowImageInput(!showImageInput)}
-            title="Add Image URL"
-          >
-            <ImageIcon className="h-4 w-4" />
-          </ToolbarButton>
-
-          {showImageInput && (
-            <div className="absolute top-full left-0 mt-2 p-2 bg-midnight-800 border border-midnight-600 rounded-lg shadow-lg z-10 flex gap-2">
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Image URL"
-                className="bg-midnight-700 border border-midnight-500 rounded px-2 py-1 text-sm text-slate-light
-                         placeholder:text-slate-dark focus:border-tactical-red focus:outline-none w-48"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addImage();
-                  }
-                }}
-              />
-              <button
-                onClick={addImage}
-                className="px-2 py-1 bg-tactical-red text-white text-sm rounded hover:bg-tactical-red-hover"
-              >
-                Add
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Image - Media Library */}
+        {/* Image - Upload or Browse */}
         <ToolbarButton
           onClick={() => setShowMediaPicker(true)}
-          title="Browse Media Library"
+          title="Insert Image"
         >
-          <FolderOpen className="h-4 w-4" />
+          <ImageIcon className="h-4 w-4" />
         </ToolbarButton>
       </div>
 
       {/* Click outside to close popups */}
-      {(showLinkInput || showImageInput) && (
+      {showLinkInput && (
         <div
           className="fixed inset-0 z-0"
-          onClick={() => {
-            setShowLinkInput(false);
-            setShowImageInput(false);
-          }}
+          onClick={() => setShowLinkInput(false)}
         />
       )}
 
