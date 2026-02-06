@@ -9,7 +9,6 @@ import {
   Menu,
   X,
   Globe,
-  Send,
   LogIn,
   LogOut,
   User,
@@ -21,7 +20,6 @@ import {
 } from "lucide-react";
 import BreakingNewsTicker from "@/components/ui/BreakingNewsTicker";
 import type { Locale, Dictionary } from "@/lib/i18n";
-import { getTelegramChannel } from "@/lib/config";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
 
@@ -60,8 +58,6 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
     const newPathname = pathname.replace(`/${locale}`, `/${newLocale}`);
     router.push(newPathname);
   };
-
-  const telegramChannel = getTelegramChannel(locale);
 
   return (
     <header className="sticky top-0 z-50">
@@ -246,17 +242,6 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 </Link>
               )}
 
-              {/* Telegram CTA - Desktop only */}
-              <a
-                href={telegramChannel}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden lg:flex items-center gap-1.5 rounded-full bg-tactical-red px-3 py-1.5 font-heading text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-tactical-red-hover"
-              >
-                <Send className="h-3 w-3" aria-hidden="true" />
-                {dict.nav.joinIntel}
-              </a>
-
               {/* Mobile menu button - Always visible on mobile */}
               <button
                 className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-white bg-tactical-red hover:bg-tactical-red-hover transition-colors"
@@ -394,18 +379,6 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                 )}
               </div>
 
-              {/* Telegram CTA */}
-              <div className="mt-4 pt-4 border-t border-midnight-700">
-                <a
-                  href={telegramChannel}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-lg bg-tactical-red px-4 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white hover:bg-tactical-red-hover transition-colors"
-                >
-                  <Send className="h-4 w-4" aria-hidden="true" />
-                  {dict.nav.joinIntel}
-                </a>
-              </div>
             </div>
           </motion.div>
         )}
