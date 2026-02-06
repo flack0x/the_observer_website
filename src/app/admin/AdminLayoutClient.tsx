@@ -1,34 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider, RequireAuth } from '@/lib/auth';
 import { AdminSidebar } from '@/components/admin/layout';
 import Header from '@/components/layout/Header';
-import { getDictionary } from '@/lib/i18n';
+import type { Dictionary } from '@/lib/i18n';
+
+interface AdminLayoutClientProps {
+  children: React.ReactNode;
+  breakingNews: string[];
+  dict: Dictionary;
+}
 
 export default function AdminLayoutClient({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  breakingNews,
+  dict,
+}: AdminLayoutClientProps) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [breakingNews, setBreakingNews] = useState<string[]>([]);
-  const [dict, setDict] = useState<any>(null);
-
-  // Fetch breaking news and dictionary
-  useEffect(() => {
-    // Fetch breaking news
-    fetch('/api/breaking-news?locale=en')
-      .then(res => res.json())
-      .then(data => setBreakingNews(data.news || []))
-      .catch(() => {});
-
-    // Get dictionary (synchronous)
-    setDict(getDictionary('en'));
-  }, []);
 
   // Don't show layout chrome on login/signup pages
   const isAuthPage = pathname === '/admin/login' || pathname === '/admin/signup';
@@ -37,17 +29,6 @@ export default function AdminLayoutClient({
     return (
       <AuthProvider>
         {children}
-      </AuthProvider>
-    );
-  }
-
-  // Wait for dictionary to load
-  if (!dict) {
-    return (
-      <AuthProvider>
-        <div className="min-h-screen bg-midnight-900 flex items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-2 border-tactical-red border-t-transparent rounded-full" />
-        </div>
       </AuthProvider>
     );
   }

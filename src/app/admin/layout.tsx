@@ -5,6 +5,41 @@ import { Noto_Sans_Arabic } from 'next/font/google';
 import '../globals.css';
 import AdminLayoutClient from './AdminLayoutClient';
 import { ThemeProvider } from '@/lib/theme';
+import { fetchNewsHeadlines, dbHeadlineToTicker, fetchArticlesFromDB, dbArticleToFrontend } from '@/lib/supabase';
+import { getDictionary } from '@/lib/i18n';
+
+// Revalidate every 30 minutes for fresh headlines
+export const revalidate = 1800;
+
+// Shuffle array using Fisher-Yates algorithm
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Fetch breaking news for ticker - same as main layout
+async function getBreakingNews(): Promise<string[]> {
+  try {
+    const headlines = await fetchNewsHeadlines('en', 30);
+    if (headlines.length > 0) {
+      const shuffled = shuffleArray(headlines);
+      return shuffled.map(dbHeadlineToTicker);
+    }
+    const articles = await fetchArticlesFromDB('en', 5);
+    return articles.map((article) => {
+      const a = dbArticleToFrontend(article);
+      const prefix = (a.category || 'NEWS').toUpperCase();
+      const title = (a.title || '').length > 80 ? (a.title || '').substring(0, 77) + "..." : (a.title || '');
+      return `${prefix}: ${title}`;
+    });
+  } catch {
+    return [];
+  }
+}
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -44,11 +79,15 @@ export const metadata: Metadata = {
   description: 'Content Management System for The Observer',
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Fetch breaking news server-side for instant display
+  const breakingNews = await getBreakingNews();
+  const dict = getDictionary('en');
+
   return (
     <html lang="en" suppressHydrationWarning className={`${montserrat.variable} ${lora.variable} ${notoArabic.variable}`}>
       <head>
@@ -70,7 +109,7 @@ export default function AdminLayout({
           `}
         </Script>
         <ThemeProvider>
-          <AdminLayoutClient>{children}</AdminLayoutClient>
+          <AdminLayoutClient breakingNews={breakingNews} dict={dict}>{children}</AdminLayoutClient>
         </ThemeProvider>
       </body>
     </html>
