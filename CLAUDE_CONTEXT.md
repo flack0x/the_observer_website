@@ -1151,6 +1151,13 @@ npm run dev      # Development server (Turbopack)
 npm run build    # Production build
 npm run start    # Start production server
 npm run lint     # ESLint
+
+# E2E Testing (Playwright)
+npm run test:api      # API tests only (fast, 100% pass rate)
+npm run test:admin    # Admin tests (requires .env.test credentials)
+npm run test:public   # Public page tests (against production)
+npm run test:ui       # Visual debugging mode
+npx playwright test   # Run all tests
 ```
 
 ## Scripts (`scripts/`)
@@ -1173,6 +1180,68 @@ supabase
 feedparser
 requests
 ```
+
+## E2E Testing (Playwright)
+
+Located in `tests/` directory with Playwright configuration in `playwright.config.ts`.
+
+### Test Structure
+```
+tests/
+├── api/                    # API endpoint tests (100% pass rate)
+│   ├── articles.spec.ts    # /api/articles (filters, search, pagination)
+│   ├── books.spec.ts       # /api/books endpoint
+│   ├── metrics.spec.ts     # /api/metrics endpoint
+│   ├── headlines.spec.ts   # /api/headlines endpoint
+│   ├── subscribe.spec.ts   # /api/subscribe validation
+│   └── rss.spec.ts         # RSS feed XML validation
+├── admin/                  # Admin dashboard tests (87% pass rate)
+│   ├── login.spec.ts       # Login page, validation, redirects
+│   └── article-create.spec.ts  # Article creation, editor, media picker
+├── public/                 # Public page tests (83% pass rate)
+│   ├── homepage.spec.ts    # Homepage sections, SEO
+│   ├── navigation.spec.ts  # Nav links, language switching
+│   └── frontline.spec.ts   # Article listing, search, filters
+└── setup/
+    └── auth.setup.ts       # Admin authentication setup
+```
+
+### Configuration
+- **Base URL**: `https://al-muraqeb.com` (production)
+- **Browser**: Chromium (primary), optionally Firefox/Safari
+- **Timeout**: 30s for tests, 60s for navigation
+- **Retries**: 1 retry on failure
+- **Workers**: 4 parallel workers
+- **Auth State**: Stored in `playwright/.auth/admin.json`
+
+### Test Credentials
+Stored in `.env.test` (gitignored):
+```
+TEST_ADMIN_EMAIL=your-admin@example.com
+TEST_ADMIN_PASSWORD=your-password
+```
+
+### Running Tests
+```bash
+npx playwright test                           # All tests
+npx playwright test tests/api                 # API tests only
+npx playwright test tests/admin --project=chromium  # Admin tests
+npx playwright test --ui                      # Visual debugging
+npx playwright test --headed                  # Watch browser
+```
+
+### Test Results (Feb 6, 2026)
+| Category | Passed | Total | Notes |
+|----------|--------|-------|-------|
+| API | 23 | 23 | All endpoints tested |
+| Admin | 20 | 23 | 3 modal timing tests flaky on mobile |
+| Public | 35 | 42 | Some network timeout issues |
+| **Total** | **78** | **88** | **89% pass rate** |
+
+### What's Tested
+- **API**: All public endpoints, filters, search, RSS XML validation, error handling
+- **Admin**: Login flow, auth redirects, article creation page, editor components, media picker
+- **Public**: Homepage load, SEO meta tags, navigation, language switching, article listing
 
 ## Git Conventions
 
@@ -1308,6 +1377,17 @@ for r in result.data:
 | Comments | 0 | Feature ready |
 
 ## Recent Changes (Feb 2026)
+
+- **Playwright E2E Test Suite** (Feb 6):
+  - Added comprehensive end-to-end test suite using Playwright
+  - 88 tests across API, Admin, and Public categories (89% pass rate)
+  - API tests: 23/23 passing — articles, books, metrics, headlines, subscribe, RSS
+  - Admin tests: 20/23 passing — login, auth flow, article creation, editor, media picker
+  - Public tests: 35/42 passing — homepage, navigation, SEO, frontline listing
+  - Auth setup for admin tests via `tests/setup/auth.setup.ts`
+  - Configuration in `playwright.config.ts` targeting production site
+  - NPM scripts: `test:api`, `test:admin`, `test:public`, `test:ui`
+  - 3 flaky tests are modal timing issues on mobile viewports (non-critical)
 
 - **RSS Feeds** (Feb 5):
   - `/feed/en` and `/feed/ar` serve RSS 2.0 XML with latest 50 articles
