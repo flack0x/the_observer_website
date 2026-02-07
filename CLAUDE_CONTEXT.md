@@ -1238,23 +1238,13 @@ npx playwright test --ui                      # Visual debugging
 npx playwright test --headed                  # Watch browser
 ```
 
-### Test Results (Feb 6, 2026)
-| Category | Passed | Total | Notes |
-|----------|--------|-------|-------|
-| API | 35 | 37 | Health checks + full validation |
-| Admin | 20 | 23 | 3 modal timing tests flaky |
-| Public | 80 | 110 | Comprehensive coverage |
-| SEO | 26 | 30 | Sitemap, meta tags, robots.txt |
-| **Total** | **161** | **200** | **80% pass rate** |
-
 ### What's Tested
-- **API**: All endpoints, response shapes, health checks, error handling
-- **Admin**: Login flow, auth redirects, article creation, editor, media picker
-- **Public**: Homepage, article detail, mobile layout, search/filters, interactions UI
-- **SEO**: Sitemap validation, meta tags, OG tags, hreflang, robots.txt
+- **API**: All endpoints, response shapes, error handling
+- **Admin**: Login flow, article creation, editor, media picker
+- **Public**: Homepage, article detail, mobile layout, search/filters
+- **SEO**: Sitemap, meta tags, OG tags, hreflang
 
-### Read-Only Testing
-All tests are **read-only** — they verify UI exists and pages load correctly but **never modify data**. Safe to run against production.
+All tests are **read-only** — safe to run against production.
 
 ## Git Conventions
 
@@ -1377,297 +1367,80 @@ for r in result.data:
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Feb 5, 2026)
+## Database Stats (Feb 7, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (total) | 609 | EN + AR combined, all with SEO slugs |
+| Articles (total) | 635+ | EN + AR combined, all with SEO slugs |
 | Book Reviews | 14 | 7 EN, 7 AR published |
 | News Headlines | 200+ | Active from RSS feeds |
 | Activity Log | Active | Tracks admin actions |
 | User Profiles | 1 | Admin configured |
-| Subscribers | 0 | Table ready |
-| Comments | 0 | Feature ready |
 
 ## Recent Changes (Feb 2026)
 
-- **Critical Bug Fix: Null Content Crash** (Feb 6):
-  - **Issue**: Site crashed with "Cannot read properties of undefined (reading 'trim')"
-  - **Root cause**: Core Web Vitals optimization (Feb 5) excluded `content` from API list responses, but `LiveFeed.tsx` still called `calculateReadTime(article.content)` which crashed on undefined
-  - **Fix**: Added null safety in `LiveFeed.tsx:22`: `(content || '').trim()`
-  - **Additional hardening**:
-    - `frontline/page.tsx`: Optional chaining for `countries?.length`
-    - `layout.tsx`: Null fallbacks for `category` and `title` in ticker
-  - **Lesson**: When optimizing API responses by excluding fields, audit all consumers of that data
+- **Admin Panel Mobile Responsiveness** (Feb 7):
+  - Admin panel now uses same Header as main site (including news ticker)
+  - Breaking news fetched server-side in admin layout for instant display
+  - Removed JOIN INTEL button from header (desktop and mobile)
+  - Added prominent "Admin Panel" button in mobile menu for admin users
+  - Mobile-responsive dashboard: 2-column stat cards, FAB for sidebar access
+  - Overflow fixes to prevent horizontal scrolling on mobile
 
 - **Playwright E2E Test Suite** (Feb 6):
-  - Comprehensive end-to-end test suite with 210+ tests (87% pass rate)
-  - **API tests**: Health checks, response validation, all endpoints
-  - **Admin tests**: Login, auth flow, article creation, editor, media picker
-  - **Public tests**: Homepage, article detail, mobile layout, search/filters
-  - **SEO tests**: Sitemap validation, meta tags, OG tags, hreflang, robots.txt
-  - **Interaction UI tests**: Verify like/dislike, comments, share buttons exist (read-only)
-  - **Write operation tests**: Voting/comments with isolated test session IDs (`test-playwright-*`)
-  - All tests are read-only — safe to run against production
-  - Auth setup for admin tests via `tests/setup/auth.setup.ts`
-  - Configuration in `playwright.config.ts` targeting production site (2 workers to reduce RAM)
+  - 210+ tests covering API, admin, public pages, SEO (87% pass rate)
   - NPM scripts: `test:api`, `test:admin`, `test:public`, `test:ui`
-  - Cleanup script: `tests/cleanup-test-data.ts` for removing test data
+  - All tests read-only — safe against production
 
 - **RSS Feeds** (Feb 5):
-  - `/feed/en` and `/feed/ar` serve RSS 2.0 XML with latest 50 articles
-  - `/feed` redirects to `/feed/en`
-  - RSS autodiscovery `<link>` tag in locale layout `<head>`
-  - Added `/feed` to middleware public paths (skip locale redirect)
-  - Rate limited (100 req/min), 15-min cache (`Cache-Control: public, max-age=900`)
-  - Items include: title, slug link, excerpt (CDATA), pubDate, category, image enclosure
+  - `/feed/en` and `/feed/ar` serve RSS 2.0 XML (50 articles, 15-min cache)
   - Route: `src/app/feed/[lang]/route.ts`
 
-- **Full-Text Article Search** (Feb 5):
-  - Replaced client-side `.includes()` search with PostgreSQL full-text search on Frontline page
-  - Added `search_vector` tsvector column to articles table with weighted fields (A=title, B=excerpt, C=content)
-  - GIN index (`idx_articles_search`) for fast search queries
-  - Auto-update trigger keeps search_vector in sync on insert/update
-  - English articles use `english` regconfig (stemming), Arabic use `simple` (tokenize only)
-  - `searchArticles()` function in `supabase.ts` using `websearch` type (natural language queries)
-  - `/api/articles?search=...` endpoint for server-side search (max 50 results)
-  - Frontline page: debounced 300ms API search, loading spinner, "N search results" count
-  - Category/country/time/video filters still apply on top of search results
-  - Migration: `20260205140000_add_fulltext_search.sql`
+- **Full-Text Search** (Feb 5):
+  - PostgreSQL tsvector + GIN index for fast article search
+  - `/api/articles?search=...` with debounced 300ms frontend
 
-- **Core Web Vitals Optimization** (Feb 5):
-  - Migrated Google Fonts to `next/font` (self-hosted, no render-blocking CSS requests)
-  - Fonts: Montserrat (`--font-montserrat`), Lora (`--font-lora`), Noto Sans Arabic (`--font-noto-arabic`)
-  - Dynamic import `IntelDashboard` (recharts) and `Community` on homepage via `next/dynamic`
-  - Dynamic import `CommentSection` on article pages (`ssr: false`)
-  - Added `priority` to Header logo and first LiveFeed thumbnail (LCP optimization)
-  - Changed Google Analytics from `afterInteractive` to `lazyOnload`
-  - Added `<link rel="preconnect">` for Supabase image CDN
-  - Optimized `fetchArticlesFromDB()`: excludes `content` column from list queries (saves KBs x 500 articles)
-  - **⚠️ Breaking**: This caused crash in `LiveFeed.tsx` which expected `content` — fixed Feb 6 with null safety
+- **Core Web Vitals** (Feb 5):
+  - `next/font` for self-hosted fonts, dynamic imports for heavy components
+  - GA changed to `lazyOnload`, preconnect for Supabase CDN
 
-- **SEO-Friendly URL Slugs** (Feb 5):
-  - Replaced Telegram IDs in URLs (`/observer_5/447`) with descriptive slugs (`/iran-nuclear-deal-analysis`)
-  - Added `slug` column to articles table (NOT NULL, unique per channel via `idx_articles_slug_channel`)
-  - Backfilled all 609 existing articles with generated slugs
-  - `src/lib/slugify.ts`: `generateSlug(title, fallbackId?)` — Latin extraction, Arabic fallback via hash
-  - Public routes resolve by slug; admin routes still use telegram_id internally
-  - Old multi-segment URLs (e.g. `/observer_5/447`) auto-redirect (307) to new slug URL
-  - Updated: sitemap, OG images, bookmarks, live feed, admin "View on Site" links
-  - Slug generation added to admin article creation (`POST /api/admin/articles`) and Telegram pipeline
-  - Fix: Moved revisions API from `/api/admin/articles/[...id]/revisions` to `/api/admin/article-revisions/[...id]` (Next.js 16 catch-all constraint)
-  - Fix: Vercel CLI auth restored via `npx vercel login` (removed expired OIDC token from .env.local)
+- **SEO Slugs** (Feb 5):
+  - Descriptive URLs (`/iran-nuclear-deal-analysis` vs `/observer_5/447`)
+  - Old URLs auto-redirect (307)
 
-- **Media Upload Buttons + Publish Button Fix** (Feb 4):
-  - Replaced URL-only image/video fields with "Upload or browse" buttons on New Article and Edit Article pages
-  - Buttons open existing `MediaPickerModal` — users can upload from device or pick from library
-  - Extended `MediaPickerModal` with `mediaType` prop ('image' | 'video') for video support
-  - Image preview shown when set, with X to remove; URL input kept as secondary option
-  - Reorganized New Article header: buttons wrap on mobile, Publish always visible
-  - Changed Publish icon from Eye to Send for clarity
-
-- **Frontline No-Results Fix** (Feb 4):
-  - Fixed page going blank when search/filters returned zero results
-  - Error page only triggers for actual API errors now
-  - No results shows inline message within page layout (header, filters stay visible)
-
-- **Mobile Quick-Edit + Article Comparison** (Feb 3):
-  - `QuickEditModal`: Slide-up mobile editor with title + plain-text content editing
-  - Quick Edit button in articles list dropdown
-  - `ArticleComparisonModal`: EN/AR side-by-side paragraph comparison with issue detection
-  - Highlights missing paragraphs and length mismatches
-  - Compare button in edit page header (website articles with both languages only)
-
-- **Admin Dashboard Phase 3** (Feb 3):
-  - Bulk Actions: Checkbox select in articles list with Publish/Unpublish/Delete
-  - Content Calendar: `/admin/calendar` with month grid showing articles by date
-  - Version History: View and restore previous article versions from edit sidebar
-  - API: `/api/admin/articles/[...id]/revisions` for version history
-
-- **Admin Dashboard Phase 2** (Feb 3):
-  - Activity Log: Track all admin actions (create, edit, publish, delete, upload)
-  - New `/admin/activity` page with filters and pagination
-  - `logActivity()` helper integrated into article and media API routes
-  - Scheduled publishing: date/time picker for draft articles
-  - Enhanced dashboard home: "Published This Week" stat, "Drafts Awaiting Publish" widget, "Recent Activity" feed
-  - New migration: `20260203120000_create_activity_log.sql`, `20260203130000_add_scheduled_at.sql`
-
-- **Admin Dashboard Phase 1** (Feb 2):
-  - Autosave: Auto-saves 3s after changes stop on edit page, shows Unsaved/Saving/Saved status
-  - Quick publish/unpublish from articles list dropdown menu
-  - `MediaPickerModal`: Browse and select from media library when inserting images in editor
-  - Duplicate for Translation: One-click button to create AR/EN version with copied metadata
-
-- **Google Analytics 4** (Feb 1):
-  - Measurement ID: `G-0Z0P2B5QT8`
-  - Stream ID: 13395111011
-  - Added to both `[locale]/layout.tsx` and `admin/layout.tsx`
-  - Uses `next/script` with `lazyOnload` strategy (changed from `afterInteractive` Feb 5)
-  - Property URL: https://analytics.google.com (search "Al Muraqeb")
-  - Status: Active and receiving data
-
-- **Frontline Advanced Filters** (Feb 1):
-  - Added country/region filter based on DB analysis (577 articles)
-  - Top 12 countries: Israel (332), Palestine (207), Iran (188), Lebanon (180),
-    USA (171), Iraq (153), Yemen (121), Syria (87), Russia (51), China (50),
-    Saudi Arabia (50), Egypt (46)
-  - Time range filter: All, 7 days, 30 days, 90 days (amber color)
-  - Video only toggle: Shows only articles with video (125 total) - green color
-  - Color scheme: Categories (red), Countries (blue), Time (amber), Video (green)
-  - All filters chain: Search (server-side) → Category → Country → Time → Video (no conflicts)
-
-- **Frontline Filter UI** (Feb 1):
-  - Compact 3-row layout: Search+Video+Time | Categories | Countries
-  - Search bar: Fixed width (256px), not expanding
-  - Filters scroll horizontally on mobile
-  - Color scheme: Categories (red), Countries (blue), Time (amber), Video (green)
-  - All filters chain without conflicts
-
-- **SEO H1 Fix** (Feb 1):
-  - Homepage H1 was "Observe Analyze Understand" - not descriptive for search engines
-  - Added sr-only span with "The Observer - Geopolitical Intelligence & Strategic Analysis"
-  - Visual design unchanged, but Google now sees meaningful H1 content
-  - Bilingual support (EN/AR) for screen reader text
-  - Note: Site not yet indexed by Google despite 380 URLs in sitemap (submitted Jan 17)
-
-- **ALL CAPS Content Fix + Workflow Fix** (Feb 1):
-  - Fixed article content displaying in ALL CAPS (from Telegram posts)
-  - Added `src/lib/content.ts` utility for normalizing text to sentence case
-  - Preserves acronyms (USA, IDF, NATO, IRGC, etc.) during conversion
-  - Applied to frontend display (`ArticleContent.tsx`)
-  - Applied to admin editor on content load (editors see normalized text)
-  - Fixed GitHub Actions workflow: removed deleted `analyze_articles.py` reference
-  - Workflow now only runs `fetch_telegram.py` (metrics analysis was removed during cleanup)
-  - **Follow-up fix**: Numbered paragraphs (1. **Military Deterrence:**) now convert properly
-    - Removed duplicate `isAllCaps` check causing short segments to skip conversion
-    - Don't split sentences on colons (preserves inline bold headers)
-    - Numbered paragraphs no longer treated as section headers (only short standalone bold lines)
+- **Admin Features** (Feb 2-4):
+  - Autosave, quick publish, media picker, duplicate for translation
+  - Bulk actions, content calendar, version history, activity log
+  - Mobile quick-edit modal, EN/AR comparison modal
 
 ## Recent Changes (Jan 2026)
 
-- **Manual Article Posting + Scripts Cleanup** (Jan 31):
-  - Posted bilingual Iraq sovereignty analysis articles directly to Supabase
-  - EN: "The Viceroy's Stamp: Washington's Veto on Iraqi Democracy"
-  - AR: "من يحكم العراق؟ الفيتو الأمريكي على السيادة العراقية"
-  - Images uploaded to Supabase Storage (`article-media` bucket)
-  - Cleaned up scripts folder: removed test files, one-off scripts, stale artifacts
-  - Kept only essential pipeline scripts (fetch_telegram.py, fetch_news_headlines.py, etc.)
-- **Article Comments System + Guest Comments** (Jan 28-29): Full commenting with frictionless guest support
-  - `article_comments` table with threading support (parent_id for replies)
-  - API routes: GET/POST `/api/articles/[id]/comments`, DELETE/PATCH `/api/articles/[id]/comments/[commentId]`
-  - `CommentSection` component with form, replies, edit/delete functionality
-  - Both authenticated users and guests can comment
-  - Guests provide a name (persisted in localStorage) and are tracked via session_id
-  - Guest comments show "Guest" badge; guest name stored for repeat visits
-  - `guest_comment` and `guest_delete_comment` RPC functions (`SECURITY DEFINER`)
-  - DB constraint ensures every comment has either `user_id` or `guest_name` + `session_id`
-  - Owners can edit/delete their own comments (guests via session_id match)
-  - Admins can delete any comment (moderation)
-  - Bilingual support (EN/AR) with full translations (`guestName`, `guestLabel`)
-  - Integrated into `ArticleContent.tsx` below interactions
-  - Comment count cached in `articles.comment_count` via trigger
-  - Migrations: `20260128120000` (table), `20260128120000` (guest fields), `20260128130000` (RPC functions)
-- **External Voices Section** (Jan 28): New section for featuring external authors/analysts
-  - `/[locale]/voices` - List page showing all featured voices
-  - `/[locale]/voices/[slug]` - Detail page with bio, articles, books, credentials
-  - `FeaturedVoices.tsx` - Homepage section preview
-  - Static data in `src/lib/voices.ts` (can migrate to DB later)
-  - First voice: J. Michael Springmann (former US diplomat, author)
-  - Bilingual support (EN/AR) with full translations
-  - Added "Voices" to main navigation
-- **Self-Referential Link Stripping** (Jan 29): Remove promotional markdown links from article content
-  - Telegram posts include `[**Our website**](https://al-muraqeb.com/en)` and `[Link to Arabic](https://t.me/almuraqb/...)` links
-  - Added regex in `processContent()` to strip `[...](https://al-muraqeb.com/...)` and `[...](https://t.me/...)` patterns
-  - Stripping runs BEFORE bold conversion to catch `[**text**](url)` in raw markdown form
-  - Added paragraph filter fallback to skip standalone self-referential link paragraphs
-  - Handles all variations: any link text, any path, http/https
-- **Emoji Sanitization Fix** (Jan 28): Comprehensive emoji stripping from article content
-  - Root cause: Telegram emojis (📰, ✌, etc.) rendering as broken box characters
-  - Solution: Replaced hardcoded emoji lists with comprehensive Unicode range regex
-  - Regex covers: `U+1F300-1F9FF`, `U+2600-27BF`, `U+1F600-1F64F`, `U+1F680-1F6FF`, etc.
-  - Also strips `U+FFFD` replacement characters and variation selectors
-  - Applied to `processContent()` in `ArticleContent.tsx`
-  - Applied to `sanitizeTitle()` and `sanitizeExcerpt()` in `supabase.ts`
-  - Database scan: 531 articles checked, 4 minor issues handled by frontend sanitization
-- **Guest Voting Fix** (Jan 27): Fixed likes/dislikes not persisting after refresh
-  - Root cause: RLS policies required headers that Supabase client couldn't send
-  - Solution: Created `guest_vote` and `guest_unvote` RPC functions with `SECURITY DEFINER`
-  - Guest operations now use RPC functions instead of direct table access
-  - Authenticated users still use direct table operations
-  - Replaced `upsert` with delete+insert for reliable partial index handling
-  - Migration: `20260127120000_secure_guest_voting.sql`
-- **User System & Dashboard** (Jan 21): Full public authentication and user features
-  - **Public Auth**: Sign In/Sign Up pages (`/login`, `/signup`) with email trimming
-  - **Dashboard**: User hub (`/dashboard`) showing overview, bookmarks, and history
-  - **Interactions**: Like, Dislike, Bookmark, and Share functionality
-  - **Guest Support**: Anonymous users can view stats and "vote" (session-based)
-  - **View Counters**: Legitimate, atomic view counting via DB RPC functions
-  - **Engagement Metrics**: Thumbnails display Views, Likes, and Dislikes
-  - **Header UX**: Profile dropdown menu with quick links and Sign Out
-  - **Database**: 4 new migrations for interactions, bookmarks, views, and guest policies
-  - **Performance**: Cached like/dislike counts in `articles` table via triggers
-- **Content Formatting Fix** (Jan 15): Telegram markdown to HTML conversion
-  - `processContent()` in ArticleContent.tsx converts `**bold**` → `<strong>`
-  - Converts `__italic__` → `<em>`
-  - Strips header section (title/category/countries) from content body
-  - Removes emoji markers (🔴🔵 etc.) from content
-  - `sanitizeExcerpt()` cleans excerpts on article cards
-  - Uses DOMPurify for XSS protection
-- **Title Extraction Fix** (Jan 15): Comprehensive title parsing overhaul
-  - Recognizes `**Title**` with value on next line
-  - Handles `**Title : Value**` and `**Title: Value` inline formats
-  - Strips emoji prefixes (🔴🔵 etc.) before parsing headers
-  - Handles unclosed `**` in title lines
-  - Skips metadata lines in legacy extraction
-  - Frontend `sanitizeTitle()` as safety net
-  - Lower char threshold (20) for multi-part grouping
-- **Library (Book Reviews)**: Full bilingual book review system
-  - Public listing + detail pages
-  - Admin CRUD with TipTap editor
-  - Rating system (1-5 stars)
-  - Recommendation levels (essential/recommended/optional)
-  - Local book cover images
-- **Admin Dashboard**: Complete content management system
-  - Article management (create, edit, delete, bulk actions, quick edit)
-  - Book review management
-  - Media library with upload/browse picker
-  - User management
-  - Activity log, content calendar, version history
-  - Autosave, scheduled publishing, duplicate for translation
-- **Theme System**: Light/dark mode toggle
-- **Navigation**: Shortened names (Frontline, Library, Dossier)
-- **Mobile Optimization**: Improved book detail page mobile layout
-- **Multi-part Telegram post combining** (180s grouping window)
-- **Country tags** with AR translations on Frontline
-- **Accessibility**: skip-to-content, focus-visible styles
-- **Database**: 20+ migrations, PostgreSQL 17
-- **RLS Policies**: Optimized for performance, role-based access
-- **SEO Overhaul** (Jan 17): Critical fixes for Google indexing
-  - Changed all URLs from `the-observer-website.vercel.app` to `al-muraqeb.com`
-  - Files updated: `sitemap.ts`, `robots.ts`, article/book page JSON-LD, OG route
-  - Added hreflang tags for EN↔AR language alternates with x-default
-  - Made canonical URLs absolute (full domain)
-  - Added book reviews to sitemap (was missing)
-  - Added `/books` to static paths in sitemap
-  - Google Search Console verified via DNS TXT record
-  - Sitemap submitted: 228 pages discovered
-  - Added ESLint configuration (`eslint.config.mjs`)
-  - Updated metadataBase to production domain
-- **External News Headlines** (Jan 17): Breaking news ticker from international sources
-  - Fetches headlines from 25+ RSS feeds (Iraq, Iran, Lebanon, Russia, USA, China, UK, France, etc.)
-  - GitHub Actions workflow runs every 30 minutes
-  - Falls back to articles if no external headlines available
-  - Sources include: Press TV, RT, BBC, Al Jazeera, CGTN, NHK, France 24, etc.
-  - API endpoint: `/api/headlines`
-  - Migration: `20260117120000_create_news_headlines_table.sql`
+- **Comments System** (Jan 28-29): Full commenting with guest support
+  - Threading via `parent_id`, guest comments via `session_id`
+  - RPC functions: `guest_comment`, `guest_delete_comment`
+
+- **External Voices** (Jan 28): `/[locale]/voices` for external authors
+  - Static data in `src/lib/voices.ts`, first voice: J. Michael Springmann
+
+- **Guest Voting** (Jan 27): RPC functions fix for session-based voting
+  - `guest_vote`, `guest_unvote` with `SECURITY DEFINER`
+
+- **User System** (Jan 21): Auth, dashboard, bookmarks, interactions
+  - Like/dislike, view counters, profile dropdown
+
+- **Content Fixes** (Jan 15): Telegram markdown → HTML, title parsing
+  - Emoji stripping, self-referential link removal
+
+- **Library** (Jan): Book reviews with ratings, admin CRUD
+
+- **SEO Overhaul** (Jan 17): Domain change to al-muraqeb.com
+  - Hreflang, canonical URLs, sitemap, Google Search Console
+
+- **News Headlines** (Jan 17): 25+ RSS feeds for breaking ticker
 
 ## Google Search Console
 
-- **Property**: al-muraqeb.com (Domain property)
-- **Verification**: DNS TXT record (Namecheap)
-- **Sitemap**: https://al-muraqeb.com/sitemap.xml (380 pages as of Feb 1)
-- **Verification Code**: `google-site-verification=6GZxTpIryls2s95Zkl3jkPxpPsYlvW3LGnEe4L6Qm2k`
-- **Status**: Verified, sitemap submitted Jan 17, 2026
-- **Indexing Status** (Feb 1): `site:al-muraqeb.com` returns 0 results - not yet indexed
-- **SEO Health**: robots.txt OK, no noindex tags, canonical URLs present, JSON-LD structured data present
-- **SEO Slugs**: Implemented Feb 5 — all URLs now use descriptive slugs, old Telegram ID URLs redirect
+- **Property**: al-muraqeb.com (Domain property, DNS TXT verified)
+- **Sitemap**: https://al-muraqeb.com/sitemap.xml (380+ pages)
+- **Verification Code**: `6GZxTpIryls2s95Zkl3jkPxpPsYlvW3LGnEe4L6Qm2k`
+- **SEO**: robots.txt OK, canonical URLs, JSON-LD, hreflang, descriptive slugs
