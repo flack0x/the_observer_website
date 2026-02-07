@@ -355,10 +355,10 @@ export default function Header({ locale, dict, breakingNews }: HeaderProps) {
                       <Link
                         href="/admin"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 w-full rounded-lg px-4 py-2 mt-1 text-tactical-red hover:bg-midnight-700 transition-colors"
+                        className="flex items-center justify-center gap-2 w-full rounded-lg px-4 py-3 mt-3 bg-tactical-red text-white hover:bg-tactical-red-hover transition-colors"
                       >
-                        <Shield className="h-4 w-4 ml-1" />
-                        <span className="font-heading text-xs font-medium uppercase tracking-wider">
+                        <Shield className="h-5 w-5" />
+                        <span className="font-heading text-sm font-bold uppercase tracking-wider">
                           {locale === "en" ? "Admin Panel" : "لوحة الإدارة"}
                         </span>
                       </Link>
