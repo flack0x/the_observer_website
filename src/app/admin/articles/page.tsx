@@ -25,7 +25,7 @@ import {
   MinusSquare,
   Smartphone,
 } from 'lucide-react';
-import { useAuth, ShowForAdmin } from '@/lib/auth';
+
 import { CATEGORIES } from '@/lib/categories';
 import { QuickEditModal } from '@/components/admin/articles';
 
@@ -60,8 +60,6 @@ const fetchArticles = async (url: string): Promise<ArticlesResponse> => {
 export default function AdminArticlesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profile } = useAuth();
-
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
 
@@ -403,20 +401,18 @@ export default function AdminArticlesPage() {
               )}
               Unpublish Selected
             </button>
-            <ShowForAdmin>
-              <button
-                onClick={handleBulkDelete}
-                disabled={bulkActionLoading !== null}
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm disabled:opacity-50"
-              >
-                {bulkActionLoading === 'delete' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                Delete Selected
-              </button>
-            </ShowForAdmin>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkActionLoading !== null}
+              className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm disabled:opacity-50"
+            >
+              {bulkActionLoading === 'delete' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Delete Selected
+            </button>
             <button
               onClick={() => setSelectedArticles(new Set())}
               className="px-3 py-1.5 text-slate-dark hover:text-slate-medium transition-colors text-sm"
@@ -595,15 +591,13 @@ export default function AdminArticlesPage() {
                                 {article.status === 'published' ? 'Unpublish' : 'Publish'}
                               </button>
                             )}
-                            <ShowForAdmin>
-                              <button
-                                onClick={() => handleDelete(article.telegram_id)}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-midnight-700 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Delete
-                              </button>
-                            </ShowForAdmin>
+                            <button
+                              onClick={() => handleDelete(article.telegram_id)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-midnight-700 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </button>
                           </div>
                         )}
                       </div>

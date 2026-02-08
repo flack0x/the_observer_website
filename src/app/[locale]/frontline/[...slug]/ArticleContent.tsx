@@ -164,20 +164,34 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
     setTimeout(() => setShowCopied(false), 2000);
   };
 
+  // Detect admin-created HTML content (from TipTap editor)
+  const isHtmlContent = /<(?:p|h[2-3]|ul|ol|blockquote)\b/.test(article.content);
+
   // Process and sanitize content
   const processedContent = useMemo(() => {
+    if (isHtmlContent) {
+      // Admin-created content: already HTML from TipTap, sanitize with expanded tags
+      return typeof window !== 'undefined'
+        ? DOMPurify.sanitize(article.content, {
+            ALLOWED_TAGS: ['h2', 'h3', 'p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'blockquote', 'br', 'img', 'u'],
+            ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'dir'],
+          })
+        : article.content;
+    }
+    // Telegram content: process markdown and sanitize
     const processed = processContent(article.content, article.title);
-    // Sanitize HTML to prevent XSS
     return typeof window !== 'undefined'
       ? DOMPurify.sanitize(processed, { ALLOWED_TAGS: ['strong', 'em', 'br'] })
       : processed;
-  }, [article.content, article.title]);
+  }, [article.content, article.title, isHtmlContent]);
 
-  // Format content into paragraphs
-  const paragraphs = processedContent
-    .split("\n\n")
-    .filter((p) => p.trim().length > 0)
-    .map((p) => p.trim());
+  // Format content into paragraphs (only for Telegram content)
+  const paragraphs = isHtmlContent
+    ? []
+    : processedContent
+        .split("\n\n")
+        .filter((p) => p.trim().length > 0)
+        .map((p) => p.trim());
 
   return (
     <article className="min-h-screen bg-midnight-900 py-8 sm:py-12 lg:py-16">
@@ -318,46 +332,63 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
           transition={{ delay: 0.2 }}
           className="prose prose-invert max-w-none"
         >
-          {paragraphs.map((paragraph, index) => {
-            // Strip HTML tags for text analysis
-            const plainText = paragraph.replace(/<[^>]+>/g, '');
+          {isHtmlContent ? (
+            <div
+              className="text-slate-medium leading-relaxed text-base sm:text-lg
+                [&>h2]:font-heading [&>h2]:text-xl [&>h2]:font-bold [&>h2]:text-slate-light [&>h2]:mt-8 [&>h2]:mb-4
+                [&>h3]:font-heading [&>h3]:text-lg [&>h3]:font-bold [&>h3]:text-slate-light [&>h3]:mt-6 [&>h3]:mb-3
+                [&>p]:mb-4
+                [&_strong]:text-slate-light [&_strong]:font-semibold
+                [&_em]:italic
+                [&_a]:text-tactical-red [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-tactical-red-hover
+                [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:mb-4 [&>ul]:space-y-1
+                [&>ol]:list-decimal [&>ol]:pl-6 [&>ol]:mb-4 [&>ol]:space-y-1
+                [&_li]:text-slate-medium
+                [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red/50 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-dark [&>blockquote]:my-4"
+              dangerouslySetInnerHTML={{ __html: processedContent }}
+            />
+          ) : (
+            paragraphs.map((paragraph, index) => {
+              // Strip HTML tags for text analysis
+              const plainText = paragraph.replace(/<[^>]+>/g, '');
 
-            // Check if it's a section header - must be SHORT and standalone (not a full paragraph)
-            // Only treat as header if it's a short line that's entirely bold OR a Roman numeral header
-            const isHeader =
-              (plainText.length < 60 && /^[IVX]+\.\s/.test(plainText)) ||
-              (plainText.length < 60 && paragraph.startsWith('<strong>') && paragraph.endsWith('</strong>'));
+              // Check if it's a section header - must be SHORT and standalone (not a full paragraph)
+              // Only treat as header if it's a short line that's entirely bold OR a Roman numeral header
+              const isHeader =
+                (plainText.length < 60 && /^[IVX]+\.\s/.test(plainText)) ||
+                (plainText.length < 60 && paragraph.startsWith('<strong>') && paragraph.endsWith('</strong>'));
 
-            // Skip footer content and empty paragraphs
-            if (
-              plainText.includes("@observer") ||
-              plainText.includes("@almuraqb") ||
-              plainText.startsWith("Link to") ||
-              plainText.startsWith("🔵") ||
-              plainText.length < 3 ||
-              /^\[.*?\]\(https?:\/\/(?:www\.)?al-muraqeb\.com[^)]*\)$/.test(plainText.trim())
-            ) {
-              return null;
-            }
+              // Skip footer content and empty paragraphs
+              if (
+                plainText.includes("@observer") ||
+                plainText.includes("@almuraqb") ||
+                plainText.startsWith("Link to") ||
+                plainText.startsWith("🔵") ||
+                plainText.length < 3 ||
+                /^\[.*?\]\(https?:\/\/(?:www\.)?al-muraqeb\.com[^)]*\)$/.test(plainText.trim())
+              ) {
+                return null;
+              }
 
-            if (isHeader) {
+              if (isHeader) {
+                return (
+                  <h2
+                    key={index}
+                    className="font-heading text-xl font-bold text-slate-light mt-8 mb-4 normal-case"
+                    dangerouslySetInnerHTML={{ __html: paragraph }}
+                  />
+                );
+              }
+
               return (
-                <h2
+                <p
                   key={index}
-                  className="font-heading text-xl font-bold text-slate-light mt-8 mb-4 normal-case"
+                  className="text-slate-medium leading-relaxed mb-4 text-base sm:text-lg [&>strong]:text-slate-light [&>strong]:font-semibold [&>em]:italic"
                   dangerouslySetInnerHTML={{ __html: paragraph }}
                 />
               );
-            }
-
-            return (
-              <p
-                key={index}
-                className="text-slate-medium leading-relaxed mb-4 text-base sm:text-lg [&>strong]:text-slate-light [&>strong]:font-semibold [&>em]:italic"
-                dangerouslySetInnerHTML={{ __html: paragraph }}
-              />
-            );
-          })}
+            })
+          )}
         </motion.div>
 
         {/* Interactions */}
