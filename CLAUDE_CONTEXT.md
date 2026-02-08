@@ -496,10 +496,20 @@ function dbArticleToFrontend(article: DBArticle): Article;
 
 ### Content Processing (`src/app/[locale]/frontline/[...slug]/ArticleContent.tsx`)
 
-```typescript
-// Comprehensive emoji regex for stripping decorative emojis
-const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}...]+/gu;
+**Dual rendering path** — detects content type and applies appropriate processing:
 
+```typescript
+// Detection: admin-created articles have HTML from TipTap editor
+const isHtmlContent = /<(?:p|h[2-3]|ul|ol|blockquote)\b/.test(article.content);
+```
+
+**HTML content (admin/TipTap)**: Skips `processContent()`, sanitizes with expanded DOMPurify tags:
+- `ALLOWED_TAGS`: h2, h3, p, strong, em, a, ul, ol, li, blockquote, br, img, u
+- `ALLOWED_ATTR`: href, target, rel, src, alt, class, dir
+- Rendered with Tailwind prose styling (headings, lists, links, blockquotes)
+
+**Telegram content**: Uses `processContent()` pipeline:
+```typescript
 function processContent(rawContent: string, title: string): string {
   // 1. Remove U+FFFD replacement characters
   // 2. Skip header section (title, category, countries)
@@ -509,6 +519,7 @@ function processContent(rawContent: string, title: string): string {
   // 6. Clean up multiple newlines
   // 7. Remove footer/channel references
 }
+// Sanitized with: ALLOWED_TAGS: ['strong', 'em', 'br']
 ```
 
 ## Supabase Clients
@@ -1256,7 +1267,7 @@ Short description
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
 ## Key Dependencies (package.json)
@@ -1343,15 +1354,18 @@ for r in result.data:
 ### Telegram session expired
 **Fix**: Re-authenticate via Telethon. For CI/CD, set `TELEGRAM_SESSION_STRING` environment variable.
 
-### Article content showing raw markdown
-**Symptoms**: `**text**` or `__text__` visible instead of bold/italic
+### Article content showing raw markdown or wall of text
+**Symptoms**: `**text**` or `__text__` visible, or HTML tags stripped (no headings/lists)
 
 **Location**: `src/app/[locale]/frontline/[...slug]/ArticleContent.tsx`
 
-**Fix**: The `processContent()` function converts Telegram markdown to HTML. If new formats appear:
-1. Check the raw content in database
-2. Update regex patterns in `processContent()`
-3. Rebuild and deploy
+**Fix**: Content uses dual rendering path:
+- **Telegram content**: `processContent()` converts markdown to HTML (limited tags)
+- **Admin/TipTap content**: Detected by `/<(?:p|h[2-3]|ul|ol|blockquote)\b/`, uses expanded DOMPurify tags
+1. Check raw content in database to determine source (HTML tags = admin, markdown = Telegram)
+2. For Telegram: update regex patterns in `processContent()`
+3. For admin: update DOMPurify ALLOWED_TAGS if new elements needed
+4. Rebuild and deploy
 
 ### Excerpts showing metadata or markdown
 **Location**: `src/lib/supabase.ts` → `sanitizeExcerpt()`
@@ -1378,6 +1392,12 @@ for r in result.data:
 | User Profiles | 1 | Admin configured |
 
 ## Recent Changes (Feb 2026)
+
+- **Admin Delete + Content Rendering Fix** (Feb 8):
+  - Removed `ShowForAdmin` wrappers from delete buttons in admin articles page
+    (redundant since admin dashboard is already behind auth; API has server-side check)
+  - Added dual rendering path in ArticleContent: TipTap HTML vs Telegram markdown
+  - Admin-created articles now render with proper headings, lists, links, blockquotes
 
 - **Admin Panel Mobile Responsiveness** (Feb 7):
   - Admin panel now uses same Header as main site (including news ticker)
