@@ -311,12 +311,13 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
                 </video>
               </div>
             ) : article.imageUrl ? (
-              <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-midnight-800">
+              <div className="relative w-full overflow-hidden rounded-xl bg-midnight-800">
                 <Image
                   src={article.imageUrl}
                   alt={article.title}
-                  fill
-                  className="object-cover"
+                  width={1200}
+                  height={675}
+                  className="w-full h-auto object-contain"
                   sizes="(max-width: 768px) 100vw, 768px"
                   priority
                 />
@@ -344,7 +345,8 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
                 [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:mb-4 [&>ul]:space-y-1
                 [&>ol]:list-decimal [&>ol]:pl-6 [&>ol]:mb-4 [&>ol]:space-y-1
                 [&_li]:text-slate-medium
-                [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red/50 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-dark [&>blockquote]:my-4"
+                [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red/50 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-dark [&>blockquote]:my-4
+                [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4"
               dangerouslySetInnerHTML={{ __html: processedContent }}
             />
           ) : (

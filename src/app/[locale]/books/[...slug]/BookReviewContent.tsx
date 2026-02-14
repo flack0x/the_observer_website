@@ -166,7 +166,7 @@ export default function BookReviewContent({ review, locale, dict }: BookReviewCo
                   {dict.books.aboutBook}
                 </h2>
                 <div
-                  className="prose prose-invert prose-sm max-w-none text-slate-medium leading-relaxed [&>p]:mb-3 [&>h3]:text-slate-light [&>h3]:font-heading [&>h3]:text-sm [&>h3]:font-bold [&>h3]:mt-4 [&>h3]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-light"
+                  className="prose prose-invert prose-sm max-w-none text-slate-medium leading-relaxed [&>p]:mb-3 [&>h3]:text-slate-light [&>h3]:font-heading [&>h3]:text-sm [&>h3]:font-bold [&>h3]:mt-4 [&>h3]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-light [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4"
                   dangerouslySetInnerHTML={{ __html: review.description }}
                 />
               </div>
@@ -321,7 +321,7 @@ export default function BookReviewContent({ review, locale, dict }: BookReviewCo
                   {dict.books.aboutBook}
                 </h2>
                 <div
-                  className="prose prose-invert max-w-none text-slate-medium leading-relaxed [&>p]:mb-4 [&>h3]:text-slate-light [&>h3]:font-heading [&>h3]:text-base [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-light"
+                  className="prose prose-invert max-w-none text-slate-medium leading-relaxed [&>p]:mb-4 [&>h3]:text-slate-light [&>h3]:font-heading [&>h3]:text-base [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>blockquote]:border-l-4 [&>blockquote]:border-tactical-red [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-light [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4"
                   dangerouslySetInnerHTML={{ __html: review.description }}
                 />
               </motion.div>
