@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/admin/logActivity';
 import { generateSlug } from '@/lib/slugify';
 
+export const preferredRegion = 'bom1';
+
 // GET /api/admin/articles - List articles with filters
 export async function GET(request: NextRequest) {
   try {

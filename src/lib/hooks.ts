@@ -36,6 +36,22 @@ function parseArticleDates(articles: unknown[]): Article[] {
   });
 }
 
+// Fetch with retry for resilience against transient failures
+async function fetchWithRetry(url: string, options: RequestInit, retries = 2): Promise<Response> {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      if (i === retries) return response;
+    } catch (err) {
+      if (i === retries) throw err;
+    }
+    // Wait before retry (200ms, 500ms)
+    await new Promise(r => setTimeout(r, (i + 1) * 200));
+  }
+  throw new Error("Failed after retries");
+}
+
 // Hook to fetch articles on the client side
 export function useArticles(channel: "en" | "ar" | "all" = "en") {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -47,16 +63,19 @@ export function useArticles(channel: "en" | "ar" | "all" = "en") {
       try {
         setLoading(true);
         // Add timestamp to prevent caching
-        const response = await fetch(`/api/articles?channel=${channel}&t=${Date.now()}`, {
-          cache: 'no-store',
-          headers: {
-            'Pragma': 'no-cache',
-            'Cache-Control': 'no-cache'
+        const response = await fetchWithRetry(
+          `/api/articles?channel=${channel}&t=${Date.now()}`,
+          {
+            cache: 'no-store',
+            headers: {
+              'Pragma': 'no-cache',
+              'Cache-Control': 'no-cache'
+            }
           }
-        });
+        );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch articles");
+          throw new Error(`Failed to fetch articles (${response.status})`);
         }
 
         const data = await response.json();
@@ -69,9 +88,16 @@ export function useArticles(channel: "en" | "ar" | "all" = "en") {
           ];
           setArticles(combined);
         } else {
-          setArticles(parseArticleDates(data));
+          // Ensure data is an array before parsing
+          if (Array.isArray(data)) {
+            setArticles(parseArticleDates(data));
+          } else {
+            console.error("Unexpected articles response format:", typeof data);
+            setArticles([]);
+          }
         }
       } catch (err) {
+        console.error("Articles fetch error:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
@@ -112,15 +138,16 @@ export function useMetrics() {
     async function fetchMetrics() {
       try {
         setLoading(true);
-        const response = await fetch("/api/metrics");
+        const response = await fetchWithRetry("/api/metrics", {});
 
         if (!response.ok) {
-          throw new Error("Failed to fetch metrics");
+          throw new Error(`Failed to fetch metrics (${response.status})`);
         }
 
         const data = await response.json();
         setMetrics(data);
       } catch (err) {
+        console.error("Metrics fetch error:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);

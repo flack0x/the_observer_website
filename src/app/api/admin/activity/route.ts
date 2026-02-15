@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const preferredRegion = 'bom1';
+
 // GET /api/admin/activity - Get activity log with filters
 export async function GET(request: NextRequest) {
   try {

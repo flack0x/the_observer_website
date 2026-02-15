@@ -3,6 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { rateLimit, getClientIdentifier, subscribeConfig } from "@/lib/rate-limit";
 import type { Locale } from "@/lib/i18n";
 
+export const preferredRegion = 'bom1';
+
 interface SubscribeRequestBody {
   email: string;
   locale?: Locale;

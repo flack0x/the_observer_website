@@ -4,6 +4,7 @@ import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 // Always fetch fresh from database
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'bom1';
 
 // Fisher-Yates shuffle for randomizing headlines
 function shuffle<T>(array: T[]): T[] {

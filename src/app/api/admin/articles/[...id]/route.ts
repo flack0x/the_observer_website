@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/admin/logActivity';
 
+export const preferredRegion = 'bom1';
+
 interface RouteParams {
   params: Promise<{ id: string[] }>;
 }

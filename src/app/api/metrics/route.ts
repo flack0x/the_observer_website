@@ -4,6 +4,9 @@ import { supabase } from "@/lib/supabase";
 // Always fetch fresh
 export const dynamic = 'force-dynamic';
 
+// Run function closer to Supabase (Mumbai)
+export const preferredRegion = 'bom1';
+
 export async function GET() {
   try {
     // Fetch the latest metrics snapshot

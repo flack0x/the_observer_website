@@ -4,6 +4,7 @@ import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 // Always fetch fresh from database
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'bom1';
 
 export async function GET(request: Request) {
   // Rate limiting - 100 requests per minute per IP (default)

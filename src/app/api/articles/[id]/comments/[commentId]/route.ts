@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'bom1';
 
 // Create admin client
 const supabaseAdmin = createClient(

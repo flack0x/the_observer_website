@@ -745,6 +745,7 @@ def parse_message(message: Message, channel: str, channel_username: str) -> dict
         'is_structured': is_structured,
         'telegram_link': f"https://t.me/{channel_username}/{message.id}",
         'telegram_date': message.date.isoformat(),
+        'status': 'published',
     }
 
 
@@ -837,6 +838,7 @@ def combine_message_group(messages: list[Message], channel: str, channel_usernam
         'is_structured': is_structured,
         'telegram_link': f"https://t.me/{channel_username}/{first_message.id}",
         'telegram_date': first_message.date.isoformat(),
+        'status': 'published',
         '_part_count': len(sorted_messages),  # For logging
         '_message_id': first_message.id,  # For tracking
     }
