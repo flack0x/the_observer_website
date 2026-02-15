@@ -764,6 +764,7 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260205130000_enforce_article_slugs.sql` | NOT NULL + unique index on slug per channel |
 | `20260205140000_add_fulltext_search.sql` | tsvector column + GIN index + trigger for full-text search |
 | `20260215120000_fix_security_warnings.sql` | Fix function search_path + restrict RLS policies |
+| `20260215130000_fix_rls_performance.sql` | Fix RLS initplan + merge duplicate policies + drop unused indexes |
 
 ### articles
 | Column | Type | Notes |
@@ -1419,6 +1420,12 @@ for r in result.data:
     - Added email regex validation on `subscribers` INSERT
   - Enabled leaked password protection (HIBP) via Supabase Auth config
   - Added `status: 'published'` to fetch_telegram.py (both parse_message and combine_message_group)
+  - Performance migration `20260215130000_fix_rls_performance.sql`:
+    - Wrapped `auth.uid()`/`auth.role()` in `(select ...)` across 16 RLS policies (per-statement eval)
+    - Merged duplicate permissive policies on `article_comments`, `book_reviews`
+    - Dropped redundant `service_role` policies on `news_headlines`, `activity_log`
+    - Added FK indexes on `article_shares.user_id`, `book_reviews.author_id/last_edited_by`
+    - Dropped 19 unused indexes (kept GIN search indexes)
 
 - **Admin Delete + Content Rendering Fix** (Feb 8):
   - Removed `ShowForAdmin` wrappers from delete buttons in admin articles page
