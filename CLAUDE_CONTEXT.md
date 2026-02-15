@@ -18,10 +18,11 @@ Bilingual (EN/AR) geopolitical intelligence news platform. Aggregates content fr
 ### Supabase
 - **Project**: `TheObserver`
 - **Reference ID**: `gbqvivmfivsuvvdkoiuc`
-- **Region**: South Asia (Mumbai)
+- **Region**: South Asia (Mumbai) — `bom1`
 - **Database**: PostgreSQL 17
-- **CLI Version**: 2.72.7
+- **CLI Version**: 2.76.8
 - **Storage Bucket**: `article-media` (50MB limit, images/videos)
+- **Auth**: Leaked password protection (HIBP) enabled
 
 ### Environment Variables (Vercel Production)
 ```
@@ -115,7 +116,7 @@ Article content...
 - **Concurrency**: `telegram-fetch` group (prevents parallel runs)
 - **Jobs**:
   1. `fetch_telegram.py` - Fetches new messages from Telegram
-  2. `analyze_articles.py` - Computes metrics
+  2. `analyze_articles.py` - Computes metrics (NOTE: script not in repo, metrics may be stale)
 
 - **Workflow**: `.github/workflows/fetch-headlines.yml`
 - **Schedule**: Every 30 minutes (`*/30 * * * *`) + manual dispatch
@@ -762,6 +763,7 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260205120000_add_article_slugs.sql` | Add slug column to articles |
 | `20260205130000_enforce_article_slugs.sql` | NOT NULL + unique index on slug per channel |
 | `20260205140000_add_fulltext_search.sql` | tsvector column + GIN index + trigger for full-text search |
+| `20260215120000_fix_security_warnings.sql` | Fix function search_path + restrict RLS policies |
 
 ### articles
 | Column | Type | Notes |
@@ -904,31 +906,28 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 
 ### RPC Functions
 
+All RPC and trigger functions use `SECURITY DEFINER` + `SET search_path = public` (fixed in migration `20260215120000`).
+
 **`increment_view_count(p_article_id BIGINT)`**
 - Atomically increments article view count
 - Called from article detail pages
-- `SECURITY DEFINER` - bypasses RLS
 
 **`guest_vote(p_article_id BIGINT, p_session_id TEXT, p_interaction_type TEXT)`**
 - Adds or changes a guest vote (like/dislike)
 - Deletes existing vote first, then inserts new one
-- `SECURITY DEFINER` - bypasses RLS for secure guest operations
 
 **`guest_unvote(p_article_id BIGINT, p_session_id TEXT)`**
 - Removes a guest vote
-- `SECURITY DEFINER` - bypasses RLS
 
 **`guest_comment(p_article_id BIGINT, p_session_id TEXT, p_guest_name TEXT, p_content TEXT, p_parent_id UUID DEFAULT NULL)`**
 - Creates a comment as a guest user
 - Validates content (3-2000 chars) and name (1-50 chars)
 - Returns UUID of created comment
-- `SECURITY DEFINER` - bypasses RLS
 
 **`guest_delete_comment(p_comment_id UUID, p_session_id TEXT)`**
 - Deletes a guest comment by verifying session ownership
 - Only deletes if `session_id` matches AND `user_id IS NULL`
 - Returns boolean success indicator
-- `SECURITY DEFINER` - bypasses RLS
 
 ## Middleware (`middleware.ts`)
 
@@ -1010,6 +1009,8 @@ Theme toggle in Header (desktop + mobile).
 
 ## API Routes
 
+All API route files export `preferredRegion = 'bom1'` to co-locate serverless functions with the Supabase database in Mumbai, reducing latency.
+
 ### Public APIs
 
 **GET /api/articles**
@@ -1050,8 +1051,8 @@ Theme toggle in Header (desktop + mobile).
 
 ```typescript
 // src/lib/hooks.ts
-useArticles(channel: 'en' | 'ar' | 'all')
-useMetrics()
+useArticles(channel: 'en' | 'ar' | 'all')  // Uses fetchWithRetry (2 retries, 200/500ms backoff)
+useMetrics()                                 // Uses fetchWithRetry
 useBreakingNews(locale)
 useBookReviews(channel: 'en' | 'ar')
 ```
@@ -1345,6 +1346,19 @@ for r in result.data:
 1. Lower `MIN_MESSAGE_LENGTH` if needed
 2. Check message timestamps in Telegram
 
+### Articles showing 0 / "No articles found"
+**Symptoms**: Stats show 0, Live Feed says "No articles found", but database has data
+
+**Causes**:
+1. Cross-region latency: Vercel functions default to US East, Supabase is in Mumbai
+2. Silent fetch failures in client-side hooks (errors caught but not surfaced)
+
+**Fix**:
+1. Ensure all API routes have `export const preferredRegion = 'bom1';`
+2. Ensure `vercel.json` has `"regions": ["bom1"]`
+3. Check browser console for fetch errors (hooks now log with console.error)
+4. Redeploy: `npx vercel --prod`
+
 ### Changes not showing on website
 **Causes**:
 1. Browser cache → Hard refresh (Ctrl+F5)
@@ -1381,17 +1395,30 @@ for r in result.data:
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Feb 7, 2026)
+## Database Stats (Feb 15, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (total) | 635+ | EN + AR combined, all with SEO slugs |
+| Articles (total) | 729 | EN + AR combined, 727 published, 2 draft |
 | Book Reviews | 14 | 7 EN, 7 AR published |
 | News Headlines | 200+ | Active from RSS feeds |
 | Activity Log | Active | Tracks admin actions |
 | User Profiles | 1 | Admin configured |
 
 ## Recent Changes (Feb 2026)
+
+- **Security & Reliability Fixes** (Feb 15):
+  - Added `preferredRegion = 'bom1'` to all 15 API route files + `regions: ["bom1"]` in vercel.json
+    (co-locates Vercel functions with Supabase Mumbai, fixes intermittent article loading failures)
+  - Added `fetchWithRetry` helper in hooks.ts (2 retries, 200/500ms backoff) for resilience
+  - Added array type check and console.error logging in useArticles/useMetrics hooks
+  - Security migration `20260215120000_fix_security_warnings.sql`:
+    - Fixed 10 functions with `SECURITY DEFINER` + `SET search_path = public`
+    - Restricted `book_reviews` INSERT/UPDATE to admin/editor, DELETE to admin only
+    - Added `article_id`/`platform` NOT NULL validation on `article_shares` INSERT
+    - Added email regex validation on `subscribers` INSERT
+  - Enabled leaked password protection (HIBP) via Supabase Auth config
+  - Added `status: 'published'` to fetch_telegram.py (both parse_message and combine_message_group)
 
 - **Admin Delete + Content Rendering Fix** (Feb 8):
   - Removed `ShowForAdmin` wrappers from delete buttons in admin articles page
