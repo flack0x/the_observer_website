@@ -4,6 +4,7 @@
 Bilingual (EN/AR) geopolitical intelligence news platform. Aggregates content from Telegram channels via automated pipeline, displays with analytics dashboard. Includes admin dashboard for content management and book reviews section.
 
 **Live Site**: https://al-muraqeb.com
+**GitHub**: https://github.com/flack0x/the_observer_website (public)
 
 ## Deployment & Infrastructure
 
@@ -765,6 +766,9 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260205140000_add_fulltext_search.sql` | tsvector column + GIN index + trigger for full-text search |
 | `20260215120000_fix_security_warnings.sql` | Fix function search_path + restrict RLS policies |
 | `20260215130000_fix_rls_performance.sql` | Fix RLS initplan + merge duplicate policies + drop unused indexes |
+| `20260215140000_fix_missing_fk_indexes.sql` | Re-add FK indexes + drop remaining unused indexes |
+| `20260216120000_fix_guest_delete_type.sql` | Fix type mismatch in guest_delete_comment (BOOLEAN → INTEGER) |
+| `20260216130000_fix_comments_parent_index.sql` | Re-add parent_id index for comments FK |
 
 ### articles
 | Column | Type | Notes |
@@ -1396,11 +1400,11 @@ for r in result.data:
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Feb 15, 2026)
+## Database Stats (Feb 16, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (total) | 729 | EN + AR combined, 727 published, 2 draft |
+| Articles (total) | 736 | 347 EN + 389 AR, mostly published |
 | Book Reviews | 14 | 7 EN, 7 AR published |
 | News Headlines | 200+ | Active from RSS feeds |
 | Activity Log | Active | Tracks admin actions |
@@ -1426,6 +1430,12 @@ for r in result.data:
     - Dropped redundant `service_role` policies on `news_headlines`, `activity_log`
     - Added FK indexes on `article_shares.user_id`, `book_reviews.author_id/last_edited_by`
     - Dropped 19 unused indexes (kept GIN search indexes)
+  - Fix migrations `20260215140000`, `20260216120000`, `20260216130000`:
+    - Re-added FK indexes accidentally dropped (activity_log, article_comments, article_revisions, articles)
+    - Fixed `guest_delete_comment` type mismatch (ROW_COUNT returns INTEGER, not BOOLEAN)
+    - Re-added `idx_comments_parent` for article_comments.parent_id FK
+    - Dropped remaining unused non-FK indexes (countries, organizations, search GIN, comments_parent)
+  - Changed GitHub repo from private to public (fixes Actions billing — unlimited free minutes)
 
 - **Admin Delete + Content Rendering Fix** (Feb 8):
   - Removed `ShowForAdmin` wrappers from delete buttons in admin articles page
