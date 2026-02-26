@@ -165,11 +165,15 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
   };
 
   // Detect admin-created HTML content (from TipTap editor).
-  // Content that still has raw markdown syntax (**text**) was a Telegram article edited
-  // via TipTap — it got wrapped in <p> tags but the markdown was never converted,
-  // so route it through the markdown processor instead.
-  const hasRawMarkdown = /\*\*[^*]+\*\*/.test(article.content);
-  const isHtmlContent = /<(?:p|h[2-3]|ul|ol|blockquote)\b/.test(article.content) && !hasRawMarkdown;
+  // TipTap always converts bold to <strong> tags. If content has <p> tags but
+  // uses raw **markdown** bold with NO <strong> tags, it was a Telegram article
+  // that got accidentally saved through TipTap without markdown conversion —
+  // route it through the markdown processor instead.
+  const isHtmlWrappedMarkdown =
+    /<(?:p|h[2-3]|ul|ol|blockquote)\b/.test(article.content) &&
+    /\*\*[^*]+\*\*/.test(article.content) &&
+    !/<strong\b/.test(article.content);
+  const isHtmlContent = /<(?:p|h[2-3]|ul|ol|blockquote)\b/.test(article.content) && !isHtmlWrappedMarkdown;
 
   // Process and sanitize content
   const processedContent = useMemo(() => {
@@ -369,10 +373,12 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
               const plainText = paragraph.replace(/<[^>]+>/g, '');
 
               // Check if it's a section header - must be SHORT and standalone (not a full paragraph)
-              // Only treat as header if it's a short line that's entirely bold OR a Roman numeral header
+              // Treat as header if: Roman numeral (I. II.), Arabic numeral (1. 2.),
+              // or a short line that is entirely bold.
               const isHeader =
-                (plainText.length < 60 && /^[IVX]+\.\s/.test(plainText)) ||
-                (plainText.length < 60 && paragraph.startsWith('<strong>') && paragraph.endsWith('</strong>'));
+                (plainText.length < 80 && /^[IVX]+\.\s/.test(plainText)) ||
+                (plainText.length < 80 && /^\d+\.\s.+/.test(plainText)) ||
+                (plainText.length < 80 && paragraph.startsWith('<strong>') && paragraph.endsWith('</strong>'));
 
               // Skip footer content and empty paragraphs
               if (
