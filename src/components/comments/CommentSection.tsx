@@ -37,6 +37,7 @@ interface Comment {
   userId: string | null;
   sessionId: string | null;
   isGuest: boolean;
+  source?: string;
   author: {
     name: string;
     avatar: string | null;
@@ -65,6 +66,7 @@ interface CommentSectionProps {
       replyingTo: string;
       guestName: string;
       guestLabel: string;
+      telegramLabel: string;
     };
   };
 }
@@ -373,8 +375,8 @@ export default function CommentSection({ articleId, locale, dict }: CommentSecti
                 {comment.author.name}
               </span>
               {comment.isGuest && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-midnight-700 text-slate-dark">
-                  {dict.comments.guestLabel}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded ${comment.source === 'telegram' ? 'bg-[#2AABEE]/15 text-[#2AABEE]' : 'bg-midnight-700 text-slate-dark'}`}>
+                  {comment.source === 'telegram' ? dict.comments.telegramLabel : dict.comments.guestLabel}
                 </span>
               )}
               <span className="text-xs text-slate-dark">

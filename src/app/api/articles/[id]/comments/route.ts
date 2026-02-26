@@ -28,7 +28,7 @@ export async function GET(
     // Fetch comments (including guest fields)
     const { data: comments, error } = await supabaseAdmin
       .from('article_comments')
-      .select('id, content, parent_id, is_edited, created_at, user_id, guest_name, session_id')
+      .select('id, content, parent_id, is_edited, created_at, user_id, guest_name, session_id, source')
       .eq('article_id', articleId)
       .eq('is_approved', true)
       .order('created_at', { ascending: true });
@@ -65,6 +65,7 @@ export async function GET(
         userId: comment.user_id,
         sessionId: comment.session_id,
         isGuest,
+        source: comment.source || 'website',
         author: {
           name: isGuest ? comment.guest_name : (profile?.full_name || 'Anonymous'),
           avatar: isGuest ? null : (profile?.avatar_url || null),

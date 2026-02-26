@@ -311,6 +311,7 @@ const dictionaries = {
       replyingTo: 'Replying to',
       guestName: 'Your name',
       guestLabel: 'Guest',
+      telegramLabel: 'Telegram',
     },
   },
   ar: {
@@ -623,6 +624,7 @@ const dictionaries = {
       replyingTo: 'الرد على',
       guestName: 'اسمك',
       guestLabel: 'زائر',
+      telegramLabel: 'تيليجرام',
     },
   },
 };
