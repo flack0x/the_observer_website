@@ -55,10 +55,15 @@ CRON_SECRET
 Telegram Channels → fetch_telegram.py → AI Analysis → Supabase → Next.js API → Frontend
      ↓                    ↓                  ↓
 @observer_5 (EN)    Groups multi-part    Extracts:
-@almuraqb (AR)      posts (180s window)  - title, excerpt
+@almuraqb (AR)      posts (600s window)  - title, excerpt
                                          - category
                                          - countries[]
                                          - organizations[]
+
+Discussion Groups → fetch_telegram.py --comments → article_comments table → Frontend
+     ↓                        ↓
+Linked to channels    Maps comments to articles via
+via GetFullChannel    channel_post_id → telegram_id
 ```
 
 ### Telegram Channels
@@ -116,7 +121,7 @@ Article content...
 - **Schedule**: Hourly cron (`0 * * * *`) + manual dispatch
 - **Concurrency**: `telegram-fetch` group (prevents parallel runs)
 - **Jobs**:
-  1. `fetch_telegram.py` - Fetches new messages from Telegram
+  1. `fetch_telegram.py --comments` - Fetches new messages from Telegram + syncs discussion group comments
   2. `analyze_articles.py` - Computes metrics (NOTE: script not in repo, metrics may be stale)
 
 - **Workflow**: `.github/workflows/fetch-headlines.yml`
@@ -127,7 +132,7 @@ Article content...
 
 **fetch_telegram.py Features**:
 - Incremental sync (tracks last synced message ID per channel)
-- Groups consecutive messages within 180 seconds (multi-part articles)
+- Groups consecutive messages within 600 seconds (multi-part articles); continuation messages (no header, starts lowercase) grouped up to 1800s
 - Combines multi-part posts into single articles
 - Multi-format header parsing:
   - `**Title**` with value on next line (bold)
@@ -138,7 +143,13 @@ Article content...
 - Auto-detection fallback for unstructured posts
 - Downloads and uploads images/videos to Supabase Storage
 - Minimum message length: 20 chars (allows short headers in multi-part posts)
-- Use `--full` flag to force complete re-sync
+- **Comment sync** from linked discussion groups (via `--comments` flag):
+  - Auto-discovers linked discussion group via `GetFullChannelRequest`
+  - Maps comments to articles by walking reply chain to find forwarded channel post
+  - Deduplicates via `telegram_message_id` unique index
+  - Guest pattern: `guest_name` from sender, `session_id` = `tg_{sender_id}`
+  - Comments marked with `source = 'telegram'` (shown with Telegram badge on frontend)
+- CLI flags: `--full`, `--channel`, `--limit`, `--comments`, `--comments-only`, `--dry-run`
 
 **Frontend Title Sanitization** (`src/lib/supabase.ts`):
 - `sanitizeTitle()` strips `TITLE:` / `العنوان:` prefixes
@@ -614,6 +625,9 @@ await supabase.rpc('guest_delete_comment', { p_comment_id, p_session_id });
 // Guest name persistence (stored separately from session ID)
 localStorage.getItem('guest_comment_name');
 localStorage.setItem('guest_comment_name', name);
+
+// Telegram comments use session_id = "tg_{sender_id}" and source = "telegram"
+// They are auto-approved (is_approved = true) and have telegram_message_id set
 ```
 
 ## Component Patterns
@@ -688,6 +702,7 @@ dict.footer        // { about, privacy, subscribe, ... }
 dict.countries     // { Russia: "Russia"/"روسيا", Iran: "Iran"/"إيران", ... }
 dict.about         // { title, missionTitle, principlesTitle, ... }
 dict.community     // { joinNetwork, telegramEnglish, ... }
+dict.comments      // { title, placeholder, guestLabel, telegramLabel, ... }
 ```
 
 ## External Voices System (`src/lib/voices.ts`)
@@ -769,6 +784,7 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | `20260215140000_fix_missing_fk_indexes.sql` | Re-add FK indexes + drop remaining unused indexes |
 | `20260216120000_fix_guest_delete_type.sql` | Fix type mismatch in guest_delete_comment (BOOLEAN → INTEGER) |
 | `20260216130000_fix_comments_parent_index.sql` | Re-add parent_id index for comments FK |
+| `20260217120000_add_telegram_comment_fields.sql` | Add telegram_message_id + source columns for Telegram comment sync |
 
 ### articles
 | Column | Type | Notes |
@@ -839,10 +855,13 @@ getFeaturedVoices(limit: number): ExternalVoice[]  // Get first N voices for hom
 | content | text | 3-2000 characters |
 | is_approved | boolean | For moderation (default true) |
 | is_edited | boolean | Auto-set on update |
+| telegram_message_id | text | Dedup key for Telegram comments: `{group_id}/{msg_id}` (partial unique index) |
+| source | text | `'website'` (default) or `'telegram'` |
 | created_at | timestamptz | |
 | updated_at | timestamptz | |
 
 **Constraint**: `comment_author_check` — every comment must have either `user_id` (authenticated) OR both `guest_name` AND `session_id` (guest).
+**Index**: `idx_comments_telegram_msg_id` — unique partial index on `telegram_message_id WHERE NOT NULL`.
 
 ### book_reviews
 | Column | Type | Notes |
@@ -1302,10 +1321,13 @@ npm run dev                    # Start Next.js dev server (port 3000)
 ### Running Telegram sync manually
 ```bash
 cd scripts
-python fetch_telegram.py              # Incremental sync (new messages only)
-python fetch_telegram.py --full       # Full sync (re-process all)
-python fetch_telegram.py --channel en # Sync only English channel
-python fetch_telegram.py --channel ar # Sync only Arabic channel
+python fetch_telegram.py                    # Incremental article sync (new messages only)
+python fetch_telegram.py --full             # Full sync (re-process all articles)
+python fetch_telegram.py --channel en       # Sync only English channel
+python fetch_telegram.py --channel ar       # Sync only Arabic channel
+python fetch_telegram.py --comments         # Sync articles AND discussion group comments
+python fetch_telegram.py --comments-only    # Only sync comments (skip articles)
+python fetch_telegram.py --comments-only --dry-run  # Preview what comments would be synced
 ```
 
 ### Viewing raw data (debugging)
@@ -1340,16 +1362,21 @@ for r in result.data:
 2. Update `parse_structured_header()` in `scripts/fetch_telegram.py`
 3. Run full sync: `python scripts/fetch_telegram.py --full`
 
-### Multi-part articles not grouped
-**Symptoms**: Article starts with "2." or "3." (missing first part)
+### Multi-part articles not grouped / split into separate articles
+**Symptoms**: Article starts mid-sentence, or a stub article appears with a garbled title (e.g. "decries domestic issues in Iran")
 
 **Causes**:
 1. First message too short (< 20 chars) → filtered out
-2. Time gap > 180 seconds between parts
+2. Time gap > 600 seconds between parts AND second part has a proper header (doesn't look like a continuation)
 
 **Fix**:
-1. Lower `MIN_MESSAGE_LENGTH` if needed
-2. Check message timestamps in Telegram
+1. Run `gh workflow run fetch-articles.yml -f full_sync=true` — the continuation detection will re-group and restore the article
+2. If already merged manually via admin and content got overwritten, same command restores from Telegram
+3. Lower `MIN_MESSAGE_LENGTH` if needed
+
+**How continuation detection works** (`fetch_telegram.py` → `is_continuation_message()`):
+- If a message has no structured header (`**Title**` / `TITLE:`) AND starts with a lowercase letter → always grouped with previous message (up to 1800s / 30 min)
+- Arabic numeral sections starting with `2.`+ are also treated as continuations
 
 ### Articles showing 0 / "No articles found"
 **Symptoms**: Stats show 0, Live Feed says "No articles found", but database has data
@@ -1378,13 +1405,20 @@ for r in result.data:
 
 **Location**: `src/app/[locale]/frontline/[...slug]/ArticleContent.tsx`
 
-**Fix**: Content uses dual rendering path:
-- **Telegram content**: `processContent()` converts markdown to HTML (limited tags)
-- **Admin/TipTap content**: Detected by `/<(?:p|h[2-3]|ul|ol|blockquote)\b/`, uses expanded DOMPurify tags
-1. Check raw content in database to determine source (HTML tags = admin, markdown = Telegram)
-2. For Telegram: update regex patterns in `processContent()`
-3. For admin: update DOMPurify ALLOWED_TAGS if new elements needed
-4. Rebuild and deploy
+**How the dual rendering path works**:
+- **TipTap/admin HTML**: detected when content has `<p>`/`<h2>`/etc tags AND has `<strong>` tags → rendered via `dangerouslySetInnerHTML` with DOMPurify expanded tags
+- **Telegram markdown** (or HTML-wrapped markdown): everything else → `processContent()` converts `**bold**` → `<strong>`, strips headers, splits into paragraphs
+- **Edge case — TipTap-saved Telegram content**: has `<p>` tags but `**bold**` markdown and NO `<strong>` tags (TipTap kept raw markdown) → `isHtmlWrappedMarkdown=true` → HTML stripped, then processed as markdown
+
+**Fix**:
+1. Check raw content in database (HTML tags + `<strong>` = admin, raw `**` = Telegram)
+2. If article shows raw `**` asterisks: run full sync to restore from Telegram — `gh workflow run fetch-articles.yml -f full_sync=true`
+3. For Telegram: update regex patterns in `processContent()`
+4. For admin: update DOMPurify ALLOWED_TAGS if new elements needed
+
+**Section headers in Telegram articles**: detected as `<h2>` if:
+- Short line (< 80 chars) starting with Roman numerals (`I.`, `II.`) or Arabic numerals (`1.`, `2.`)
+- Short line (< 80 chars) that is entirely bold (`<strong>...</strong>`)
 
 ### Excerpts showing metadata or markdown
 **Location**: `src/lib/supabase.ts` → `sanitizeExcerpt()`
@@ -1400,17 +1434,38 @@ for r in result.data:
 - **Connect**: Telegram EN/AR links
 - **Newsletter**: Email subscription form in top section
 
-## Database Stats (Feb 16, 2026)
+## Database Stats (Feb 26, 2026)
 
 | Table | Count | Notes |
 |-------|-------|-------|
-| Articles (total) | 736 | 347 EN + 389 AR, mostly published |
+| Articles (total) | 872 | EN + AR, mostly published |
 | Book Reviews | 14 | 7 EN, 7 AR published |
 | News Headlines | 200+ | Active from RSS feeds |
 | Activity Log | Active | Tracks admin actions |
 | User Profiles | 1 | Admin configured |
 
 ## Recent Changes (Feb 2026)
+
+- **Multi-part Article Grouping & Content Rendering Fixes** (Feb 26):
+  - `fetch_telegram.py`: increased grouping window from 180s → 600s
+  - Added `is_continuation_message()`: messages with no header starting lowercase always grouped with previous (up to 1800s)
+  - `ArticleContent.tsx`: added precise `isHtmlWrappedMarkdown` detection (has `<p>` + raw `**` + no `<strong>`) to correctly route TipTap-saved Telegram content through markdown processor
+  - Added Arabic numeral section header detection (`1.`, `2.` etc.) alongside Roman numerals; bumped header length limit to 80 chars
+  - `fetch-articles.yml`: added `full_sync` workflow_dispatch input (set to `true` to force re-sync / restore overwritten articles)
+  - To restore a broken/overwritten article: `gh workflow run fetch-articles.yml -f full_sync=true`
+
+- **Telegram Discussion Group Comment Sync** (Feb 17):
+  - New pipeline: syncs comments from Telegram discussion groups into `article_comments` table
+  - Extended `fetch_telegram.py` with `--comments`, `--comments-only`, `--dry-run` flags
+  - Auto-discovers linked discussion groups via `GetFullChannelRequest`
+  - Resolves comment→article mapping by walking reply chains to find forwarded channel posts
+  - Deduplication via `telegram_message_id` unique partial index
+  - Comments use guest pattern: `guest_name` from Telegram sender, `session_id = tg_{sender_id}`
+  - New `source` column (`'website'` | `'telegram'`) on `article_comments`
+  - Frontend shows Telegram-branded badge (blue) for telegram-sourced comments
+  - Added `telegramLabel` to EN/AR dictionaries
+  - GitHub Actions workflow now runs `fetch_telegram.py --comments` (articles + comments)
+  - Migration: `20260217120000_add_telegram_comment_fields.sql`
 
 - **Security & Reliability Fixes** (Feb 15):
   - Added `preferredRegion = 'bom1'` to all 15 API route files + `regions: ["bom1"]` in vercel.json
