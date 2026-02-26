@@ -5,8 +5,17 @@ on:
   schedule:
     - cron: '0 * * * *'
 
-  # Allow manual trigger
+  # Allow manual trigger with optional full sync
   workflow_dispatch:
+    inputs:
+      full_sync:
+        description: 'Force full re-sync (restores overwritten articles)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 # Only allow one run at a time to prevent Telegram session conflicts
 concurrency:
@@ -40,4 +49,8 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
-          python fetch_telegram.py
+          FULL_FLAG=""
+          if [ "${{ github.event.inputs.full_sync }}" = "true" ]; then
+            FULL_FLAG="--full"
+          fi
+          python fetch_telegram.py --comments $FULL_FLAG
