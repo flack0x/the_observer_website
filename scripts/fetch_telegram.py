@@ -33,7 +33,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.tl.types import Message, MessageMediaPhoto, MessageMediaDocument
+from telethon.tl.types import Message, MessageMediaPhoto, MessageMediaDocument, MessageService
+from telethon.tl.functions.channels import GetFullChannelRequest
+from telethon.errors import FloodWaitError
 from supabase import create_client, Client
 
 # Fix Windows console encoding for Arabic/emoji
@@ -137,13 +139,12 @@ def get_last_synced_id(state: dict, channel: str) -> int:
     return state.get(channel, {}).get('last_message_id', 0)
 
 
-def update_sync_state(state: dict, channel: str, last_id: int, article_count: int):
-    """Update sync state for a channel."""
-    state[channel] = {
-        'last_message_id': last_id,
-        'last_sync': datetime.now(timezone.utc).isoformat(),
-        'articles_synced': article_count,
-    }
+def update_sync_state(state: dict, channel: str, **kwargs):
+    """Update sync state for a channel (merges with existing state)."""
+    if channel not in state:
+        state[channel] = {}
+    state[channel].update(kwargs)
+    state[channel]['last_sync'] = datetime.now(timezone.utc).isoformat()
 
 
 # =============================================================================
@@ -749,10 +750,48 @@ def parse_message(message: Message, channel: str, channel_username: str) -> dict
     }
 
 
-def group_multipart_messages(messages: list[Message], time_threshold_seconds: int = 180) -> list[list[Message]]:
+def is_continuation_message(text: str) -> bool:
+    """
+    Detect if a message is likely a continuation of a previous article part.
+    Returns True if the message has no structured header and starts mid-sentence.
+    """
+    if not text:
+        return False
+
+    # Strip leading emojis, whitespace, bullets
+    stripped = text.strip()
+    stripped = re.sub(r'^[\U0001F300-\U0001FFFF\s🔴⚠️📢•\-]+', '', stripped)
+
+    if not stripped:
+        return False
+
+    # If it has a structured header, it's a new article
+    has_bold_header = bool(re.match(r'^\*\*.{10,}\*\*', stripped))
+    has_label_header = bool(re.match(
+        r'^(?:TITLE|CATEGORY|COUNTRIES?|SOURCE|SOURCES?|التصنيف|العنوان|الدول)\s*[:\-]',
+        stripped, re.IGNORECASE
+    ))
+    if has_bold_header or has_label_header:
+        return False
+
+    # Check if text starts with a lowercase letter (mid-sentence continuation)
+    first_char = stripped[0] if stripped else ''
+    if first_char.islower():
+        return True
+
+    # Check if it starts with a numbered section > 1 continuing a list (e.g. "5. Title")
+    if re.match(r'^[2-9]\.\s+\w', stripped):
+        return True
+
+    return False
+
+
+def group_multipart_messages(messages: list[Message], time_threshold_seconds: int = 600) -> list[list[Message]]:
     """
     Group consecutive messages that are likely parts of the same article.
     Messages posted within time_threshold_seconds of each other are grouped together.
+    Continuation messages (no header, starts mid-sentence) are always grouped with
+    the previous message up to a maximum gap of 1800 seconds (30 minutes).
     """
     if not messages:
         return []
@@ -770,8 +809,11 @@ def group_multipart_messages(messages: list[Message], time_threshold_seconds: in
         # Calculate time difference in seconds
         time_diff = (current_msg.date - prev_msg.date).total_seconds()
 
-        if time_diff <= time_threshold_seconds:
-            # Same group - messages are close together
+        msg_text = getattr(current_msg, 'text', '') or getattr(current_msg, 'message', '') or ''
+        continuation = is_continuation_message(msg_text)
+
+        if time_diff <= time_threshold_seconds or (continuation and time_diff <= 1800):
+            # Same group - close in time, or a clear mid-sentence continuation
             current_group.append(current_msg)
         else:
             # New group - save current and start new
@@ -845,6 +887,263 @@ def combine_message_group(messages: list[Message], channel: str, channel_usernam
 
 
 # =============================================================================
+# TELEGRAM COMMENT SYNC
+# =============================================================================
+
+async def discover_discussion_group(client: TelegramClient, channel_username: str):
+    """
+    Discover the linked discussion group for a channel.
+    Returns the discussion group entity, or None if no linked group.
+    """
+    try:
+        channel = await client.get_entity(channel_username)
+        full = await client(GetFullChannelRequest(channel))
+        linked_chat_id = full.full_chat.linked_chat_id
+        if linked_chat_id:
+            group = await client.get_entity(linked_chat_id)
+            print(f"  Found discussion group: {getattr(group, 'title', linked_chat_id)} (ID: {linked_chat_id})")
+            return group
+        else:
+            print(f"  Warning: @{channel_username} has no linked discussion group")
+            return None
+    except Exception as e:
+        print(f"  Error discovering discussion group for @{channel_username}: {e}")
+        return None
+
+
+async def resolve_channel_post_id(client: TelegramClient, discussion_group, message) -> int | None:
+    """
+    Given a comment in the discussion group, find the original channel post ID it belongs to.
+    Comments in discussion groups reply to an auto-forwarded copy of the channel post.
+    We walk up the reply chain (max 10 hops) to find the root forwarded post.
+    """
+    current = message
+    for _ in range(10):
+        reply_to_id = getattr(current.reply_to, 'reply_to_msg_id', None) if current.reply_to else None
+        if not reply_to_id:
+            return None
+
+        try:
+            parent = await client.get_messages(discussion_group, ids=reply_to_id)
+        except Exception:
+            return None
+
+        if not parent:
+            return None
+
+        # Check if this is the auto-forwarded channel post
+        if parent.fwd_from and getattr(parent.fwd_from, 'channel_post', None):
+            return parent.fwd_from.channel_post
+
+        # If it's a service message (the "discussion started" notification), skip
+        if isinstance(parent, MessageService):
+            return None
+
+        current = parent
+
+    return None
+
+
+async def fetch_and_sync_comments(
+    client: TelegramClient,
+    supabase: Client,
+    channel_username: str,
+    discussion_group,
+    min_id: int = 0,
+    dry_run: bool = False,
+) -> tuple[int, int, int]:
+    """
+    Fetch comments from a Telegram discussion group and sync to article_comments.
+
+    Returns (synced_count, skipped_count, max_message_id).
+    """
+    synced = 0
+    skipped = 0
+    max_id = min_id
+    comments_to_insert = []
+
+    print(f"  Fetching discussion comments since ID {min_id}...")
+
+    # Collect candidate comment messages
+    candidates = []
+    fetch_count = 0
+    try:
+        async for message in client.iter_messages(discussion_group, min_id=min_id, limit=2000):
+            fetch_count += 1
+            if message.id > max_id:
+                max_id = message.id
+
+            # Skip service messages
+            if isinstance(message, MessageService):
+                continue
+
+            # Must have text content
+            if not message.text or len(message.text.strip()) < 3:
+                continue
+
+            # Must be a reply (comments always reply to something)
+            if not message.reply_to:
+                continue
+
+            # Skip forwarded messages (these are the auto-forwarded channel posts)
+            if message.fwd_from:
+                continue
+
+            candidates.append(message)
+    except FloodWaitError as e:
+        print(f"  Rate limited, need to wait {e.seconds}s. Skipping comment sync.")
+        return 0, 0, max_id
+    except Exception as e:
+        print(f"  Error fetching discussion messages: {e}")
+        return 0, 0, max_id
+
+    print(f"  Fetched {fetch_count} messages, {len(candidates)} candidate comments")
+
+    if not candidates:
+        return 0, 0, max_id
+
+    # Batch-check which telegram_message_ids already exist
+    candidate_tg_ids = [f"{discussion_group.id}/{m.id}" for m in candidates]
+    existing_tg_ids = set()
+    try:
+        # Check in batches of 100
+        for i in range(0, len(candidate_tg_ids), 100):
+            batch = candidate_tg_ids[i:i+100]
+            result = supabase.table('article_comments').select('telegram_message_id').in_(
+                'telegram_message_id', batch
+            ).execute()
+            existing_tg_ids.update(row['telegram_message_id'] for row in result.data)
+    except Exception as e:
+        print(f"  Warning: Could not check existing comments: {e}")
+
+    # Build a cache of telegram_id -> article DB row for lookups
+    article_cache = {}
+    try:
+        result = supabase.table('articles').select('id, telegram_id').eq(
+            'channel', 'en' if channel_username == 'observer_5' else 'ar'
+        ).execute()
+        article_cache = {row['telegram_id']: row['id'] for row in result.data}
+    except Exception as e:
+        print(f"  Warning: Could not fetch articles for matching: {e}")
+
+    # Process each candidate
+    for message in candidates:
+        tg_msg_id = f"{discussion_group.id}/{message.id}"
+
+        # Skip already synced
+        if tg_msg_id in existing_tg_ids:
+            skipped += 1
+            continue
+
+        # Resolve which channel post this comment belongs to
+        channel_post_id = await resolve_channel_post_id(client, discussion_group, message)
+        if not channel_post_id:
+            continue
+
+        # Look up the article
+        telegram_id = f"{channel_username}/{channel_post_id}"
+        article_db_id = article_cache.get(telegram_id)
+        if not article_db_id:
+            continue
+
+        # Get sender info
+        sender = await message.get_sender()
+        if sender:
+            guest_name = getattr(sender, 'first_name', '') or getattr(sender, 'username', '') or 'Telegram User'
+            guest_name = guest_name[:50]
+            sender_id = sender.id
+        else:
+            guest_name = 'Telegram User'
+            sender_id = 0
+
+        # Truncate comment text to 2000 chars
+        content = message.text.strip()[:2000]
+
+        comment_record = {
+            'article_id': article_db_id,
+            'guest_name': guest_name,
+            'session_id': f"tg_{sender_id}",
+            'content': content,
+            'telegram_message_id': tg_msg_id,
+            'source': 'telegram',
+            'is_approved': True,
+            'created_at': message.date.isoformat(),
+        }
+
+        comments_to_insert.append(comment_record)
+
+    print(f"  Resolved {len(comments_to_insert)} new comments, {skipped} already synced")
+
+    if dry_run:
+        for c in comments_to_insert[:5]:
+            print(f"    [DRY RUN] article_id={c['article_id']}, name={c['guest_name']}, "
+                  f"text={c['content'][:60]}...")
+        if len(comments_to_insert) > 5:
+            print(f"    ... and {len(comments_to_insert) - 5} more")
+        return len(comments_to_insert), skipped, max_id
+
+    # Batch insert
+    if comments_to_insert:
+        try:
+            # Insert in batches of 50
+            for i in range(0, len(comments_to_insert), 50):
+                batch = comments_to_insert[i:i+50]
+                supabase.table('article_comments').insert(batch).execute()
+                synced += len(batch)
+            print(f"  Inserted {synced} Telegram comments")
+        except Exception as e:
+            print(f"  Error inserting comments: {e}")
+
+    return synced, skipped, max_id
+
+
+async def sync_comments_for_channel(
+    client: TelegramClient,
+    supabase: Client,
+    channel_username: str,
+    channel: str,
+    sync_state: dict,
+    dry_run: bool = False,
+):
+    """Orchestrate comment sync for a single channel."""
+    print(f"\n[COMMENTS] Syncing comments for @{channel_username} ({channel})...")
+
+    channel_state = sync_state.get(channel, {})
+
+    # Discover or load cached discussion group
+    cached_group_id = channel_state.get('discussion_group_id')
+    if cached_group_id:
+        try:
+            discussion_group = await client.get_entity(cached_group_id)
+            print(f"  Using cached discussion group ID: {cached_group_id}")
+        except Exception:
+            print(f"  Cached group ID {cached_group_id} invalid, re-discovering...")
+            discussion_group = await discover_discussion_group(client, channel_username)
+    else:
+        discussion_group = await discover_discussion_group(client, channel_username)
+
+    if not discussion_group:
+        print(f"  Skipping comment sync for @{channel_username} (no discussion group)")
+        return
+
+    last_comment_id = channel_state.get('last_comment_id', 0)
+
+    synced, skipped, max_id = await fetch_and_sync_comments(
+        client, supabase, channel_username, discussion_group,
+        min_id=last_comment_id, dry_run=dry_run,
+    )
+
+    print(f"  Comment sync: {synced} new, {skipped} already synced")
+
+    if not dry_run and max_id > last_comment_id:
+        update_sync_state(
+            sync_state, channel,
+            discussion_group_id=discussion_group.id,
+            last_comment_id=max_id,
+        )
+
+
+# =============================================================================
 # MAIN FETCH LOGIC
 # =============================================================================
 
@@ -905,8 +1204,8 @@ async def fetch_channel_messages(
             print(f"  No new messages to process")
             return [], max_id
 
-        # Group multi-part messages (within 3 minutes of each other)
-        message_groups = group_multipart_messages(raw_messages, time_threshold_seconds=180)
+        # Group multi-part messages (within 10 minutes, or longer for continuations)
+        message_groups = group_multipart_messages(raw_messages)
         print(f"  Grouped into {len(message_groups)} article groups")
 
         # Get existing articles with their media URLs to avoid re-uploading
@@ -1103,6 +1402,9 @@ async def main():
     parser.add_argument('--full', action='store_true', help='Force full sync (ignore last sync state)')
     parser.add_argument('--channel', choices=['en', 'ar'], help='Sync only one channel')
     parser.add_argument('--limit', type=int, default=2000, help='Maximum messages to fetch per channel')
+    parser.add_argument('--comments', action='store_true', help='Also sync discussion group comments')
+    parser.add_argument('--comments-only', action='store_true', help='Only sync comments (skip articles)')
+    parser.add_argument('--dry-run', action='store_true', help='Print what would be synced without writing')
     args = parser.parse_args()
 
     print("=" * 60)
@@ -1165,36 +1467,57 @@ async def main():
     }
 
     # Determine which channels to sync
-    channels_to_sync = CHANNELS.items()
+    channels_to_sync = list(CHANNELS.items())
     if args.channel:
         channels_to_sync = [(args.channel, CHANNELS[args.channel])]
 
-    for channel, username in channels_to_sync:
-        # Get last synced ID for this channel
-        last_id = 0 if args.full else get_last_synced_id(sync_state, channel)
+    # --- Article sync (skip if --comments-only) ---
+    if not args.comments_only:
+        for channel, username in channels_to_sync:
+            # Get last synced ID for this channel
+            last_id = 0 if args.full else get_last_synced_id(sync_state, channel)
 
-        # Fetch messages
-        articles, max_id = await fetch_channel_messages(
-            client, supabase, username, channel,
-            min_id=last_id,
-            limit=args.limit,
-            full_sync=args.full
-        )
+            # Fetch messages
+            articles, max_id = await fetch_channel_messages(
+                client, supabase, username, channel,
+                min_id=last_id,
+                limit=args.limit,
+                full_sync=args.full
+            )
 
-        if articles:
-            # Smart upsert with change detection
-            stats = smart_upsert_articles(supabase, articles, channel, full_sync=args.full)
+            if articles:
+                # Smart upsert with change detection
+                stats = smart_upsert_articles(supabase, articles, channel, full_sync=args.full)
 
-            # Update totals
-            for key in total_stats:
-                total_stats[key] += stats[key]
+                # Update totals
+                for key in total_stats:
+                    total_stats[key] += stats[key]
 
-            # Update sync state with new max ID
-            update_sync_state(sync_state, channel, max_id, len(articles))
-        else:
-            # Even if no articles, update the max_id if we got one
-            if max_id > last_id:
-                update_sync_state(sync_state, channel, max_id, 0)
+                # Update sync state with new max ID
+                update_sync_state(sync_state, channel, last_message_id=max_id, articles_synced=len(articles))
+            else:
+                # Even if no articles, update the max_id if we got one
+                if max_id > last_id:
+                    update_sync_state(sync_state, channel, last_message_id=max_id, articles_synced=0)
+
+    # --- Comment sync (if --comments or --comments-only) ---
+    if args.comments or args.comments_only:
+        print("\n" + "=" * 60)
+        print("COMMENT SYNC")
+        print("=" * 60)
+        if args.dry_run:
+            print("*** DRY RUN MODE — no comments will be inserted ***\n")
+
+        for channel, username in channels_to_sync:
+            try:
+                await sync_comments_for_channel(
+                    client, supabase, username, channel, sync_state,
+                    dry_run=args.dry_run,
+                )
+            except Exception as e:
+                print(f"  Error syncing comments for @{username}: {e}")
+                import traceback
+                traceback.print_exc()
 
     # Save sync state
     save_sync_state(sync_state)
@@ -1204,11 +1527,14 @@ async def main():
     print("\n" + "=" * 60)
     print("SYNC COMPLETE")
     print("=" * 60)
-    print(f"Total processed: {total_stats['total']}")
-    print(f"  New articles:  {total_stats['inserted']}")
-    print(f"  Updated:       {total_stats['updated']}")
-    print(f"  Unchanged:     {total_stats['skipped']}")
-    print(f"  Errors:        {total_stats['errors']}")
+    if not args.comments_only:
+        print(f"Total processed: {total_stats['total']}")
+        print(f"  New articles:  {total_stats['inserted']}")
+        print(f"  Updated:       {total_stats['updated']}")
+        print(f"  Unchanged:     {total_stats['skipped']}")
+        print(f"  Errors:        {total_stats['errors']}")
+    if args.comments or args.comments_only:
+        print("Comment sync completed (see per-channel stats above)")
     print("=" * 60)
 
 

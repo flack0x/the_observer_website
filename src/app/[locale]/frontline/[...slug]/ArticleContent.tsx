@@ -164,8 +164,12 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
     setTimeout(() => setShowCopied(false), 2000);
   };
 
-  // Detect admin-created HTML content (from TipTap editor)
-  const isHtmlContent = /<(?:p|h[2-3]|ul|ol|blockquote)\b/.test(article.content);
+  // Detect admin-created HTML content (from TipTap editor).
+  // Content that still has raw markdown syntax (**text**) was a Telegram article edited
+  // via TipTap — it got wrapped in <p> tags but the markdown was never converted,
+  // so route it through the markdown processor instead.
+  const hasRawMarkdown = /\*\*[^*]+\*\*/.test(article.content);
+  const isHtmlContent = /<(?:p|h[2-3]|ul|ol|blockquote)\b/.test(article.content) && !hasRawMarkdown;
 
   // Process and sanitize content
   const processedContent = useMemo(() => {
@@ -178,8 +182,18 @@ export default function ArticleContent({ article, locale, dict }: ArticleContent
           })
         : article.content;
     }
-    // Telegram content: process markdown and sanitize
-    const processed = processContent(article.content, article.title);
+    // Telegram content (raw markdown, or markdown accidentally wrapped in HTML by TipTap):
+    // strip any HTML wrapper first to recover plain text, then process markdown.
+    const rawText = article.content
+      .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&quot;/g, '"');
+    const processed = processContent(rawText, article.title);
     return typeof window !== 'undefined'
       ? DOMPurify.sanitize(processed, { ALLOWED_TAGS: ['strong', 'em', 'br'] })
       : processed;
