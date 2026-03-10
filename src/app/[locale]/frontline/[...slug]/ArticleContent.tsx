@@ -45,8 +45,17 @@ function processContent(rawContent: string, title: string): string {
   let contentStartIndex = 0;
 
   // Skip header lines at the beginning
+  const titlePrefix = title.substring(0, 30).toLowerCase();
   for (let i = 0; i < Math.min(20, lines.length); i++) {
     const line = lines[i].trim();
+    const lineLower = line.toLowerCase();
+
+    // Skip the title line itself (case-insensitive, handles ALL CAPS vs title case)
+    if (i < 5 && lineLower.includes(titlePrefix)) {
+      contentStartIndex = i + 1;
+      continue;
+    }
+
     // Skip if it's a header-like line
     if (
       line.match(/^\*\*(?:Category|Title|Countries?|Orgs?|Organizations?|Brief)/i) ||
@@ -55,11 +64,6 @@ function processContent(rawContent: string, title: string): string {
       line === '' ||
       line.match(/^(?:Geopolitics|Military|Political|Economic)\s*\|/i) // Category line
     ) {
-      // Check if this bold line might be the title (skip it)
-      if (line.includes(title.substring(0, 30))) {
-        contentStartIndex = i + 1;
-        continue;
-      }
       // Skip empty lines and header markers at the start
       if (i === contentStartIndex || line === '') {
         contentStartIndex = i + 1;
