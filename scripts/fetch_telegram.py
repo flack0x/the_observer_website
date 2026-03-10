@@ -33,7 +33,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.tl.types import Message, MessageMediaPhoto, MessageMediaDocument, MessageService
+from telethon.tl.types import Message, MessageMediaPhoto, MessageMediaDocument, MessageService, MessageEntityBold
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.errors import FloodWaitError
 from supabase import create_client, Client
@@ -786,11 +786,13 @@ def is_continuation_message(text: str) -> bool:
     return False
 
 
-def has_article_header(text: str) -> bool:
+def has_article_header(text: str, entities=None) -> bool:
     """
     Check if a message starts with an article header pattern, indicating a new article.
-    More comprehensive than is_continuation_message — checks for structured titles
-    AND bold header lines.
+    Checks for:
+    1. Structured titles (TITLE:, **Title**, etc.)
+    2. Bold header lines using ** markdown
+    3. Telegram native bold formatting (via entities)
     """
     if not text:
         return False
@@ -800,11 +802,17 @@ def has_article_header(text: str) -> bool:
     if parsed and parsed.get('title'):
         return True
 
-    # Check for bold header (message starts with **long text**)
+    # Check for bold header using ** markdown
     stripped = text.strip()
     stripped = re.sub(r'^[\U0001F300-\U0001FFFF\s\U0001F534\u26A0\uFE0F\U0001F4E2\u2022\u2B55\u2014\-]+', '', stripped)
     if stripped and re.match(r'^\*\*.{10,}\*\*', stripped):
         return True
+
+    # Check Telegram native bold formatting (entities) at the start of message
+    if entities:
+        for entity in entities:
+            if isinstance(entity, MessageEntityBold) and entity.offset < 10 and entity.length >= 15:
+                return True
 
     return False
 
@@ -833,9 +841,10 @@ def group_multipart_messages(messages: list[Message], time_threshold_seconds: in
         time_diff = (current_msg.date - prev_msg.date).total_seconds()
 
         msg_text = getattr(current_msg, 'text', '') or getattr(current_msg, 'message', '') or ''
+        msg_entities = getattr(current_msg, 'entities', None)
         continuation = is_continuation_message(msg_text)
 
-        if has_article_header(msg_text) and not continuation:
+        if has_article_header(msg_text, msg_entities) and not continuation:
             # Message has its own article header - always start a new group
             groups.append(current_group)
             current_group = [current_msg]
