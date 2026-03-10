@@ -88,6 +88,12 @@ export function convertAllCapsToSentenceCase(text: string, forceConvert: boolean
         return part;
       }
 
+      // Preserve dotted abbreviations (U.S., U.S.A., U.K.)
+      if (/^(?:[A-Za-z]\.){2,}$/.test(part)) {
+        isFirstContentWord = false;
+        return part.toUpperCase();
+      }
+
       // Extract word and surrounding punctuation
       const match = part.match(/^([^\w]*)(\w+)([^\w]*)$/);
       if (!match) {

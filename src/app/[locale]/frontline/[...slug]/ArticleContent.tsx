@@ -95,8 +95,11 @@ function processContent(rawContent: string, title: string): string {
   // Also handle single underscore italic (less common)
   content = content.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>');
 
-  // Convert bullet points
-  content = content.replace(/^[•]\s*/gm, '• ');
+  // Convert inline bullet points to separate lines
+  // Handles: "sentence. • Next point:" → "sentence.\n\n• Next point:"
+  content = content.replace(/([.!?:;"\u201D])\s*•\s*/g, '$1\n\n• ');
+  // Also handle single newline before bullet → double newline (new paragraph)
+  content = content.replace(/\n•\s*/g, '\n\n• ');
 
   // Remove emoji markers at the start of each line
   content = content.replace(new RegExp('^' + emojiRegex.source + '\\s*', 'gmu'), '');

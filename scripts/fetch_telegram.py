@@ -786,12 +786,35 @@ def is_continuation_message(text: str) -> bool:
     return False
 
 
+def has_article_header(text: str) -> bool:
+    """
+    Check if a message starts with an article header pattern, indicating a new article.
+    More comprehensive than is_continuation_message — checks for structured titles
+    AND bold header lines.
+    """
+    if not text:
+        return False
+
+    # Check structured header (TITLE:, **Title : Value**, etc.)
+    parsed = parse_structured_header(text)
+    if parsed and parsed.get('title'):
+        return True
+
+    # Check for bold header (message starts with **long text**)
+    stripped = text.strip()
+    stripped = re.sub(r'^[\U0001F300-\U0001FFFF\s\U0001F534\u26A0\uFE0F\U0001F4E2\u2022\u2B55\u2014\-]+', '', stripped)
+    if stripped and re.match(r'^\*\*.{10,}\*\*', stripped):
+        return True
+
+    return False
+
+
 def group_multipart_messages(messages: list[Message], time_threshold_seconds: int = 600) -> list[list[Message]]:
     """
     Group consecutive messages that are likely parts of the same article.
-    Messages posted within time_threshold_seconds of each other are grouped together.
-    Continuation messages (no header, starts mid-sentence) are always grouped with
-    the previous message up to a maximum gap of 1800 seconds (30 minutes).
+    - Messages with their own article header always start a new group.
+    - Continuation messages (mid-sentence, numbered sections) grouped up to 1800s.
+    - Other messages grouped within time_threshold_seconds.
     """
     if not messages:
         return []
@@ -812,8 +835,15 @@ def group_multipart_messages(messages: list[Message], time_threshold_seconds: in
         msg_text = getattr(current_msg, 'text', '') or getattr(current_msg, 'message', '') or ''
         continuation = is_continuation_message(msg_text)
 
-        if time_diff <= time_threshold_seconds or (continuation and time_diff <= 1800):
-            # Same group - close in time, or a clear mid-sentence continuation
+        if has_article_header(msg_text) and not continuation:
+            # Message has its own article header - always start a new group
+            groups.append(current_group)
+            current_group = [current_msg]
+        elif continuation and time_diff <= 1800:
+            # Clear mid-sentence continuation (up to 30 min)
+            current_group.append(current_msg)
+        elif time_diff <= time_threshold_seconds:
+            # Close in time - likely same article
             current_group.append(current_msg)
         else:
             # New group - save current and start new

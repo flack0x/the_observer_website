@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { convertAllCapsToSentenceCase } from '@/lib/content';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -69,6 +70,9 @@ function sanitizeTitle(title: string): string {
       }
     }
   }
+
+  // Normalize ALL CAPS titles to title case
+  clean = convertAllCapsToSentenceCase(clean);
 
   return clean.trim() || 'Untitled';
 }
